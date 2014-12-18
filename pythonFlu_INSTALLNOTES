@@ -1,0 +1,29 @@
+
+Installation notes on pythonFlu
+
+- download managedFlu, confFlu, pythonFlu from 
+  http://sourceforge.net/projects/pythonflu/files/9.1-SWIG/
+
+- python 2.7 version
+- swig 2.0.6 version (2.0.10 does not work)
+
+-intallation steps
+
+  1. confFlu and managedFlu: build and install (or use precompiled packages)
+  2. OpenFoam 2.0.1 version: build and install (or use precompiled packages)
+     - use system openmpi (edit etc/bashrc to match this)
+
+  3. pythonFlu package build and installation
+     - make env.sh (copy env.sh.example) to match your system
+        -add line to the end of env.sh
+            export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib64/openmpi/lib
+     - source ./env.sh
+     - ./build_configure
+     - ./configure
+     - source ./bashrc
+     - make
+     - edit  /install-scripts/install_pythonFlu.sh script
+           -pythonflu_dir="pythonflu-installation-dir"
+           -pythonflu_m4dir="pythonflu-installation-dir"
+           where "pythonflu-installation-dir" is not the same directory as the source directory
+     - sudo make install
