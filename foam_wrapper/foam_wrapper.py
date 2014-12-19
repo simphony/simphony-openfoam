@@ -10,7 +10,7 @@ from simphony.cuds.mesh import Mesh, Point, Face, Edge, Cell
 #import inspect
 #import copy
 #from Foam.OpenFOAM import fileName, word
-#from collections import defaultdict
+from collections import defaultdict
 #from Foam.finiteVolume import volScalarField
 
 
