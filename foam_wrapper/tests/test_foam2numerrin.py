@@ -21,7 +21,7 @@ class FoamNumerrinWrapperTestCase(unittest.TestCase):
         """Test mesh read from OpenFoam to SimPhony, pass to Numerrin to save to CGNS -format and back to SimPhony mesh"""
         foam_wrapper = Foam_wrapper(self.model)
         print "Read mesh from OpenFOAM"
-        simphonyMesh = foam_wrapper.get_mesh("FOAM_Meshes/pitzDaily")
+        simphonyMesh = foam_wrapper.get_mesh("foam_wrapper/tests/FOAM_Meshes/pitzDaily")
         print "Number of mesh points: ",sum(1 for _ in simphonyMesh.iter_points())
         print "Number of mesh cells : ",sum(1 for _ in simphonyMesh.iter_cells())
         print "Number of mesh faces : ",sum(1 for _ in simphonyMesh.iter_faces())
