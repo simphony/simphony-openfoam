@@ -7,11 +7,12 @@ mesh module functionalities
 
 import unittest
 from foam_wrapper.model import Model
-from foam_wrapper.foam_wrapper import Foam_wrapper
-import os
+from foam_wrapper.foam_wrapper import FoamWrapper
+import logging
+logger = logging.getLogger(__name__)
 
 class FoamWrapperTestCase(unittest.TestCase):
-    """Test case for Foam_wrapper class"""
+    """Test case for FoamWrapper class"""
     def setUp(self):
         """Creates dummy model to perform tests"""
         self.model = Model(1)
@@ -19,13 +20,15 @@ class FoamWrapperTestCase(unittest.TestCase):
 
     def test_meshRead(self):
         """Test mesh read from OpenFoam to Simphony"""
-        foam_wrapper = Foam_wrapper(self.model)
-        curPath = os.getcwd()
-        casePath = curPath
+        foam_wrapper = FoamWrapper(self.model)
         simphonyMesh = foam_wrapper.get_mesh("foam_wrapper/tests/FOAM_Meshes/pitzDaily")
-        print "Number of mesh points: ",sum(1 for _ in simphonyMesh.iter_points())
-        print "Number of mesh cells : ",sum(1 for _ in simphonyMesh.iter_cells())
-        print "Number of mesh faces : ",sum(1 for _ in simphonyMesh.iter_faces())
+        self.assertEqual(sum(1 for _ in simphonyMesh.iter_points()), 25012)
+
+        self.assertEqual(sum(1 for _ in simphonyMesh.iter_cells()), 12225)
+
+        self.assertEqual(sum(1 for _ in simphonyMesh.iter_faces()), 49180)
+
 
 if __name__ == '__main__':
     unittest.main()
+
