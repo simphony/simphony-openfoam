@@ -5,16 +5,15 @@ NOTE: at a moment pythonFlu supports only up to 2.0.1 -version of OpenFOAM
 
 """
 
-from Foam import ref, man
+from Foam import ref, man, src
 from simphony.cuds.mesh import Mesh, Point, Face, Edge, Cell
-#import inspect
-#import copy
-#from Foam.OpenFOAM import fileName, word
+import inspect
+from Foam.OpenFOAM import fileName, word, IOobject
 from collections import defaultdict
-#from Foam.finiteVolume import volScalarField
+from Foam.finiteVolume import volScalarField
+from Foam.src.OpenFOAM import *
 
-
-class Foam_wrapper(object):
+class FoamWrapper(object):
 
     def __init__(self, model):
         self.model = model
@@ -41,19 +40,14 @@ class Foam_wrapper(object):
 
         foamLabelToUuid=[]
  
-        for i in range(foamPoints.size()):
-            point = foamPoints[i]
-
+        for point in foamPoints:
             spoint = Point((point.x(),point.y(),point.z()))
             simphonyMesh.add_point(spoint)
             foamLabelToUuid.append(spoint.uuid)
                  
-        print "Points added"
 
-        for i in range(foamFaces.size()):
-            face = foamFaces[i]
+        for face in foamFaces:
             points = []
-           
             for pi in range(face.size()):
                 pl=face[pi]
                 
@@ -61,8 +55,6 @@ class Foam_wrapper(object):
             face = Face(points)
             simphonyMesh.add_face(face)
  
-        print "Faces added"
-
 
         for i in range(foamCells.size()):
             faces = foamCells[i]
@@ -162,67 +154,5 @@ class Foam_wrapper(object):
             
         del foamLabelToUuid
 
-        print "Cells added"
 
         return simphonyMesh
-
-
-"""
-
-# moves simphonyMesh to OpenFoam polyMesh structure
-# to get this work pythonFlu must be extended
-
-
-    def to_foam_mesh(self, simphonyMesh):
-
-        foamPoints = []
-        for point in simphonyMesh.iter_points():
-            
-            foamPoints.append(point.coordinates)
-
-        print "Points added"
-
-        foamFaces = []
-        for face in simphonyMesh.iter_faces():
-            foamFaces.append(face.points)
-
-        print "Faces added"
-
-        foamCells = []
-        for cell in simphonyMesh.iter_cells():
-            foamCells.append(cell.points)
-
-        print "Cells added"
-
-
-        print inspect.getmembers(Foam.src.OpenFOAM.meshes.polyMesh)
-        foamMesh = Foam.src.OpenFOAM.meshes.polyMesh.polyMesh.new_polyMesh()
-        
-"""
-
-"""
-# Reads given OpenFoam -scalarvariable from "foamCaseName" -directory# and returns corresponding SimPhony variable 
-# to get this to work needs extension of pythonFlu to get vertex based values. Tis can be done using OpenFoam interpolations and pointmesh
-from Foam.src.OpenFOAM import *
-    def get_scalarvariable(self, foamCaseName, variableName):
-        
-        argv=["test", "-case", foamCaseName]
-        args = ref.setRootCase( len(argv), argv )
-        runTime = man.createTime( args )
-        foamMesh = man.createMesh( runTime )
-        variable = volScalarField( IOobject( word( variableName ),
-                        fileName( runTime.timeName() ),
-                        foamMesh,
-                        IOobject.MUST_READ,
-                        IOobject.AUTO_WRITE ),
-                        foamMesh)
-
-        internalField = variable.internalField()
-        
-        for value in internalField:
-            print value
-
-        
-        print "# variables ",len(internalField)
- 
-"""       
