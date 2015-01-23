@@ -21,13 +21,25 @@ version = '%s'
     finally:
         fh.close()
 
+    if filename is None:
+        filename = os.path.join(
+            os.path.dirname(__file__), 'foam_tokenwrapper', 'version.py')
+    ver = """\
+version = '%s'
+"""
+    fh = open(filename, 'wb')
+    try:
+        fh.write(ver % VERSION)
+    finally:
+        fh.close()
+
 
 write_version_py()
 
 setup(
-    name='foam_wrapper',
+    name='simphony-openfoam',
     version=VERSION,
     author='SimPhoNy FP7 European Project',
-    description='The native implementation of the SimPhoNy cuds objects',
+    description='Implementation of OpenFoam wrappers',
     long_description=README_TEXT,
     packages=find_packages())
