@@ -4,7 +4,7 @@ python:
 before_install:
   - sudo apt-add-repository -y ppa:flu-team/`dpkg --print-architecture`
   - sudo apt-get update -qq
-  - sudo apt-get install libhdf5-serial-dev pythonflu
+  - sudo apt-get install libhdf5-serial-dev pythonflu211
 install:
   # (1) Install cython and numexpr externally because the requirements does
   #     work with them
