@@ -21,7 +21,7 @@ make install
 mkdir ../managedFlu
 cd ../managedFlu
 tar -xf ../../managedFlu_r1.1_1.tar.gz
-cp ../../scipts/env_managedFlu  env.sh
+cp ../../scipts/env_managedFlu.sh  env.sh
 bash -c "source env.sh && ./build_configure && ./configure && make"
 bash -c "source ./bashrc  && make install"
 
@@ -29,6 +29,6 @@ bash -c "source ./bashrc  && make install"
 mkdir ../pythonFlu
 cd ../pythonFlu
 tar -xf ../../pythonFlu_r9.1-SWIG_1.tar.gz
-cp ../../scipts/env_pythonFlu  env.sh
+cp ../../scipts/env_pythonFlu.sh  env.sh
 bash -c "source env.sh && ./build_configure && ./configure && make"
 bash -c "source ./bashrc  && make install"
