@@ -2,9 +2,12 @@ language: python
 python:
   - "2.7"
 before_install:
-  - sudo apt-add-repository -y ppa:flu-team/`dpkg --print-architecture`
   - sudo apt-get update -qq
-  - sudo apt-get install libhdf5-serial-dev pythonflu211
+  - sudo apt-get install build-essential flex cmake zlib1g-dev gnuplot
+  - sudo apt-get install libreadline-dev libxt-dev libscotch-dev libopenmpi-dev
+  - sudo apt-get install libhdf5-serial-dev
+  - ./install_openfoam.sh
+  - ./install_pythonflu.sh
 install:
   # (1) Install cython and numexpr externally because the requirements does
   #     work with them
