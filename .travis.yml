@@ -2,7 +2,7 @@ language: python
 python:
   - "2.7"
 before_install:
-  - sudo add-apt-repository "deb http://www.openfoam.org/download/ubuntu precise main"
+  - sudo sh -c "echo deb http://www.openfoam.org/download/ubuntu precise main > /etc/apt/sources.list.d/openfoam.list"
   - sudo apt-get update -qq
   - sudo apt-get install --force=yes libhdf5-serial-dev openfoam211 
   - ./scripts/install_pythonflu.sh
