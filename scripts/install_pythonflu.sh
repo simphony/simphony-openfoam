@@ -18,8 +18,10 @@ make install
 
 # Build managedFlu
 mkdir managedFlu
+cd managedFlu
 tar -xf ../../managedFlu_r1.1_1.tar.gz
-source env.sh
+cp env.sh.example env.sh
+source ./env.sh
 ./build_configure
 ./configure
 make install
