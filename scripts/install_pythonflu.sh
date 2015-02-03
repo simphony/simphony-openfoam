@@ -22,7 +22,8 @@ make install
 mkdir managedFlu
 cd managedFlu
 tar -xf ../../managedFlu_r1.1_1.tar.gz
-cp env.sh.example env.sh
+ls
+cp ./env.sh.example env.sh
 source ./env.sh
 ./build_configure
 ./configure
@@ -32,7 +33,7 @@ bash -c "source ./bashrc  && make install"
 # Build pythonFlu
 mkdir pythonFlu
 cd pythonFlu
-tar -xf ../../managedFlu_r1.1_1.tar.gz
+tar -xf ../../pythonFlu_r9.1-SWIG_1.tar.gz
 source ../Flu env.sh
 ./build_configure
 ./configure
