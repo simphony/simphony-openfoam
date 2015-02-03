@@ -2,10 +2,9 @@ language: python
 python:
   - "2.7"
 before_install:
+  - sudo sh -c "echo deb http://www.openfoam.org/download/ubuntu precise main > /etc/apt/sources.list.d/openfoam.list"
   - sudo apt-get update -qq
-  - sudo apt-get install libscotch-dev libopenmpi-dev libptscotch-dev ptscotch
-  - sudo apt-get install libhdf5-serial-dev
-  - ./scripts/install_openfoam.sh
+  - sudo apt-get install -y --force-yes libhdf5-serial-dev openfoam211 
   - ./scripts/install_pythonflu.sh
 install:
   # (1) Install cython and numexpr externally because the requirements does
