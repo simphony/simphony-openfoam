@@ -4,7 +4,9 @@ python:
 before_install:
   - sudo sh -c "echo deb http://www.openfoam.org/download/ubuntu precise main > /etc/apt/sources.list.d/openfoam.list"
   - sudo apt-get update -qq
-  - sudo apt-get install -y --force-yes libhdf5-serial-dev openfoam211 
+  - sudo apt-get install -y --force-yes openfoam211
+  - sudo apt-get install libboost-all-dev libhdf5-serial-dev
+  - sudo apt-get install libcr-dev mpich2 mpich2-doc
   - ./scripts/install_pythonflu.sh
 install:
   # (1) Install cython and numexpr externally because the requirements does
