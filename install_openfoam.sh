@@ -1,15 +1,13 @@
 #!/bin/sh
 
-cd ~
+mkdir ~/OpenFoam
+cd ~/OpenFoam
 
-# Download openfoam package
+# Download and extract sources
 wget "http://sourceforge.net/projects/foam/files/foam/2.0.1/OpenFOAM-2.0.1.gtgz/download" -O OpenFoam-2.0.1.gtgz
-
-# Extract sources
-mkdir OpenFoam
 tar -xf OpenFoam-2.0.1.gtgz
 
-# build OpenFoam
+# Build OpenFoam
 cd OpenFoam-2.0.1
 source /etc/bashrc
 ./Allwmake
