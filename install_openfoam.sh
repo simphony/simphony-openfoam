@@ -12,5 +12,5 @@ tar -xf OpenFOAM-2.0.1.gtgz
 cd OpenFOAM-2.0.1
 source ./etc/bashrc
 export WM_MPLIB=SYSTEMOPENMPI
-export WM_NCOMPPROCS=3
-./Allwmake
+export WM_NCOMPPROC=2
+./Allwmake > log.Allwmake
