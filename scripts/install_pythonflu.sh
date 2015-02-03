@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Download pythonflu packages
 wget "http://sourceforge.net/projects/pythonflu/files/9.1-SWIG/confFlu_r2.1-swig_1.tar.gz/download" -O confFlu_r2.1-swig_1.tar.gz
