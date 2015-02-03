@@ -25,4 +25,4 @@ source ./env.sh
 ./build_configure
 ./configure
 make
-sudo bash -c "source ./bashrc  && make install"
+bash -c "source ./bashrc  && make install"
