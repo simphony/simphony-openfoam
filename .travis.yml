@@ -5,8 +5,8 @@ before_install:
   - sudo apt-get update -qq
   - sudo apt-get install libscotch-dev libopenmpi-dev libptscotch-dev ptscotch
   - sudo apt-get install libhdf5-serial-dev
-  - ./install_openfoam.sh
-  - ./install_pythonflu.sh
+  - ./scripts/install_openfoam.sh
+  - ./scripts/install_pythonflu.sh
 install:
   # (1) Install cython and numexpr externally because the requirements does
   #     work with them
