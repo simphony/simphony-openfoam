@@ -7,7 +7,7 @@ popd ~
 
 # Extract sources
 mkdir OpenFoam
-tar -xvf OpenFoam-2.0.1.gtgz
+tar -xf OpenFoam-2.0.1.gtgz
 
 # build OpenFoam
 cd OpenFoam-2.0.1
