@@ -1,9 +1,9 @@
 #!/bin/sh
 
+cd ~
+
 # Download openfoam package
 wget "http://sourceforge.net/projects/foam/files/foam/2.0.1/OpenFOAM-2.0.1.gtgz/download" -O OpenFoam-2.0.1.gtgz
-
-popd ~
 
 # Extract sources
 mkdir OpenFoam
@@ -13,5 +13,3 @@ tar -xf OpenFoam-2.0.1.gtgz
 cd OpenFoam-2.0.1
 source /etc/bashrc
 ./Allwmake
-
-pushd
