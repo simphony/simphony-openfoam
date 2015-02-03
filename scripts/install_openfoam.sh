@@ -13,4 +13,4 @@ cd OpenFOAM-2.0.1
 source ./etc/bashrc
 export WM_MPLIB=SYSTEMOPENMPI
 export WM_NCOMPPROC=2
-./Allwmake > log.Allwmake
+./Allwmake | grep -v 'g++'
