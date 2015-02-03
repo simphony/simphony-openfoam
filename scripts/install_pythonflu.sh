@@ -24,4 +24,4 @@ cp env.sh.example env.sh
 source ./env.sh
 ./build_configure
 ./configure
-make install
+make
