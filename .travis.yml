@@ -2,8 +2,7 @@ language: python
 python:
   - "2.7"
 before_install:
-  - export VERS=$(lsb_release -cs) 
-  - sudo sh -c "echo deb http://www.openfoam.org/download/ubuntu $VERS main > /etc/apt/sources.list.d/openfoam.list"
+  - sudo add-apt-repository "deb deb http://www.openfoam.org/download/ubuntu precise main"
   - sudo apt-get update -qq
   - sudo apt-get install libhdf5-serial-dev openfoam211
   - ./scripts/install_pythonflu.sh
