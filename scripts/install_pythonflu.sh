@@ -7,6 +7,8 @@ wget "http://sourceforge.net/projects/pythonflu/files/9.1-SWIG/pythonFlu_r9.1-SW
 
 mkdir Flu
 cd Flu
+cp ../scripts/env.sh .
+
 
 # Build confFlu
 mkdir confFlu
@@ -22,6 +24,16 @@ cd managedFlu
 tar -xf ../../managedFlu_r1.1_1.tar.gz
 cp env.sh.example env.sh
 source ./env.sh
+./build_configure
+./configure
+make
+bash -c "source ./bashrc  && make install"
+
+# Build pythonFlu
+mkdir pythonFlu
+cd pythonFlu
+tar -xf ../../managedFlu_r1.1_1.tar.gz
+source ../Flu env.sh
 ./build_configure
 ./configure
 make
