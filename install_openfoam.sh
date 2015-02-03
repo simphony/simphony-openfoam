@@ -9,5 +9,4 @@ tar -xf OpenFoam-2.0.1.gtgz
 
 # Build OpenFoam
 cd OpenFoam-2.0.1
-source /etc/bashrc
 ./Allwmake
