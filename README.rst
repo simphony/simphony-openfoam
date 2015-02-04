@@ -27,10 +27,6 @@ or::
     python setup.py develop
 
 
-or::
-
-    # build for in-place development
-    python setupTokewrapper.py develop
 
 Testing
 -------
