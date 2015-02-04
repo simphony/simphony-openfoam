@@ -14,7 +14,6 @@ Simphony-openfoam is hosted on github: https://github.com/simphony/simphony-open
 Installation
 ------------
 
-Package foam_wrapper requires python 2.7.x, OpenFOAM 2.1.0 and pythonFLU.
 Package foam_tokenwrapper requires python 2.7.x, OpenFOAM 2.2.x
  
 Installation is based on setuptools::
@@ -46,5 +45,4 @@ Directory structure
 
 Subpackages:
 
-- foam_wrapper --  wrapper class and tests for OpenFOAM -wrapper based on pythonFLU 
 - foam_tokenwrapper --  wrapper class and tests for native OpenFOAM -wrapping of data transfer(mesh and solution variables) 

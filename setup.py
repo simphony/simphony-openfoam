@@ -9,17 +9,6 @@ VERSION = '0.0.1dev'
 
 
 def write_version_py(filename=None):
-    if filename is None:
-        filename = os.path.join(
-            os.path.dirname(__file__), 'foam_wrapper', 'version.py')
-    ver = """\
-version = '%s'
-"""
-    fh = open(filename, 'wb')
-    try:
-        fh.write(ver % VERSION)
-    finally:
-        fh.close()
 
     if filename is None:
         filename = os.path.join(
@@ -37,7 +26,7 @@ version = '%s'
 write_version_py()
 
 setup(
-    name='simphony-openfoam',
+    name='foam_tokenwrapper',
     version=VERSION,
     author='SimPhoNy FP7 European Project',
     description='Implementation of OpenFoam wrappers',
