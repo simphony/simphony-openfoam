@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class FoamControlWrapperTestCase(unittest.TestCase):
-    """Test case for FoamTokenWrapper class"""
+    """Test case for FoamControlWrapper class"""
     def setUp(self):
         pass
 
