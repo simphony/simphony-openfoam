@@ -1,7 +1,7 @@
 """ test_foamcontrolwrapper module
 
 This module contains the unitary tests for the
-foam_tokenwrapper module functionalities
+foam_controlwrapper module functionalities
 
 """
 
