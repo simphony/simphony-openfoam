@@ -7,7 +7,7 @@ before_install:
   - sudo apt-get install -y --force-yes openfoam222
   - sudo apt-get install libhdf5-serial-dev
   - chmod +x ./install_pyFoam.sh
-  - sudo ./install_pyFoam.sh
+  - sudo ./install_PyFoam.sh
   - python check_pyFoam.py
   # (1) Install cython and numexpr externally because the requirements does
   #     not work with them
