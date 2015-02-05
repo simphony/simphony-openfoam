@@ -5,7 +5,7 @@ before_install:
   - sudo sh -c "echo deb http://www.openfoam.org/download/ubuntu precise main > /etc/apt/sources.list.d/openfoam.list"
   - sudo apt-get update -qq
   - sudo apt-get install -y --force-yes openfoam222
-  - sudo apt-get install libboost-all-dev libhdf5-serial-dev
+  - sudo apt-get install libhdf5-serial-dev
   - chmod +x ./install_pyFoam.sh
   - sudo ./install_pyFoam.sh
   # (1) Install cython and numexpr externally because the requirements does
