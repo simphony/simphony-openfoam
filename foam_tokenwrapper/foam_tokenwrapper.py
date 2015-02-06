@@ -66,7 +66,7 @@ class FoamTokenWrapper(object):
     def get_mesh(self,caseName,timeStep):
         """ OpenFoam mesh to Simphony mesh
         """
-        simphonyMesh = Mesh()
+        simphonyMesh = Mesh(caseName)
         argv=["test","-case",caseName,"-time",timeStep]
                 
         self.initArgs(argv)
