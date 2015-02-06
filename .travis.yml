@@ -1,6 +1,8 @@
 language: python
 python:
   - "2.7"
+virtualenv:
+  system_site_packages: true  
 before_install:
   - sudo sh -c "echo deb http://www.openfoam.org/download/ubuntu precise main > /etc/apt/sources.list.d/openfoam.list"
   - sudo apt-get update -qq
