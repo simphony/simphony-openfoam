@@ -26,7 +26,7 @@ class FoamControlWrapperTestCase(unittest.TestCase):
         foam_controlwrapper.CM[CUBA.NAME]="foam_controlwrapper/tests/pitzDaily"
 #        foam_controlwrapper.CM[CUBA.SOLVER]="simpleFoam"
         foam_controlwrapper.SP[CUBA.TIME_STEP]=1
-        foam_controlwrapper.SP[CUBA.NUMBEROF_TIME_STEPS]=500
+        foam_controlwrapper.SP[CUBA.NUMBER_OF_TIME_STEPS]=500
         foam_controlwrapper.SP[CUBA.DENSITY] = 1.0
         foam_controlwrapper.SP[CUBA.DYNAMIC_VISCOSITY] = 1.0e-5
 # this is just an example. It is not enough for general setting of BC's

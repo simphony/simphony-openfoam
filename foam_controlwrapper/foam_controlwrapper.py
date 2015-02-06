@@ -32,7 +32,7 @@ class FoamControlWrapper(object):
         solver = "simpleFoam"       
 #        startTime = self.SP["startTime"]
         startTime = 0
-        nOfTimeSteps = self.SP[CUBA.NUMBEROF_TIME_STEPS]
+        nOfTimeSteps = self.SP[CUBA.NUMBER_OF_TIME_STEPS]
         deltaT = self.SP[CUBA.TIME_STEP]
         endTime = nOfTimeSteps*deltaT
         writeInterval = endTime-startTime
@@ -131,8 +131,7 @@ class FoamControlWrapper(object):
             raise ValueError(error_str.format(control)) 
         
 
-
-        run = ConvergenceRunner(BoundingLogAnalyzer(),argv=[solver,"-case",case],logname="SimPhoNy",silent=True)
+        run = ConvergenceRunner(BoundingLogAnalyzer(),argv=[solver,".",case],logname="SimPhoNy",silent=True)
         run.start()
         
         return dire.getLast()

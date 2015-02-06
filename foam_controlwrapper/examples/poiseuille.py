@@ -9,7 +9,7 @@ foam_controlwrapper.CM[CUBA.NAME]="foam_controlwrapper/examples/poiseuille"
 # in the future the OpenFoam solver must be specified somewhere
 #foam_controlwrapper.CM[CUBA.SOLVER]="simpleFoam"
 foam_controlwrapper.SP[CUBA.TIME_STEP]=1
-foam_controlwrapper.SP[CUBA.NUMBEROF_TIME_STEPS]=1000
+foam_controlwrapper.SP[CUBA.NUMBER_OF_TIME_STEPS]=1000
 foam_controlwrapper.SP[CUBA.DENSITY] = 1.0
 foam_controlwrapper.SP[CUBA.DYNAMIC_VISCOSITY] = 1.0
 
