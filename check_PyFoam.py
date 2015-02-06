@@ -1,3 +1,3 @@
 import PyFoam
 import PyFoam.FoamInformation
-print PyFoam.FoamInformation.foamTutorials()
+assert len(PyFoam.FoamInformation.foamTutorials()) > 0
