@@ -6,6 +6,7 @@ before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -y --force-yes openfoam222
   - sudo apt-get install libhdf5-serial-dev
+  - pip install numpy # pyfoam requires numpy
   - chmod +x ./install_pyFoam.sh
   - sudo ./install_pyFoam.sh
   - python check_PyFoam.py
