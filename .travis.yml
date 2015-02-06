@@ -9,6 +9,7 @@ before_install:
   - pip install numpy # pyfoam requires numpy
   - chmod +x ./install_pyFoam.sh
   - sudo ./install_pyFoam.sh
+  - source /opt/openfoam222/etc/bashrc
   - python check_PyFoam.py
   # (1) Install cython and numexpr externally because the requirements does
   #     not work with them
