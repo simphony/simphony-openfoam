@@ -80,10 +80,7 @@ class FoamControlWrapper(object):
 #                        control["boundaryField"][boundary]["value"] = "uniform (0 0 0)"
                     else:
                         control["boundaryField"][boundary]["type"] = "fixedValue"
-                        valueString = "uniform ( "
-                        +str(velocityBCs[boundary][0])+" "
-                        +str(velocityBCs[boundary][1])+" "
-                        +str(velocityBCs[boundary][2])+" )"
+                        valueString = "uniform ( "+str(velocityBCs[boundary][0])+" "+str(velocityBCs[boundary][1])+" "+str(velocityBCs[boundary][2])+" )"
                         control["boundaryField"][boundary]["value"] = valueString
         except IOError:
             error_str = "File  {}/U does not exist"
