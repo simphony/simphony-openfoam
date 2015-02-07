@@ -1,12 +1,13 @@
 """ foam_tokenwrapper module
 
 Wrapper module for OpenFOAM tokens using native c++ interface
-  
+
 """
 from simphony.core.cuba import CUBA
-from simphony.cuds.mesh import Mesh, Point, Face, Edge, Cell
+from simphony.cuds.mesh import Mesh, Point, Face, Cell
 from simphony.core.data_container import DataContainer
 import foamtokeninterface
+
 
 class FoamTokenWrapper(object):
 
@@ -36,12 +37,12 @@ class FoamTokenWrapper(object):
         return foamtokeninterface.getInternalScalarCellValues(name)
 
     def getInternalVectorPointValues(self, name):
-        """ Reads internal point values of vector variable "name".  
+        """ Reads internal point values of vector variable "name"
         """
         return foamtokeninterface.getInternalVectorPointValues(name)
 
     def getInternalVectorCellValues(self, name):
-        """ Reads internal cell values of vector variable "name".  
+        """ Reads internal cell values of vector variable "name"
         """
         return foamtokeninterface.getInternalVectorCellValues(name)
 
@@ -49,83 +50,76 @@ class FoamTokenWrapper(object):
         """
             Get nodal data from OpenFoam
         """
-             
-        if cubaName==CUBA.PRESSURE:            
-            data =self.getInternalScalarPointValues("p")
+
+        if cubaName == CUBA.PRESSURE:
+            data = self.getInternalScalarPointValues("p")
             for point in simphonyMesh.iter_points():
-                point.data.update({CUBA.PRESSURE:data[foamMeshMap[point.uuid]-1]})
+                point.data.update({CUBA.PRESSURE: data[foamMeshMap[point.uuid]-1]})
                 simphonyMesh.update_point(point)
-        elif cubaName==CUBA.VELOCITY:
-            data =self.getInternalVectorPointValues("U")
+        elif cubaName == CUBA.VELOCITY:
+            data = self.getInternalVectorPointValues("U")
             for point in simphonyMesh.iter_points():
-                point.data.update({CUBA.VELOCITY:data[foamMeshMap[point.uuid]-1]})
+                point.data.update({CUBA.VELOCITY: data[foamMeshMap[point.uuid]-1]})
                 simphonyMesh.update_point(point)
         else:
-          raise KeyError("Variable "+cubaName+" transfer not supported yet")
-                    
-    def get_mesh(self,caseName,timeStep):
+            raise KeyError("Variable "+cubaName+" transfer not supported yet")
+
+    def get_mesh(self, caseName, timeStep):
         """ OpenFoam mesh to Simphony mesh
         """
         simphonyMesh = Mesh(caseName)
-        argv=["test","-case",caseName,"-time",timeStep]
-                
+        argv = ["test", "-case", caseName, "-time", timeStep]
+
         self.initArgs(argv)
         self.readMesh()
-        
+
         foamPointCoordinates = foamtokeninterface.getPointCoordinates()
 
-        foamLabelToUuid={}
+        foamLabelToUuid = {}
         pointUuids = []
-        k=1
-        for i in range(0,len(foamPointCoordinates),3):
-            spoint = Point((foamPointCoordinates[i],foamPointCoordinates[i+1],foamPointCoordinates[i+2]))
+        k = 1
+        for i in range(0, len(foamPointCoordinates), 3):
+            spoint = Point((foamPointCoordinates[i], foamPointCoordinates[i+1], foamPointCoordinates[i+2]))
             simphonyMesh.add_point(spoint)
             foamLabelToUuid[spoint.uuid] = k
             pointUuids.append(spoint.uuid)
-            k+=1
-            
+            k += 1
+
         foamFacePoints = foamtokeninterface.getFacePoints()
 
         i = 0
-         
-        while i<len(foamFacePoints):
-
+        while i < len(foamFacePoints):
             k = 1
             points = []
             start = i+1
             end = i+1+foamFacePoints[i]
-            i+=1
-            for j in range(start,end):
+            i += 1
+            for j in range(start, end):
                 points.append(pointUuids[foamFacePoints[j]])
-                i+=1
+                i += 1
             face = Face(points)
             simphonyMesh.add_face(face)
-            foamLabelToUuid[face.uuid]=k
-            k+=1
+            foamLabelToUuid[face.uuid] = k
+            k += 1
 
         foamCellPoints = foamtokeninterface.getCellPoints()
 
         i = 0
-         
-        while i<len(foamCellPoints):
-
+        while i < len(foamCellPoints):
             k = 0
             points = []
             start = i+1
             end = i+1+foamCellPoints[i]
-            i+=1
-            for j in range(start,end):
-#                print i," ",foamCellPoints[j]
-#                point = simphonyMesh.get_point(pointUuids[foamCellPoints[j]])
-#                print point.coordinates
+            i += 1
+            for j in range(start, end):
                 points.append(pointUuids[foamCellPoints[j]])
-                i+=1
-                           
+                i += 1
+
             cell = Cell(points)
             simphonyMesh.add_cell(cell)
             foamLabelToUuid[cell.uuid] = k
-            k=+1
+            k += 1
 
         del pointUuids
-        
+
         return (simphonyMesh, foamLabelToUuid)
