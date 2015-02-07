@@ -11,6 +11,8 @@ from simphony.core.cuba import CUBA
 import shutil
 import logging
 import os
+from PyFoam.Execution.UtilityRunner import UtilityRunner
+
 logger = logging.getLogger(__name__)
 
 
@@ -23,18 +25,21 @@ class FoamControlWrapperTestCase(unittest.TestCase):
         """Test to run pitzDaily example in OpenFoam"
             -to get example working  $FOAM_TUTORIALS/incompressible/simpleFoam/pitzDaily must exist
         """
+        caseName = os.path.join('foam_controlwrapper','tests','pitzDaily')
         try:
             src = os.path.expandvars('$FOAM_TUTORIALS/incompressible/simpleFoam/pitzDaily')
-            dest = os.path.join('foam_controlwrapper','tests','pitzDaily')
-            shutil.copytree(src, dest)
+            
+            shutil.copytree(src, caseName)
         except shutil.Error as e:
             raise shutil.Error('Case directory not copied. Error: %s' % e)
         except OSError as e:
             raise OSError('Case directory not copied. Error: %s' % e)
 
-        
+        blockMesh=UtilityRunner(argv=["blockMesh","-case",caseName],silent=True,logname="blockMesh")
+        blockMesh.start()
+
         foam_controlwrapper = FoamControlWrapper()
-        foam_controlwrapper.CM[CUBA.NAME]=os.path.join('foam_controlwrapper','tests','pitzDaily')
+        foam_controlwrapper.CM[CUBA.NAME]= caseName
 #        foam_controlwrapper.CM[CUBA.SOLVER]="simpleFoam"
         foam_controlwrapper.SP[CUBA.TIME_STEP]=1
         foam_controlwrapper.SP[CUBA.NUMBER_OF_TIME_STEPS]=500
@@ -52,8 +57,10 @@ class FoamControlWrapperTestCase(unittest.TestCase):
                                                 'lowerWall'    : 'zeroGradient',
                                                 'frontAndBack' : 'empty'}
         
-        foam_controlwrapper.run()
-        
+        timeStep = foam_controlwrapper.run()
+      
+        self.assertEqual(timeStep,500)
+
 
 if __name__ == '__main__':
     unittest.main()
