@@ -42,7 +42,7 @@ class FoamControlWrapperTestCase(unittest.TestCase):
         foam_controlwrapper.CM[CUBA.NAME]= caseName
 #        foam_controlwrapper.CM[CUBA.SOLVER]="simpleFoam"
         foam_controlwrapper.SP[CUBA.TIME_STEP]=1
-        foam_controlwrapper.SP[CUBA.NUMBER_OF_TIME_STEPS]=500
+        foam_controlwrapper.SP[CUBA.NUMBER_OF_TIME_STEPS]=100
         foam_controlwrapper.SP[CUBA.DENSITY] = 1.0
         foam_controlwrapper.SP[CUBA.DYNAMIC_VISCOSITY] = 1.0e-5
 # this is just an example. It is not enough for general setting of BC's
@@ -59,7 +59,7 @@ class FoamControlWrapperTestCase(unittest.TestCase):
         
         timeStep = foam_controlwrapper.run()
       
-        self.assertEqual(timeStep,500)
+        self.assertEqual(timeStep,'100')
 
 
 if __name__ == '__main__':
