@@ -20,7 +20,7 @@ class FoamTokenWrapperTestCase(unittest.TestCase):
     def test_internalScalarPointValues(self):
         """Test mesh and point data read from OpenFoam"""
         foam_tokenwrapper = FoamTokenWrapper()
-        caseName = "foam_tokenwrapper/tests/pitzDaily"
+        caseName = os.path.join('foam_tokenwrapper','tests','pitzDaily')
         timeStep = "760"
         (simPhoNyMesh,foamMeshMap) = foam_tokenwrapper.get_mesh(caseName, timeStep)
         
