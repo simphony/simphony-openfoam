@@ -131,7 +131,7 @@ class FoamControlWrapper(object):
             raise ValueError(error_str.format(control)) 
         
 
-        run = ConvergenceRunner(BoundingLogAnalyzer(),argv=[solver,".",case],logname="SimPhoNy",silent=True)
+        run = ConvergenceRunner(BoundingLogAnalyzer(),argv=[solver,".",case],logname="SimPhoNy",silent=False)
         run.start()
         
         return dire.getLast()
