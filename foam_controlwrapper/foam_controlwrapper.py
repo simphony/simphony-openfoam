@@ -33,15 +33,16 @@ class FoamControlWrapper(object):
         endTime = nOfTimeSteps*deltaT
         writeInterval = endTime-startTime
 # parse system/controlDict -file in case directory
+        parFile = os.path.join(case, 'system', 'controlDict')
         try:
-            control = ParsedParameterFile(case+"/system/controlDict")
+            control = ParsedParameterFile(parFile)
             control["startTime"] = startTime
             control["endTime"] = endTime
             control["deltaT"] = deltaT
             control["writeInterval"] = writeInterval
         except IOError:
-            error_str = "File  {}/system/controlDict does not exist"
-            raise ValueError(error_str.format(case))
+            error_str = "File {} does not exist"
+            raise ValueError(error_str.format(parFile))
         try:
             control.writeFile()
         except IOError:
@@ -53,13 +54,14 @@ class FoamControlWrapper(object):
         kinematicViscosity = viscosity/density
 
 # parse constant/transportProperties -file in case directory
+        parFile = os.path.join(case, 'constant', 'transportProperties')
         try:
-            control = ParsedParameterFile(case+"/constant/transportProperties")
+            control = ParsedParameterFile(parFile)
             nu = control["nu"]
             nu[2] = kinematicViscosity
         except IOError:
-            error_str = "File  {}/constant/transportProperties does not exist"
-            raise ValueError(error_str.format(case))
+            error_str = "File {} does not exist"
+            raise ValueError(error_str.format(parFile))
         try:
             control.writeFile()
         except IOError:
@@ -69,8 +71,9 @@ class FoamControlWrapper(object):
         velocityBCs = self.BC[CUBA.VELOCITY]
 
 # parse startTime/U -file in case directory
+        parFile = os.path.join(case, str(startTime), 'U')
         try:
-            control = ParsedParameterFile(case+"/"+str(startTime)+"/U")
+            control = ParsedParameterFile(parFile)
             for boundary in control["boundaryField"]:
                 if boundary in velocityBCs:
                     if velocityBCs[boundary] == "zeroGradient":
@@ -84,8 +87,8 @@ class FoamControlWrapper(object):
                         valueString = "uniform ( "+str(velocityBCs[boundary][0])+" "+str(velocityBCs[boundary][1])+" "+str(velocityBCs[boundary][2])+" )"
                         control["boundaryField"][boundary]["value"] = valueString
         except IOError:
-            error_str = "File  {}/U does not exist"
-            raise ValueError(error_str.format(case+"/"+str(startTime)))
+            error_str = "File {} does not exist"
+            raise ValueError(error_str.format(parFile))
         try:
             control.writeFile()
         except IOError:
@@ -95,8 +98,9 @@ class FoamControlWrapper(object):
         velocityBCs = self.BC[CUBA.PRESSURE]
 
 # parse startTime/p -file in case directory
+        parFile = os.path.join(case, str(startTime), 'p')
         try:
-            control = ParsedParameterFile(case+"/"+str(startTime)+"/p")
+            control = ParsedParameterFile(parFile)
             for boundary in control["boundaryField"]:
                 if boundary in velocityBCs:
                     if velocityBCs[boundary] == "zeroGradient":
@@ -110,8 +114,8 @@ class FoamControlWrapper(object):
                         valueString = "uniform "+str(velocityBCs[boundary])
                         control["boundaryField"][boundary]["value"] = valueString
         except IOError:
-            error_str = "File  {}/p does not exist"
-            raise ValueError(error_str.format(case+"/"+str(startTime)))
+            error_str = "File {} does not exist"
+            raise ValueError(error_str.format(parFile))
         try:
             control.writeFile()
         except IOError:
