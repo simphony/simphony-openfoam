@@ -9,6 +9,7 @@ from PyFoam.Execution.ConvergenceRunner import ConvergenceRunner
 from PyFoam.RunDictionary.SolutionDirectory import SolutionDirectory
 from PyFoam.LogAnalysis.BoundingLogAnalyzer import BoundingLogAnalyzer
 from PyFoam.RunDictionary.ParsedParameterFile import ParsedParameterFile
+import os
 
 
 class FoamControlWrapper(object):
@@ -117,7 +118,9 @@ class FoamControlWrapper(object):
             error_str = "Can't write file with content: {}"
             raise ValueError(error_str.format(control))
 
-        run = ConvergenceRunner(BoundingLogAnalyzer(), argv=[solver, "-case", case], logname="SimPhoNy", silent=True)
+        run = ConvergenceRunner(BoundingLogAnalyzer(), argv=[solver, "-case", case], logname="SimPhoNy", silent=True, noLog=True)
         run.start()
+
+        os.remove('PlyParser_FoamFileParser_parsetab.py')
 
         return dire.getLast()
