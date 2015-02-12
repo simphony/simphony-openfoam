@@ -10,7 +10,6 @@ VERSION = '0.0.1dev'
 
 def write_version_py(filename=None):
 
-
     if filename is None:
         filename = os.path.join(
             os.path.dirname(__file__), 'foam_controlwrapper', 'version.py')
@@ -23,8 +22,6 @@ version = '%s'
     finally:
         fh.close()
 
-
-
 write_version_py()
 
 setup(
@@ -33,4 +30,6 @@ setup(
     author='SimPhoNy FP7 European Project',
     description='Implementation of OpenFoam wrappers',
     long_description=README_TEXT,
-    packages=find_packages())
+    packages=find_packages(),
+    install_requires=['simphony'],
+)
