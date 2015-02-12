@@ -1,7 +1,7 @@
 from simphony.core.cuba import CUBA
-from foam_controlwrapper.foam_controlwrapper import FoamControlWrapper
+from simphony.engine import openfoam
 
-foam_controlwrapper = FoamControlWrapper()
+foam_controlwrapper = openfoam.FoamControlWrapper()
 
 # for OpenFoam the case -directory is given as CUBA.NAME
 foam_controlwrapper.CM[CUBA.NAME] = "foam_controlwrapper/examples/poiseuille"
