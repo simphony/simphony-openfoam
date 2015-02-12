@@ -6,8 +6,7 @@ foam_controlwrapper module functionalities
 """
 
 import unittest
-#from foam_controlwrapper.foam_controlwrapper import FoamControlWrapper
-from simphony.engine import openfoam
+from foam_controlwrapper.foam_controlwrapper import FoamControlWrapper
 from simphony.core.cuba import CUBA
 import shutil
 import logging
@@ -41,7 +40,7 @@ class FoamControlWrapperTestCase(unittest.TestCase):
                                   logname="blockMesh")
         blockMesh.start()
 
-        foam_controlwrapper = openfoam.FoamControlWrapper()
+        foam_controlwrapper = FoamControlWrapper()
         foam_controlwrapper.CM[CUBA.NAME] = caseName
 #        foam_controlwrapper.CM[CUBA.SOLVER] = "simpleFoam"
         foam_controlwrapper.SP[CUBA.TIME_STEP] = 1
