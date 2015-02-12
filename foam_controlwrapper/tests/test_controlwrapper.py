@@ -23,18 +23,21 @@ class FoamControlWrapperTestCase(unittest.TestCase):
 
     def test_pitzDailyRun(self):
         """Test to run pitzDaily example in OpenFoam"
-            -to get example working  $FOAM_TUTORIALS/incompressible/simpleFoam/pitzDaily must exist
         """
         caseName = os.path.join('foam_controlwrapper', 'tests', 'pitzDaily')
         try:
-            src = os.path.expandvars('$FOAM_TUTORIALS/incompressible/simpleFoam/pitzDaily')
+            tutorials = os.path.expandvars('$FOAM_TUTORIALS')
+            src = os.path.join(tutorials, 'incompressible',
+                               'simpleFoam', 'pitzDaily')
             shutil.copytree(src, caseName)
         except shutil.Error as e:
             raise shutil.Error('Case directory not copied. Error: %s' % e)
         except OSError as e:
             raise OSError('Case directory not copied. Error: %s' % e)
 
-        blockMesh = UtilityRunner(argv=["blockMesh", "-case", caseName], silent=True, logname="blockMesh")
+        blockMesh = UtilityRunner(argv=["blockMesh", "-case", caseName],
+                                  silent=True,
+                                  logname="blockMesh")
         blockMesh.start()
 
         foam_controlwrapper = FoamControlWrapper()
@@ -45,16 +48,16 @@ class FoamControlWrapperTestCase(unittest.TestCase):
         foam_controlwrapper.SP[CUBA.DENSITY] = 1.0
         foam_controlwrapper.SP[CUBA.DYNAMIC_VISCOSITY] = 1.0e-5
 # this is just an example. It is not enough for general setting of BC's
-        foam_controlwrapper.BC[CUBA.VELOCITY] = {'inlet'        : (10, 0, 0),
-                                                 'outlet'       : 'zeroGradient', 
-                                                 'upperWall'    : (0, 0, 0),
-                                                 'lowerWall'    : (0, 0, 0),
-                                                 'frontAndBack' : 'empty'}
-        foam_controlwrapper.BC[CUBA.PRESSURE] = {'inlet'        : 'zeroGradient',
-                                                 'outlet'       : 0,
-                                                 'upperWall'    : 'zeroGradient',
-                                                 'lowerWall'    : 'zeroGradient',
-                                                 'frontAndBack' : 'empty'}
+        foam_controlwrapper.BC[CUBA.VELOCITY] = {'inlet': (10, 0, 0),
+                                                 'outlet': 'zeroGradient',
+                                                 'upperWall': (0, 0, 0),
+                                                 'lowerWall': (0, 0, 0),
+                                                 'frontAndBack': 'empty'}
+        foam_controlwrapper.BC[CUBA.PRESSURE] = {'inlet': 'zeroGradient',
+                                                 'outlet': 0,
+                                                 'upperWall': 'zeroGradient',
+                                                 'lowerWall': 'zeroGradient',
+                                                 'frontAndBack': 'empty'}
 
         timeStep = foam_controlwrapper.run()
 

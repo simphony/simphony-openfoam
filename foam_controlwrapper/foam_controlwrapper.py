@@ -77,15 +77,22 @@ class FoamControlWrapper(object):
             for boundary in control["boundaryField"]:
                 if boundary in velocityBCs:
                     if velocityBCs[boundary] == "zeroGradient":
-                        control["boundaryField"][boundary]["type"] = "zeroGradient"
-                        control["boundaryField"][boundary]["value"] = "uniform (0 0 0)"
+                        control["boundaryField"][boundary]["type"] = \
+                            "zeroGradient"
+                        control["boundaryField"][boundary]["value"] = \
+                            "uniform (0 0 0)"
                     elif velocityBCs[boundary] == "empty":
-                        control["boundaryField"][boundary]["type"] = "empty"
-#                        control["boundaryField"][boundary]["value"] = "uniform (0 0 0)"
+                        control["boundaryField"][boundary]["type"] = \
+                            "empty"
                     else:
-                        control["boundaryField"][boundary]["type"] = "fixedValue"
-                        valueString = "uniform ( "+str(velocityBCs[boundary][0])+" "+str(velocityBCs[boundary][1])+" "+str(velocityBCs[boundary][2])+" )"
-                        control["boundaryField"][boundary]["value"] = valueString
+                        control["boundaryField"][boundary]["type"] = \
+                            "fixedValue"
+                        valueString = "uniform ( " \
+                                      + str(velocityBCs[boundary][0]) + " " \
+                                      + str(velocityBCs[boundary][1]) + " " \
+                                      + str(velocityBCs[boundary][2]) + " )"
+                        control["boundaryField"][boundary]["value"] = \
+                            valueString
         except IOError:
             error_str = "File {} does not exist"
             raise ValueError(error_str.format(parFile))
@@ -104,15 +111,19 @@ class FoamControlWrapper(object):
             for boundary in control["boundaryField"]:
                 if boundary in velocityBCs:
                     if velocityBCs[boundary] == "zeroGradient":
-                        control["boundaryField"][boundary]["type"] = "zeroGradient"
-                        control["boundaryField"][boundary]["value"] = "uniform 0"
+                        control["boundaryField"][boundary]["type"] = \
+                            "zeroGradient"
+                        control["boundaryField"][boundary]["value"] = \
+                            "uniform 0"
                     elif velocityBCs[boundary] == "empty":
-                        control["boundaryField"][boundary]["type"] = "empty"
-#                        control["boundaryField"][boundary]["value"] = "uniform 0"
+                        control["boundaryField"][boundary]["type"] = \
+                            "empty"
                     else:
-                        control["boundaryField"][boundary]["type"] = "fixedValue"
+                        control["boundaryField"][boundary]["type"] = \
+                            "fixedValue"
                         valueString = "uniform "+str(velocityBCs[boundary])
-                        control["boundaryField"][boundary]["value"] = valueString
+                        control["boundaryField"][boundary]["value"] = \
+                            valueString
         except IOError:
             error_str = "File {} does not exist"
             raise ValueError(error_str.format(parFile))
@@ -122,7 +133,11 @@ class FoamControlWrapper(object):
             error_str = "Can't write file with content: {}"
             raise ValueError(error_str.format(control))
 
-        run = ConvergenceRunner(BoundingLogAnalyzer(), argv=[solver, "-case", case], logname="SimPhoNy", silent=True, noLog=True)
+        run = ConvergenceRunner(BoundingLogAnalyzer(),
+                                argv=[solver, "-case", case],
+                                logname="SimPhoNy",
+                                silent=True,
+                                noLog=True)
         run.start()
 
         os.remove('PlyParser_FoamFileParser_parsetab.py')
