@@ -5,7 +5,8 @@ from setuptools import setup, find_packages
 with open('README.rst', 'r') as readme:
     README_TEXT = readme.read()
 
-VERSION = '1.0'
+VERSION = '0.001'
+
 
 def write_version_py(filename=None):
 
@@ -32,6 +33,5 @@ setup(
     packages=find_packages(),
     install_requires=['simphony'],
     entry_points={
-        'simphony.engine': ['openfoam = foam_controlwrapper']
-})
-
+        'simphony.engine': ['openfoam = foam_controlwrapper']}
+)
