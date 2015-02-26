@@ -2,11 +2,12 @@ from simphony.core.cuba import CUBA
 from simphony.engine import openfoam
 
 wrapper = openfoam.FoamControlWrapper()
+CUBAExt = openfoam.CUBAExt
 
 # for OpenFoam the case -directory is given as CUBA.NAME
 wrapper.CM[CUBA.NAME] = "foam_controlwrapper/examples/poiseuille"
 
-wrapper.CM[CUBA.GE] = (CUBA.INCOMPRESSIBLE, CUBA.LAMINAR_MODEL)
+wrapper.CM[CUBAExt.GE] = (CUBAExt.INCOMPRESSIBLE, CUBAExt.LAMINAR_MODEL)
 wrapper.SP[CUBA.TIME_STEP] = 1
 wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 1000
 wrapper.SP[CUBA.DENSITY] = 1.0

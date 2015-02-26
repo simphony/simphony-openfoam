@@ -2,3 +2,6 @@
 # when the `openfoam` module is imported.
 from .foam_controlwrapper import FoamControlWrapper
 __all__ = ['FoamControlWrapper']
+from .cuba_extension import CUBAExt
+__all__ = ['CUBAExt']
+

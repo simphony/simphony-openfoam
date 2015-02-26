@@ -3,7 +3,6 @@
 Wrapper module for OpenFOAM control using pyFoam -package
 
 """
-from simphony.core.data_container import DataContainer
 from simphony.core.cuba import CUBA
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
 from PyFoam.Execution.ConvergenceRunner import ConvergenceRunner
@@ -12,6 +11,7 @@ from PyFoam.LogAnalysis.BoundingLogAnalyzer import BoundingLogAnalyzer
 from PyFoam.RunDictionary.ParsedParameterFile import ParsedParameterFile
 import os
 from foam_files import FoamFiles
+from cuba_extension import CUBAExt
 
 
 class FoamControlWrapper(ABCModelingEngine):
@@ -19,11 +19,14 @@ class FoamControlWrapper(ABCModelingEngine):
 
     """
 
+
     def __init__(self):
 
-        self.CM = DataContainer()
-        self.BC = DataContainer()
-        self.SP = DataContainer()
+        # these should be changed to DtaContainer, when CUBAExt keywords
+        # are found in CUBA
+        self.CM = {}
+        self.BC = {}
+        self.SP = {}
 
     def run(self):
         """ run OpenFoam based on CM, BC and SP data
@@ -42,16 +45,16 @@ class FoamControlWrapper(ABCModelingEngine):
 
         case = self.CM[CUBA.NAME]
 
-        GE = self.CM[CUBA.GE]
+        GE = self.CM[CUBAExt.GE]
         solver = "simpleFoam"
-        if CUBA.LAMINAR_MODEL in GE and not(CUBA.VOF in GE):
+        if CUBAExt.LAMINAR_MODEL in GE and not(CUBAExt.VOF in GE):
             solver = "simpleFoam"
         else:
             error_str = "GE does not define supported solver: GE = {}"
             raise NotImplementedError(error_str.format(GE))
 
-        laminar = 'Laminar' if (CUBA.LAMINAR_MODEL in GE) else ''
-        FoamFiles().writeFoamFiles(case, (solver+laminar))
+        turbulent = 'Turbulent' if not (CUBAExt.LAMINAR_MODEL in GE) else ''
+        FoamFiles().writeFoamFiles(case, (solver+turbulent))
 
         dire = SolutionDirectory(case, archive="SimPhoNy")
         dire.clearResults()

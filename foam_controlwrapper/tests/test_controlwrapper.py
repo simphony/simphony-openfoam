@@ -8,6 +8,7 @@ foam_controlwrapper module functionalities
 import unittest
 from foam_controlwrapper.foam_controlwrapper import FoamControlWrapper
 from simphony.core.cuba import CUBA
+from foam_controlwrapper.cuba_extension import CUBAExt
 import shutil
 import logging
 import os
@@ -42,7 +43,8 @@ class FoamControlWrapperTestCase(unittest.TestCase):
 
         foam_controlwrapper = FoamControlWrapper()
         foam_controlwrapper.CM[CUBA.NAME] = caseName
-        foam_controlwrapper.CM[CUBA.GE] = (CUBA.INCOMPRESSIBLE,CUBA.LAMINAR_MODEL)
+        foam_controlwrapper.CM[CUBAExt.GE] = (CUBAExt.INCOMPRESSIBLE,
+                                              CUBAExt.LAMINAR_MODEL)
         foam_controlwrapper.SP[CUBA.TIME_STEP] = 1
         foam_controlwrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 100
         foam_controlwrapper.SP[CUBA.DENSITY] = 1.0
