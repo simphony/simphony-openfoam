@@ -1,10 +1,11 @@
 """ foam_files module
 
-Module for writing OpenFOAM initial files 
+Module for writing OpenFOAM initial files
 
 """
 import os
-from foam_templates import head, dictionaryTemplates, scalarTemplates, vectorTemplates
+from foam_templates import head, dictionaryTemplates
+from foam_templates import scalarTemplates, vectorTemplates
 
 
 class FoamFiles():
@@ -15,7 +16,7 @@ class FoamFiles():
     def createFileContent(self, solver):
         """ create content mapping to files
 
-        """   
+        """
         version = '2.2'
         foamClass = 'dictionary'
         fileContent = {}
@@ -54,7 +55,7 @@ class FoamFiles():
     def createDirectories(self, caseDirectory):
         """ create default directories
 
-        """   
+        """
         directories = ('constant', 'system', '0',
                        os.path.join('constant', 'polyMesh'))
         for dir in directories:
@@ -64,7 +65,7 @@ class FoamFiles():
 
     def writeFoamFiles(self, caseDirectory, solver):
         """ write OpenFOAm -files base on solver attribute to given directory
-        
+
         Parameters
         ----------
         caseDirectory : caseDirectory
@@ -77,7 +78,7 @@ class FoamFiles():
         ------
         Exception when IOError occurs.
 
-        """   
+        """
 
         self.createDirectories(caseDirectory)
         fileContent = self.createFileContent(solver)

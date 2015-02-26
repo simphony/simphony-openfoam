@@ -185,8 +185,8 @@ p               ;
 }
                         """}}
 vectorTemplates = {'simpleFoam':
-                     {os.path.join('0', 'U'):
-                      """
+                   {os.path.join('0', 'U'):
+                    """
 dimensions [ 0 1 -1 0 0 0 0 ];
 
 internalField uniform (0 0 0);
@@ -195,7 +195,7 @@ boundaryField
 {
 
 }
-                      """}}
+                    """}}
 
 scalarTemplates = {'simpleFoam':
                    {os.path.join('0', 'p'):
