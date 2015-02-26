@@ -22,7 +22,7 @@ class FoamControlWrapperTestCase(unittest.TestCase):
         pass
 
     def test_pitzDailyRun(self):
-        """Test to run pitzDaily example in OpenFoam"
+        """Test to run pitzDaily laminar example in OpenFoam"
         """
         caseName = os.path.join('foam_controlwrapper', 'tests', 'pitzDaily')
         try:
@@ -42,13 +42,13 @@ class FoamControlWrapperTestCase(unittest.TestCase):
 
         foam_controlwrapper = FoamControlWrapper()
         foam_controlwrapper.CM[CUBA.NAME] = caseName
-#        foam_controlwrapper.CM[CUBA.SOLVER] = "simpleFoam"
+        foam_controlwrapper.CM[CUBA.GE] = (CUBA.INCOMPRESSIBLE,CUBA.LAMINAR_MODEL)
         foam_controlwrapper.SP[CUBA.TIME_STEP] = 1
         foam_controlwrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 100
         foam_controlwrapper.SP[CUBA.DENSITY] = 1.0
-        foam_controlwrapper.SP[CUBA.DYNAMIC_VISCOSITY] = 1.0e-5
+        foam_controlwrapper.SP[CUBA.DYNAMIC_VISCOSITY] = 1.0
 # this is just an example. It is not enough for general setting of BC's
-        foam_controlwrapper.BC[CUBA.VELOCITY] = {'inlet': (10, 0, 0),
+        foam_controlwrapper.BC[CUBA.VELOCITY] = {'inlet': (0.1, 0, 0),
                                                  'outlet': 'zeroGradient',
                                                  'upperWall': (0, 0, 0),
                                                  'lowerWall': (0, 0, 0),
