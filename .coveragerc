@@ -1,8 +1,8 @@
 [run]
 branch = True
-source = simphony
+source = foam_controlwrapper
 omit = */tests/*
-       */bench/*    
+       */bench/*
 
 [report]
 # Regexes for lines to exclude from consideration
