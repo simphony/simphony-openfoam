@@ -43,8 +43,9 @@ class FoamControlWrapperTestCase(unittest.TestCase):
 
         foam_controlwrapper = FoamControlWrapper()
         foam_controlwrapper.CM[CUBA.NAME] = caseName
-        foam_controlwrapper.CM[CUBAExt.GE] = (CUBAExt.INCOMPRESSIBLE,
-                                              CUBAExt.LAMINAR_MODEL)
+        foam_controlwrapper.CM_extensions[CUBAExt.GE] = \
+            (CUBAExt.INCOMPRESSIBLE,
+             CUBAExt.LAMINAR_MODEL)
         foam_controlwrapper.SP[CUBA.TIME_STEP] = 1
         foam_controlwrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 100
         foam_controlwrapper.SP[CUBA.DENSITY] = 1.0

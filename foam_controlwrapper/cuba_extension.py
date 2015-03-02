@@ -1,5 +1,8 @@
-from enum import IntEnum, unique
+""" Provisional CUBA keywords specific for this revision
 
+"""
+
+from enum import IntEnum, unique
 
 @unique
 class CUBAExt(IntEnum):

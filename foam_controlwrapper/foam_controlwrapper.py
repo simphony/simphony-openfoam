@@ -4,6 +4,7 @@ Wrapper module for OpenFOAM control using pyFoam -package
 
 """
 from simphony.core.cuba import CUBA
+from simphony.core.data_container import DataContainer
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
 from PyFoam.Execution.ConvergenceRunner import ConvergenceRunner
 from PyFoam.RunDictionary.SolutionDirectory import SolutionDirectory
@@ -21,11 +22,12 @@ class FoamControlWrapper(ABCModelingEngine):
 
     def __init__(self):
 
-        # these should be changed to DtaContainer, when CUBAExt keywords
-        # are found in CUBA
-        self.CM = {}
-        self.BC = {}
-        self.SP = {}
+        self.CM = DataContainer()
+        self.BC = DataContainer()
+        self.SP = DataContainer()
+#: to be able to use CUBAExt keywords, which are not in accepted
+#  CUBA keywords this extension to CM is used
+        self.CM_extensions = {}
 
     def run(self):
         """ run OpenFoam based on CM, BC and SP data
@@ -44,7 +46,7 @@ class FoamControlWrapper(ABCModelingEngine):
 
         case = self.CM[CUBA.NAME]
 
-        GE = self.CM[CUBAExt.GE]
+        GE = self.CM_extensions[CUBAExt.GE]
         solver = "simpleFoam"
         if CUBAExt.LAMINAR_MODEL in GE and not(CUBAExt.VOF in GE):
             solver = "simpleFoam"

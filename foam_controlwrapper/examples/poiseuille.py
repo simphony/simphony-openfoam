@@ -7,7 +7,8 @@ CUBAExt = openfoam.CUBAExt
 # for OpenFoam the case -directory is given as CUBA.NAME
 wrapper.CM[CUBA.NAME] = "foam_controlwrapper/examples/poiseuille"
 
-wrapper.CM[CUBAExt.GE] = (CUBAExt.INCOMPRESSIBLE, CUBAExt.LAMINAR_MODEL)
+wrapper.CM_extensions[CUBAExt.GE] = (CUBAExt.INCOMPRESSIBLE,
+                                     CUBAExt.LAMINAR_MODEL)
 wrapper.SP[CUBA.TIME_STEP] = 1
 wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 1000
 wrapper.SP[CUBA.DENSITY] = 1.0
