@@ -12,4 +12,4 @@ python check_PyFoam.py
 # make and setup interface library
 cd openfoam-interface
 wmake libso
-python setup install
+python setup.py install
