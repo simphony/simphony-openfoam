@@ -1,0 +1,3 @@
+simphonyInterface.C
+
+LIB = $(FOAM_USER_LIBBIN)/libfoaminterface

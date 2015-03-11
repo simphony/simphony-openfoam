@@ -13,3 +13,4 @@ class CUBAExt(IntEnum):
     VOF = 3
     LAMINAR_MODEL = 4
     GE = 5
+    PATCH_TYPE = 6
