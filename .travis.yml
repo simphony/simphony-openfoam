@@ -10,7 +10,7 @@ before_install:
   - sudo apt-get install libhdf5-serial-dev
   - pip install numpy # pyfoam requires numpy
   - . /opt/openfoam222/etc/bashrc
-  - ./install_external.sh
+  - . /install_external.sh
   # (1) Install cython and numexpr externally because the requirements does
   #     not work with them
   # (2) Pytables breaks with latest Cython
