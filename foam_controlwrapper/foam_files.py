@@ -10,6 +10,7 @@ from simphony.core.cuba import CUBA
 from PyFoam.RunDictionary.SolutionDirectory import SolutionDirectory
 from PyFoam.RunDictionary.ParsedParameterFile import ParsedParameterFile
 
+
 class FoamFiles():
 
     def __init__(self):
@@ -94,7 +95,6 @@ class FoamFiles():
                 raise ValueError(error_str.format(os.path.join(caseDirectory,
                                                                file)))
 
-
     def modify_files(self, case, SP, BC):
 
         dire = SolutionDirectory(case, archive="SimPhoNy")
@@ -106,8 +106,9 @@ class FoamFiles():
         deltaT = SP[CUBA.TIME_STEP]
         endTime = nOfTimeSteps*deltaT
         writeInterval = endTime-startTime
-        # if empty type boundary condition is used this must be 
-        # changed in foam's polyMesh/boundary file to the same type (default type is patch)
+        # if empty type boundary condition is used this must be
+        # changed in foam's polyMesh/boundary file to the same
+        # type (default type is patch)
         pressureBCs = BC[CUBA.PRESSURE]
         emptyBoundaries = []
         for boundary in pressureBCs:
@@ -125,17 +126,17 @@ class FoamFiles():
                     print type(filb)
                     if filb == boundary:
                         boundaries[bi+1]['type'] = "empty"
-                        break;
+                        break
 
         except IOError:
             error_str = "File {} does not exist"
-            raise ValueError(error_str.format(parFile))
+            raise ValueError(error_str.format(boundaryFile))
         try:
             control.writeFile()
         except IOError:
             error_str = "Can't write file with content: {}"
             raise ValueError(error_str.format(control))
-       
+
 # parse system/controlDict -file in case directory
         parFile = os.path.join(case, 'system', 'controlDict')
         try:

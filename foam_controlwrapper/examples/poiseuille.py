@@ -1,3 +1,7 @@
+"""Example to solve 2D poiseuille flow
+
+"""
+
 from simphony.core.cuba import CUBA
 from simphony.engine import openfoam
 from simphony.io.h5_cuds import H5CUDS
@@ -28,7 +32,6 @@ wrapper.BC[CUBA.PRESSURE] = {'boundary0': 'zeroGradient',
                              'boundary3': 'empty'}
 
 mesh_file = H5CUDS.open(os.path.join(name, 'poiseuille.cuds'))
-
 mesh_from_file = mesh_file.get_mesh(name)
 
 print "Mesh name ", mesh_from_file.name
@@ -39,6 +42,4 @@ print "Case directory ", mesh_inside_wrapper.path
 
 # run returns the latest time
 lastTime = wrapper.run()
-
-
 print "Timesteps taken ", lastTime
