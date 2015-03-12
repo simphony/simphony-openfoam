@@ -64,8 +64,11 @@ class FoamControlWrapper(ABCModelingEngine):
 
         GE = self.CM_extensions[CUBAExt.GE]
         solver = "simpleFoam"
-        if CUBAExt.LAMINAR_MODEL in GE and not(CUBAExt.VOF in GE):
-            solver = "simpleFoam"
+        if CUBAExt.LAMINAR_MODEL in GE:
+            if CUBAExt.VOF in GE:
+                solver = "interFoam"
+            else:
+                solver = "simpleFoam"
         else:
             error_str = "GE does not define supported solver: GE = {}"
             raise NotImplementedError(error_str.format(GE))

@@ -184,6 +184,11 @@ class FoamMesh(ABCMesh):
                         foamface.getPointData(self.name,
                                               self._uuidToFoamLabel[uuid],
                                               dataName)
+                elif dataName == "alpha1":
+                    point.data[CUBA.VOLUME_FRACTION] = \
+                        foamface.getPointData(self.name,
+                                              self._uuidToFoamLabel[uuid],
+                                              dataName)
                 elif dataName == "":
                     pass
                 else:
@@ -318,6 +323,11 @@ class FoamMesh(ABCMesh):
                         foamface.getCellData(self.name,
                                              self._uuidToFoamLabel[uuid],
                                              dataName)
+                elif dataName == "alpha1":
+                    cell.data[CUBA.VOLUME_FRACTION] = \
+                        foamface.getCellData(self.name,
+                                             self._uuidToFoamLabel[uuid],
+                                             dataName)
                 elif dataName == "":
                     pass
                 else:
@@ -389,6 +399,12 @@ class FoamMesh(ABCMesh):
                                       self._uuidToFoamLabel[point.uid],
                                       dataName,
                                       point.data[data])
+            elif data == CUBA.VOLUME_FRACTION:
+                dataName = "alpha1"
+                foamface.setPointData(self.name,
+                                      self._uuidToFoamLabel[point.uid],
+                                      dataName,
+                                      point.data[data])
             elif data == CUBA.VELOCITY:
                 dataName = "U"
                 foamface.setPointVectorData(self.name,
@@ -442,6 +458,12 @@ class FoamMesh(ABCMesh):
         for data in face.data:
             if data == CUBA.PRESSURE:
                 dataName = "p"
+                foamface.setFaceData(self.name,
+                                     self._uuidToFoamLabel[face.uid],
+                                     dataName,
+                                     face.data[data])
+            elif data == CUBA.VOLUME_FRACTION:
+                dataName = "alpha1"
                 foamface.setFaceData(self.name,
                                      self._uuidToFoamLabel[face.uid],
                                      dataName,
@@ -544,6 +566,15 @@ class FoamMesh(ABCMesh):
                 if dataName in dataNames:
                     self.create_dummy_celldata(dataName,
                                                [0, 2, -2, 0, 0, 0, 0])
+                else:
+                    foamface.setCellData(self.name,
+                                         self._uuidToFoamLabel[cell.uid],
+                                         dataName, cell.data[data])
+            elif data == CUBA.VOLUME_FRACTION:
+                dataName = "alpha1"
+                if dataName in dataNames:
+                    self.create_dummy_celldata(dataName,
+                                               [0, 0, 0, 0, 0, 0, 0])
                 else:
                     foamface.setCellData(self.name,
                                          self._uuidToFoamLabel[cell.uid],
