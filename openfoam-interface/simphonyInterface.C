@@ -266,7 +266,6 @@ std::vector<int> order_cellPoints(int i, const fvMesh & mesh, const labelListLis
 	  
 	  if (ffl == -1) {
 	    retValue[k]=conPoints[j];
-	    //Info<< "RetValue " << k << " "<<retValue[k]<<endl;
 	    k++;
 	    break;
 	  }
@@ -321,6 +320,7 @@ std::vector<int> get_ordered_points(const fvMesh & mesh, const labelListList &ce
     FatalErrorIn("simphonyInterface:foam_getCellPoints()") << except <<exit(FatalError);
     throw;
   */
+
 
   const cellModel& cellModel = *(cellModeller::lookup(type));
 
@@ -611,6 +611,28 @@ void foam_updateCellData(std::string name, std::string dataname)
   }
   
 
+bool same_points(const face &f1, const face &f2, const pointField & points)
+{
+  const pointField &points1 = f1.points(points);
+  const pointField &points2 = f2.points(points);
+
+  int i=0;
+  forAll(points1, pi1)
+    {
+      forAll(points2,pi2)
+	{
+	  if (pi1 == pi2) {
+	    i++;
+	    break;
+	  }
+	}
+    }
+  
+  return (i == points1.size());
+
+}
+
+
 void foam_addMesh(std::string name,std::vector<double> points,  std::vector<int> cellpoints, std::vector<int> facepoints, std::vector<std::string> patchnames, std::vector<int> patchfaces)
 {  
   
@@ -625,19 +647,8 @@ void foam_addMesh(std::string name,std::vector<double> points,  std::vector<int>
     pind+=1;
   }
 
-  //  Info <<"points added " <<endl;
+  //   Info <<"points added " <<endl;
  
-  // find out number of faces
-    
-  int nOfFaces = 0;
-  std::vector<int>::size_type find = 0;
-  
-  while (find < facepoints.size()-1) {
-    nOfFaces+= 1;
-    find+=facepoints[find]+1;
-  }
-  //    Info <<"number faces " << nOfFaces <<endl;
-
   // find out number of cells
   
   int nOfCells = 0;
@@ -664,13 +675,10 @@ void foam_addMesh(std::string name,std::vector<double> points,  std::vector<int>
     
     labelList labels(cellpoints[cind]);
     int np = cellpoints[cind];
-    //    Info << "cell "<<icell<<" points "<<np<<endl;;
     for (int i=0;i<np;i++) 
       {
 	cind+=1;
-	labels[i] = cellpoints[cind];
-	//	Info << " Point "<<i<<" "<<labels[i]<<endl;
-	
+	labels[i] = cellpoints[cind];	
       }
     
     if (np == 3)
@@ -680,7 +688,6 @@ void foam_addMesh(std::string name,std::vector<double> points,  std::vector<int>
     else if (np == 6)
       cellShapes[icell] = cellShape(prism,labels);
     else if (np == 8) {
-      //      Info <<"cell shape hex :cell "<<icell<<endl;
       cellShapes[icell] = cellShape(hex,labels);
     }
     else {
@@ -698,16 +705,7 @@ void foam_addMesh(std::string name,std::vector<double> points,  std::vector<int>
   Foam::Time *runTime = runTimes[name];
  
   Foam::word regionName = Foam::fvMesh::defaultRegion;
-  Foam::IOobject meshIO(
-			regionName,
-			runTime->constant(),
-			*runTime,
-			Foam::IOobject::NO_READ ,
-			Foam::IOobject::NO_WRITE,
-			false                // this to not register object
-			);
-  
-
+ 
   const word defaultFacesName = "defaultFaces";
   word defaultFacesType = emptyPolyPatch::typeName;
 
@@ -731,7 +729,7 @@ void foam_addMesh(std::string name,std::vector<double> points,  std::vector<int>
       patchNames[patchI] = word(patchnames[patchI]);
     }
 
-  // Add information to dictionary
+  // Add patch information to dictionary
   forAll(patchNames, patchI)
     {
       if (!patchDicts.set(patchI))
@@ -742,28 +740,41 @@ void foam_addMesh(std::string name,std::vector<double> points,  std::vector<int>
       patchDicts[patchI].add("type", "patch", false);
     }
  
-
-  PtrList<dictionary> nullDicts;
-
-  autoPtr<fvMesh> meshPtr
-    (
-     new fvMesh
-     (
-      meshIO, 
-      xferCopy(foamPoints),
-      cellShapes,
-      faceListList(0),
-      wordList(0),    // boundaryPatchNames
-      nullDicts,    // boundaryPatchTypes
-      defaultFacesName,
-      defaultFacesType));
+ // find out number of faces
+    
+  int nOfFaces = 0;
+  std::vector<int>::size_type find = 0;
   
+  while (find < facepoints.size()-1) {
+    nOfFaces+= 1;
+    find+=facepoints[find]+1;
+  }
+  Info <<"number faces " << nOfFaces <<endl;
 
-  const fvMesh& pmesh = meshPtr;
+  // create faces list
+  faceList faces(nOfFaces);
+  find = 0;
+  nOfFaces = 0;
+  
+  while (find < facepoints.size()-1) {
+    int nOfPoints=facepoints[find];
+    faces[nOfFaces].setSize(nOfPoints);
+    for (int i=0;i<nOfPoints;i++)
+      {
+	find+=1;
+	label pl(facepoints[find]);
+	faces[nOfFaces][i] = pl;
+      }
+    nOfFaces+= 1;
+    find+=1;
+  }
+ 
+
+
+  // make patch face lists
 
   faceListList patchFaces(patchnames.size());
 
-  const faceList &faces = pmesh.faces();
   std::vector<int>::size_type pi = 0;
   
   std::vector<std::string>::size_type paind =0;
@@ -776,7 +787,6 @@ void foam_addMesh(std::string name,std::vector<double> points,  std::vector<int>
       for (int i=0;i<nf;i++)
 	{
 	  pi+=1;
-	  
 	  flist[i] = faces[patchfaces[pi]];
 	}
       patchFaces[paind]=flist;
@@ -784,7 +794,8 @@ void foam_addMesh(std::string name,std::vector<double> points,  std::vector<int>
       paind+=1;
       
     }
-  
+
+
  const Foam::IOobject  meshregIO(
 			regionName,
 			runTime->constant(),
