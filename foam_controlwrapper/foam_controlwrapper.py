@@ -90,7 +90,6 @@ class FoamControlWrapper(ABCModelingEngine):
         dire = foamFiles.modify_files(case, self.SP, self.BC, 
                                       solver, self.SP_extensions)
 
-        print "solver ",solver, " ",case
         # run case
         run = ConvergenceRunner(BoundingLogAnalyzer(),
                                 argv=[solver, "-case", case],

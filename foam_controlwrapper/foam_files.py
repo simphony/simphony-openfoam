@@ -31,7 +31,7 @@ class FoamFiles():
             heading = head.format(version=version, foamclass=foamClass,
                                   location=location, foamobject=foamObject)
             fileContent[foamFile] = heading +\
-                                    dictionaryTemplates[solver][foamFile]
+                dictionaryTemplates[solver][foamFile]
 
         for foamFile in scalarTemplates[solver]:
             foamClass = 'volScalarField'
@@ -93,7 +93,7 @@ class FoamFiles():
                 raise ValueError(error_str.format(os.path.join(caseDirectory,
                                                                file)))
 
-    def modify_files(self, case, SP, BC, solver,SPExt):
+    def modify_files(self, case, SP, BC, solver, SPExt):
 
         dire = SolutionDirectory(case, archive="SimPhoNy")
         dire.clearResults()
@@ -160,9 +160,13 @@ class FoamFiles():
                 control = ParsedParameterFile(parFile)
 #                control["twoPhase"]["phase1"] = SPExt[CUBAExt.PHASE_LIST][0]
 #                control["twoPhase"]["phase2"] = SPExt[CUBAExt.PHASE_LIST][1]
-                
-                control["phase1"]["nu"][2] = viscosity[SPExt[CUBAExt.PHASE_LIST][0]]/density[SPExt[CUBAExt.PHASE_LIST][0]]
-                control["phase2"]["nu"][2] = viscosity[SPExt[CUBAExt.PHASE_LIST][1]]/density[SPExt[CUBAExt.PHASE_LIST][1]]
+
+                control["phase1"]["nu"][2] = \
+                    viscosity[SPExt[CUBAExt.PHASE_LIST][0]] / \
+                    density[SPExt[CUBAExt.PHASE_LIST][0]]
+                control["phase2"]["nu"][2] = \
+                    viscosity[SPExt[CUBAExt.PHASE_LIST][1]] / \
+                    density[SPExt[CUBAExt.PHASE_LIST][1]]
             except IOError:
                 error_str = "File {} does not exist"
                 raise ValueError(error_str.format(parFile))
@@ -189,9 +193,8 @@ class FoamFiles():
             except IOError:
                 error_str = "Can't write file with content: {}"
                 raise ValueError(error_str.format(control))
-        
-            
-        velocityBCs = BC[CUBA.VELOCITY]                    
+
+        velocityBCs = BC[CUBA.VELOCITY]
         # parse startTime/U -file in case directory
         parFile = os.path.join(case, str(startTime), 'U')
         try:
@@ -200,21 +203,21 @@ class FoamFiles():
                 control["boundaryField"][boundary] = {}
                 if velocityBCs[boundary] == "zeroGradient":
                     control["boundaryField"][boundary]["type"] = \
-                                                                 "zeroGradient"
+                        "zeroGradient"
                     control["boundaryField"][boundary]["value"] = \
-                                                                  "uniform (0 0 0)"
+                        "uniform (0 0 0)"
                 elif velocityBCs[boundary] == "empty":
                     control["boundaryField"][boundary]["type"] = \
-                                                                 "empty"
+                        "empty"
                 else:
                     control["boundaryField"][boundary]["type"] = \
-                                                                 "fixedValue"
+                        "fixedValue"
                     valueString = "uniform ( " \
                                   + str(velocityBCs[boundary][0]) + " " \
                                   + str(velocityBCs[boundary][1]) + " " \
                                   + str(velocityBCs[boundary][2]) + " )"
                     control["boundaryField"][boundary]["value"] = \
-                                                                  valueString
+                        valueString
         except IOError:
             error_str = "File {} does not exist"
             raise ValueError(error_str.format(parFile))
@@ -223,7 +226,6 @@ class FoamFiles():
         except IOError:
             error_str = "Can't write file with content: {}"
             raise ValueError(error_str.format(control))
-
 
         pressureBCs = BC[CUBA.PRESSURE]
 
@@ -245,7 +247,7 @@ class FoamFiles():
                     control["boundaryField"][boundary]["type"] = \
                         "fixedFluxPressure"
                     control["boundaryField"][boundary]["value"] = \
-                        "uniform 0"                    
+                        "uniform 0"
                 elif pressureBCs[boundary] == "empty":
                     control["boundaryField"][boundary]["type"] = \
                         "empty"
@@ -264,7 +266,6 @@ class FoamFiles():
             error_str = "Can't write file with content: {}"
             raise ValueError(error_str.format(control))
 
- 
         if solver == "interFoam":
             volumeFractionBCs = BC[CUBA.VOLUME_FRACTION]
             # parse startTime/alpha1 -file in case directory
@@ -275,18 +276,19 @@ class FoamFiles():
                     control["boundaryField"][boundary] = {}
                     if pressureBCs[boundary] == "zeroGradient":
                         control["boundaryField"][boundary]["type"] = \
-                                                                     "zeroGradient"
+                            "zeroGradient"
                         control["boundaryField"][boundary]["value"] = \
-                                                                      "uniform 0"
+                            "uniform 0"
                     elif pressureBCs[boundary] == "empty":
                         control["boundaryField"][boundary]["type"] = \
-                                                                     "empty"
+                            "empty"
                     else:
                         control["boundaryField"][boundary]["type"] = \
-                                                                     "fixedValue"
-                        valueString = "uniform "+str(volumeFractionBCs[boundary])
+                            "fixedValue"
+                        valueString = "uniform " + \
+                                      str(volumeFractionBCs[boundary])
                         control["boundaryField"][boundary]["value"] = \
-                                                                      valueString
+                            valueString
             except IOError:
                 error_str = "File {} does not exist"
                 raise ValueError(error_str.format(parFile))
@@ -295,6 +297,5 @@ class FoamFiles():
             except IOError:
                 error_str = "Can't write file with content: {}"
                 raise ValueError(error_str.format(control))
-
 
         return dire

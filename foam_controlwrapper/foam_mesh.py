@@ -106,8 +106,10 @@ class FoamMesh(ABCMesh):
                     if type(puid) is not numpy.string_:
                         facePoints.append(self._uuidToFoamLabel[puid])
                     else:
-                        facePoints.append(self._uuidToFoamLabel[uuid.UUID(puid, version=4)])
-                        
+                        facePoints.append(
+                            self._uuidToFoamLabel[uuid.UUID(puid,
+                                                            version=4)])
+
             # make points coordinate list
             pointCoordinates = []
             for point in mesh.iter_points():
@@ -122,8 +124,10 @@ class FoamMesh(ABCMesh):
                     if type(puid) is not numpy.string_:
                         cellPoints.append(self._uuidToFoamLabel[puid])
                     else:
-                        cellPoints.append(self._uuidToFoamLabel[uuid.UUID(puid, version=4)])
-                        
+                        cellPoints.append(
+                            self._uuidToFoamLabel[uuid.UUID(puid,
+                                                            version=4)])
+
             # make patch information
             patchNames = []
             patchFaces = []
@@ -141,7 +145,6 @@ class FoamMesh(ABCMesh):
             # this to have controlDict file for mesh definition
             FoamFiles().write_default_files(self.path, 'simpleFoam')
             # init objectRegistry and map to mesh name
-            print os.path.abspath(os.path.join(self.path,os.pardir))
             foamface.init(name, os.path.abspath(os.path.join(self.path,
                                                              os.pardir)))
             # add mesh to objectRegisty
@@ -328,8 +331,8 @@ class FoamMesh(ABCMesh):
                 elif dataName == "U":
                     cell.data[CUBA.VELOCITY] = \
                         foamface.getCellVectorData(self.name,
-                                             self._uuidToFoamLabel[uuid],
-                                             dataName)
+                                                   self._uuidToFoamLabel[uuid],
+                                                   dataName)
                 elif dataName == "alpha1":
                     cell.data[CUBA.VOLUME_FRACTION] = \
                         foamface.getCellData(self.name,
@@ -579,10 +582,8 @@ class FoamMesh(ABCMesh):
             elif data == CUBA.VOLUME_FRACTION:
                 dataName = "alpha1"
                 if dataName not in dataNames:
-                    print "creating dummydata"
                     self.create_dummy_celldata(dataName,
                                                [0, 0, 0, 0, 0, 0, 0])
-                print self._uuidToFoamLabel[cell.uid]," ",cell.data[data]
                 foamface.setCellData(self.name,
                                      self._uuidToFoamLabel[cell.uid],
                                      dataName, cell.data[data])
