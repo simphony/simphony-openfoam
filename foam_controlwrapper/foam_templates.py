@@ -215,7 +215,7 @@ simulationType  laminar;
                         """
 RASModel        laminar;
 
-turbulence      on;
+turbulence      off;
 
 printCoeffs     on;
 
@@ -367,7 +367,7 @@ fluxRequired
                         """}}
 
 vectorTemplates = {'simpleFoam':
-                   {os.path.join('0', 'U'):
+                   {'U':
                     """
 dimensions [ 0 1 -1 0 0 0 0 ];
 
@@ -379,7 +379,7 @@ boundaryField
 }
                     """},
                    'interFoam':
-                   {os.path.join('0', 'U'):
+                   {'U':
                     """
 dimensions [ 0 1 -1 0 0 0 0 ];
 
@@ -393,7 +393,7 @@ boundaryField
                     """}}
 
 scalarTemplates = {'simpleFoam':
-                   {os.path.join('0', 'p'):
+                   {'p':
                     """
 dimensions [ 0 2 -2 0 0 0 0 ];
 
@@ -405,7 +405,7 @@ boundaryField
 }
                     """},
                    'interFoam':
-                   {os.path.join('0', 'p_rgh'):
+                   {'p_rgh':
                     """
 dimensions [ 0 2 -2 0 0 0 0 ];
 
@@ -417,7 +417,19 @@ boundaryField
 }
 
                     """,
-                    os.path.join('0', 'alpha1'):
+                    'p':
+                    """
+dimensions [ 0 2 -2 0 0 0 0 ];
+
+internalField uniform 0;
+
+boundaryField
+{
+
+}
+
+                    """,
+                    'alpha1':
                     """
 dimensions [ 0 0 0 0 0 0 0 ];
 

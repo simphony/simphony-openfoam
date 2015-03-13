@@ -77,14 +77,12 @@ class FoamControlWrapper(ABCModelingEngine):
         turbulent = 'Turbulent' if not (CUBAExt.LAMINAR_MODEL in GE) else ''
 
         foamFiles = FoamFiles()
-        # write default files based on solver
+        # write default files based on solver (not field data files)
         templateName = solver + turbulent
         foamFiles.write_default_files(case, templateName)
 
         # write first mesh from foams objectRegistry to disk
         mesh.write()
-        # write data linked to mesh
-        mesh.write_data()
 
         # modify control and boundary data files based on SP and BC
         dire = foamFiles.modify_files(case, self.SP, self.BC,
@@ -103,9 +101,6 @@ class FoamControlWrapper(ABCModelingEngine):
             os.remove('PlyParser_FoamFileParser_parsetab.py')
         if os.path.exists('PlyParser_FoamFileParser_parsetab.pyc'):
             os.remove('PlyParser_FoamFileParser_parsetab.pyc')
-
-        # update data linked to mesh
-        mesh.update_data()
 
         return dire.getLast()
 

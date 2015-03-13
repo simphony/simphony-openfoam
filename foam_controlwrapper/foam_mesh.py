@@ -11,6 +11,8 @@ from simphony.cuds.mesh import Point, Face, Cell
 import simphony.core.data_container as dc
 from foam_files import FoamFiles
 import simphonyfoaminterface as foamface
+from foam_templates import head
+from foam_templates import scalarTemplates, vectorTemplates
 import tempfile
 import os
 import numpy
@@ -49,6 +51,7 @@ class FoamMesh(ABCMesh):
     def __init__(self, name, mesh=None, path=None):
         self.name = name
         self.data = dc.DataContainer()
+        self.time = str(0)
         self._uuidToFoamLabel = {}
         self._foamCellLabelToUuid = {}
         self._foamFaceLabelToUuid = {}
@@ -181,30 +184,6 @@ class FoamMesh(ABCMesh):
             coords = foamface.getPointCoordinates(self.name,
                                                   self._uuidToFoamLabel[uuid])
             point = Point(coords, uuid)
-
-            dataNames = foamface.getPointDataNames(self.name)
-            for dataName in dataNames:
-                if dataName == "p":
-                    point.data[CUBA.PRESSURE] = \
-                        foamface.getPointData(self.name,
-                                              self._uuidToFoamLabel[uuid],
-                                              dataName)
-                elif dataName == "U":
-                    point.data[CUBA.VELOCITY] = \
-                        foamface.getPointData(self.name,
-                                              self._uuidToFoamLabel[uuid],
-                                              dataName)
-                elif dataName == "alpha1":
-                    point.data[CUBA.VOLUME_FRACTION] = \
-                        foamface.getPointData(self.name,
-                                              self._uuidToFoamLabel[uuid],
-                                              dataName)
-                elif dataName == "":
-                    pass
-                else:
-                    error_str = "Data named "+dataName+" not supported"
-                    raise NotImplementedError(error_str)
-
             return point
         except KeyError:
             error_str = "Trying to get an non-existing point with uuid: {}"
@@ -266,24 +245,6 @@ class FoamMesh(ABCMesh):
             puids = [self._foamPointLabelToUuid[lbl] for lbl in pointLabels]
             face = Face(puids, uuid)
 
-            dataNames = foamface.getFaceDataNames(self.name)
-            for dataName in dataNames:
-                if dataName == "p":
-                    face.data[CUBA.PRESSURE] = \
-                        foamface.getFaceData(self.name,
-                                             self._uuidToFoamLabel[uuid],
-                                             dataName)
-                elif dataName == "U":
-                    face.data[CUBA.VELOCITY] = \
-                        foamface.getFaceData(self.name,
-                                             self._uuidToFoamLabel[uuid],
-                                             dataName)
-                elif dataName == "":
-                    pass
-                else:
-                    error_str = "Data named "+dataName+" not supported"
-                    raise NotImplementedError(error_str)
-
             return face
         except KeyError:
             error_str = "Trying to get an non-existing edge with uuid: {}"
@@ -320,24 +281,34 @@ class FoamMesh(ABCMesh):
             puids = [self._foamPointLabelToUuid[lbl] for lbl in pointLabels]
             cell = Cell(puids, uuid)
 
-            dataNames = foamface.getCellDataNames(self.name)
-            dataNames += foamface.getCellVectorDataNames(self.name)
+            foamFiles = FoamFiles()
+            dataNames = foamFiles.get_cell_data_names(self.path,
+                                                      self.time)
             for dataName in dataNames:
                 if dataName == "p":
                     cell.data[CUBA.PRESSURE] = \
-                        foamface.getCellData(self.name,
-                                             self._uuidToFoamLabel[uuid],
-                                             dataName)
+                        foamFiles.get_cell_data(self.path,
+                                                self.time,
+                                                dataName,
+                                                self._uuidToFoamLabel[uuid])
+                elif dataName == "p_rgh":
+                    cell.data[CUBA.PRESSURE] = \
+                        foamFiles.get_cell_data(self.path,
+                                                self.time,
+                                                dataName,
+                                                self._uuidToFoamLabel[uuid])
                 elif dataName == "U":
                     cell.data[CUBA.VELOCITY] = \
-                        foamface.getCellVectorData(self.name,
-                                                   self._uuidToFoamLabel[uuid],
-                                                   dataName)
+                        foamFiles.get_cell_data(self.path,
+                                                self.time,
+                                                dataName,
+                                                self._uuidToFoamLabel[uuid])
                 elif dataName == "alpha1":
                     cell.data[CUBA.VOLUME_FRACTION] = \
-                        foamface.getCellData(self.name,
-                                             self._uuidToFoamLabel[uuid],
-                                             dataName)
+                       foamFiles.get_cell_data(self.path,
+                                               self.time,
+                                               dataName,
+                                               self._uuidToFoamLabel[uuid])
                 elif dataName == "":
                     pass
                 else:
@@ -402,29 +373,6 @@ class FoamMesh(ABCMesh):
                                      self._uuidToFoamLabel[point.uid],
                                      point.coordinates)
 
-        for data in point.data:
-            if data == CUBA.PRESSURE:
-                dataName = "p"
-                foamface.setPointData(self.name,
-                                      self._uuidToFoamLabel[point.uid],
-                                      dataName,
-                                      point.data[data])
-            elif data == CUBA.VOLUME_FRACTION:
-                dataName = "alpha1"
-                foamface.setPointData(self.name,
-                                      self._uuidToFoamLabel[point.uid],
-                                      dataName,
-                                      point.data[data])
-            elif data == CUBA.VELOCITY:
-                dataName = "U"
-                foamface.setPointVectorData(self.name,
-                                            self._uuidToFoamLabel[point.uid],
-                                            dataName,
-                                            point.data[data])
-            else:
-                error_str = "Data named "+data+" not supported"
-                raise NotImplementedError(error_str)
-
     def update_edge(self, edge):
         message = 'Edge update not supported yet'
         raise NotImplementedError(message)
@@ -465,50 +413,8 @@ class FoamMesh(ABCMesh):
                                self._uuidToFoamLabel[face.uid],
                                face.points)
 
-        for data in face.data:
-            if data == CUBA.PRESSURE:
-                dataName = "p"
-                foamface.setFaceData(self.name,
-                                     self._uuidToFoamLabel[face.uid],
-                                     dataName,
-                                     face.data[data])
-            elif data == CUBA.VOLUME_FRACTION:
-                dataName = "alpha1"
-                foamface.setFaceData(self.name,
-                                     self._uuidToFoamLabel[face.uid],
-                                     dataName,
-                                     face.data[data])
-            elif data == CUBA.VELOCITY:
-                dataName = "U"
-                foamface.setFaceVectorData(self.name,
-                                           self._uuidToFoamLabel[face.uid],
-                                           dataName,
-                                           face.data[data])
-            else:
-                error_str = "Data named "+data+" not supported"
-                raise NotImplementedError(error_str)
-
-    def create_dummy_celldata(self, data_name, dimensionset):
-        """Created dummy cell data to OpenFoams objectRegistry
-
-        Parameters
-        ----------
-        data_name : str
-            Name of data to be created
-        dimensionset : tuple
-            Data dimensionset
-
-        """
-
-        nCells = foamface.getCellCount(self.name)
-        values = [0.0 for item in range(nCells)]
-        foamface.setAllCellData(self.name,
-                                data_name,
-                                dimensionset,
-                                values)
-
     def create_dummy_cellvectordata(self, data_name, dimensionset):
-        """Created dummy cell vector data to OpenFoams objectRegistry
+        """Created dummy cell vector data
 
         Parameters
         ----------
@@ -519,12 +425,65 @@ class FoamMesh(ABCMesh):
 
         """
 
+        version = '2.2'
         nCells = foamface.getCellCount(self.name)
         values = [(0.0, 0.0, 0.0) for item in range(nCells)]
-        foamface.setAllCellVectorData(self.name,
+        solver = 'interFoam'
+        foamFile = os.path.join(self.time, data_name)
+        foamClass = 'volVectorField'
+        location = '\"' + os.path.dirname(foamFile) + '\"'
+        foamObject = os.path.basename(foamFile)
+        heading = head.format(version=version, foamclass=foamClass,
+                              location=location, foamobject=foamObject)
+        fileContent = heading + vectorTemplates[solver][data_name]
+        try:
+            f = open(os.path.join(self.path, self.time, data_name), 'w')
+            f.write(fileContent)
+            f.close()
+        except IOError:
+            error_str = "Can't write file: {}"
+            raise ValueError(error_str.format(os.path.join(self.path,
+                                                           self.time,
+                                                           data_name)))
+        FoamFiles().set_all_cell_data(self.path, self.time,
                                       data_name,
-                                      dimensionset,
-                                      (values))
+                                      values, 'vector')
+
+    def create_dummy_celldata(self, data_name, dimensionset):
+        """Created dummy cell data
+
+        Parameters
+        ----------
+        data_name : str
+            Name of data to be created
+        dimensionset : tuple
+            Data dimensionset
+
+        """
+
+        version = '2.2'
+        nCells = foamface.getCellCount(self.name)
+        values = [0.0 for item in range(nCells)]
+        solver = 'interFoam'
+        foamFile = os.path.join(self.time, data_name)
+        foamClass = 'volScalarField'
+        location = '\"' + os.path.dirname(foamFile) + '\"'
+        foamObject = os.path.basename(foamFile)
+        heading = head.format(version=version, foamclass=foamClass,
+                              location=location, foamobject=foamObject)
+        fileContent = heading + scalarTemplates[solver][data_name]
+        try:
+            f = open(os.path.join(self.path, self.time, data_name), 'w')
+            f.write(fileContent)
+            f.close()
+        except IOError:
+            error_str = "Can't write file: {}"
+            raise ValueError(error_str.format(os.path.join(self.path,
+                                                           self.time,
+                                                           data_name)))
+        FoamFiles().set_all_cell_data(self.path, self.time,
+                                      data_name,
+                                      values, 'scalar')
 
     def update_cell(self, cell):
         """ Updates the information of a cell.
@@ -568,34 +527,46 @@ class FoamMesh(ABCMesh):
 
 # test if data exists and if not create (must be changed in the future,
 # while not efficient to make this in cell level)
-        dataNames = foamface.getCellDataNames(self.name)
-        dataNames += foamface.getCellVectorDataNames(self.name)
+        foamFiles = FoamFiles()
+        dataNames = foamFiles.get_cell_data_names(self.path,
+                                                  self.time)
+
         for data in cell.data:
             if data == CUBA.PRESSURE:
                 dataName = "p"
                 if dataName not in dataNames:
                     self.create_dummy_celldata(dataName,
                                                [0, 2, -2, 0, 0, 0, 0])
-                foamface.setCellData(self.name,
-                                     self._uuidToFoamLabel[cell.uid],
-                                     dataName, cell.data[data])
+                foamFiles.set_cell_data(self.path, self.time,
+                                        dataName,
+                                        self._uuidToFoamLabel[cell.uid],
+                                        cell.data[data], 'scalar')
+                dataName = "p_rgh"
+                if dataName not in dataNames:
+                    self.create_dummy_celldata(dataName,
+                                               [0, 2, -2, 0, 0, 0, 0])
+                foamFiles.set_cell_data(self.path, self.time,
+                                        dataName,
+                                        self._uuidToFoamLabel[cell.uid],
+                                        cell.data[data], 'scalar')
             elif data == CUBA.VOLUME_FRACTION:
                 dataName = "alpha1"
                 if dataName not in dataNames:
                     self.create_dummy_celldata(dataName,
                                                [0, 0, 0, 0, 0, 0, 0])
-                foamface.setCellData(self.name,
-                                     self._uuidToFoamLabel[cell.uid],
-                                     dataName, cell.data[data])
+                foamFiles.set_cell_data(self.path, self.time,
+                                        dataName,
+                                        self._uuidToFoamLabel[cell.uid],
+                                        cell.data[data], 'scalar')
             elif data == CUBA.VELOCITY:
                 dataName = "U"
                 if dataName not in dataNames:
                     self.create_dummy_cellvectordata(dataName,
                                                      [0, 1, -1, 0, 0, 0, 0])
-                foamface.setCellVectorData(self.name,
-                                           self._uuidToFoamLabel[cell.uid],
-                                           dataName,
-                                           cell.data[data])
+                foamFiles.set_cell_data(self.path, self.time,
+                                        dataName,
+                                        self._uuidToFoamLabel[cell.uid],
+                                        tuple(cell.data[data]), 'vector')
             elif data == "":
                 pass
             else:
@@ -764,34 +735,6 @@ class FoamMesh(ABCMesh):
         """
 
         foamface.writeMesh(self.name)
-
-    def write_data(self):
-        """ Writes mesh related data from OpenFOAM's objectRegistry to disk
-
-        """
-
-        # currently only cell data is written
-        dataNames = foamface.getCellDataNames(self.name)
-        for dataName in dataNames:
-            if dataName != '':
-                foamface.writeCellData(self.name, dataName)
-        dataNames = foamface.getCellVectorDataNames(self.name)
-        for dataName in dataNames:
-            if dataName != '':
-                foamface.writeCellVectorData(self.name, dataName)
-
-    def update_data(self):
-        """ Updates mesh related data from disk to OpenFOAM's objectRegistry
-
-        """
-
-# currently only cell data is updated
-        dataNames = foamface.getCellDataNames(self.name)
-        for dataName in dataNames:
-            foamface.updateCellData(self.name, dataName)
-        dataNames = foamface.getCellVectorDataNames(self.name)
-        for dataName in dataNames:
-            foamface.updateCellVectorData(self.name, dataName)
 
     def generate_uuidmapping(self, nPoints, nEdges, nFaces, nCells):
         '''generate uuid mapping assuming continuous ordering of mesh objects

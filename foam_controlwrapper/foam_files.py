@@ -5,7 +5,6 @@ Module for writing and modifying OpenFOAM files
 """
 import os
 from foam_templates import head, dictionaryTemplates
-from foam_templates import scalarTemplates, vectorTemplates
 from simphony.core.cuba import CUBA
 from cuba_extension import CUBAExt
 from PyFoam.RunDictionary.SolutionDirectory import SolutionDirectory
@@ -33,24 +32,6 @@ class FoamFiles():
             fileContent[foamFile] = heading +\
                 dictionaryTemplates[solver][foamFile]
 
-        for foamFile in scalarTemplates[solver]:
-            foamClass = 'volScalarField'
-            location = '\"' + os.path.dirname(foamFile) + '\"'
-            foamObject = os.path.basename(foamFile)
-            heading = head.format(version=version, foamclass=foamClass,
-                                  location=location, foamobject=foamObject)
-            fileContent[foamFile] = heading +\
-                scalarTemplates[solver][foamFile]
-
-        for foamFile in vectorTemplates[solver]:
-            foamClass = 'volVectorField'
-            location = '\"' + os.path.dirname(foamFile) + '\"'
-            foamObject = os.path.basename(foamFile)
-            heading = head.format(version=version, foamclass=foamClass,
-                                  location=location, foamobject=foamObject)
-            fileContent[foamFile] = heading +\
-                vectorTemplates[solver][foamFile]
-
         return fileContent
 
     def create_directories(self, caseDirectory):
@@ -65,7 +46,7 @@ class FoamFiles():
                 os.makedirs(directory)
 
     def write_default_files(self, caseDirectory, solver):
-        """ write default OpenFOAm -files base on solver attribute to given directory
+        """ write default OpenFOAM -files base on solver attribute to given directory
 
         Parameters
         ----------
@@ -299,3 +280,91 @@ class FoamFiles():
                 raise ValueError(error_str.format(control))
 
         return dire
+
+    def set_all_cell_data(self, path, time_name, data_name,
+                          values, value_type):
+
+        try:
+            dir_name = os.path.join(path, time_name)
+            control = ParsedParameterFile(os.path.join(dir_name, data_name))
+
+            field_str = 'nonuniform List<' + value_type + '>\n'
+            field_str += str(len(values)) + '\n' + '(' + '\n'
+            for value in values:
+                field_str += str(value).replace(',', '') + '\n'
+            field_str += ')'
+
+            control['internalField'] = field_str
+
+        except IOError:
+            error_str = "Can't read file: {}"
+            raise ValueError(error_str.format(os.path.join(dir_name,
+                                                           data_name)))
+        try:
+            control.writeFile()
+        except IOError:
+            error_str = "Can't write file: {}"
+            raise ValueError(error_str.format(os.path.join(dir_name,
+                                                           data_name)))
+
+    def set_cell_data(self, path, time_name,
+                      data_name, label, value, value_type):
+
+        try:
+            dir_name = os.path.join(path, time_name)
+            control = ParsedParameterFile(os.path.join(dir_name, data_name))
+
+            values = control['internalField']
+            values[label] = value
+
+            field_str = 'nonuniform List<' + value_type + '>\n'
+            field_str += str(len(values.val)) + '\n' + '(' + '\n'
+            for value in values:
+                field_str += str(value).replace(',', '') + '\n'
+            field_str += ')'
+
+            control['internalField'] = field_str
+
+        except IOError:
+            error_str = "Can't read file: {}"
+            raise ValueError(error_str.format(os.path.join(dir_name,
+                                                           data_name)))
+        try:
+            control.writeFile()
+        except IOError:
+            error_str = "Can't write file: {}"
+            raise ValueError(error_str.format(os.path.join(dir_name,
+                                                           data_name)))
+
+    def get_all_cell_data(self, path, time_name, data_name):
+
+        try:
+            dir_name = os.path.join(path, time_name)
+            control = ParsedParameterFile(os.path.join(dir_name, data_name))
+
+            values = control['internalField']
+            return values.val
+
+        except IOError:
+            error_str = "Can't read file: {}"
+            raise ValueError(error_str.format(os.path.join(dir_name,
+                                                           data_name)))
+
+    def get_cell_data(self, path, time_name, data_name, label):
+
+        try:
+            dir_name = os.path.join(path, time_name)
+            control = ParsedParameterFile(os.path.join(dir_name, data_name))
+
+            values = control['internalField']
+            return values.val[label]
+
+        except IOError:
+            error_str = "Can't read file: {}"
+            raise ValueError(error_str.format(os.path.join(dir_name,
+                                                           data_name)))
+
+    def get_cell_data_names(self, path, time_name):
+
+        dir_name = os.path.join(path, time_name)
+        return [f for f in os.listdir(dir_name)]

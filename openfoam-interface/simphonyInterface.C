@@ -347,7 +347,7 @@ std::vector<int> foam_getCellPoints(std::string name, int label)
   const faceList &facePoints = mesh.faces();
 
   return order_cellPoints(label, mesh, cellPoints, cellFaces, facePoints, pointFaces, pointPoints);
-//  return get_ordered_points(mesh, cellPoints, cellFaces, label);
+
 }
 
 
@@ -426,12 +426,12 @@ std::vector<std::string> foam_getCellVectorDataNames(std::string name)
 }
 
 
-volVectorField find_vectorData(std::string name,std::string dataname)
+const volVectorField & find_vectorData(std::string name,std::string dataname)
 {
   return runTimes[name]->db().lookupObject<volVectorField>(word(dataname)); 
 }
    
-volScalarField find_scalarData(std::string name,std::string dataname)
+const volScalarField & find_scalarData(std::string name,std::string dataname)
 {
   return runTimes[name]->db().lookupObject<volScalarField>(word(dataname));  
 }
@@ -440,13 +440,13 @@ volScalarField find_scalarData(std::string name,std::string dataname)
 
 double foam_getCellData(std::string name, int label,std::string dataname)
 {
-  volScalarField field = find_scalarData(name,dataname);
+  const volScalarField & field = find_scalarData(name,dataname);
   return field[label];
 }
 
 std::vector<double> foam_getCellVectorData(std::string name, int label,std::string dataname)
 {
-  volVectorField field = find_vectorData(name,dataname);
+  const volVectorField & field = find_vectorData(name,dataname);
 
   std::vector<double> values(3);
   values[0] = field[label].x(); 
@@ -541,7 +541,7 @@ std::vector<int> foam_getFacePoints(std::string name)
 std::vector<double> foam_getCellVectorData(std::string name, std::string dataname)
 {
 
-  volVectorField vect = find_vectorData(name,dataname);
+  const volVectorField & vect = find_vectorData(name,dataname);
   std::vector<double> retValue(3*vect.size()); 
   int k=0;
   for(int i=0;i<vect.size();i++) 
@@ -558,7 +558,7 @@ std::vector<double> foam_getCellVectorData(std::string name, std::string datanam
 
 std::vector<double> foam_getCellData(std::string name, std::string dataname)
 {
-  volScalarField scal = find_scalarData(name,dataname);
+  const volScalarField & scal = find_scalarData(name,dataname);
   std::vector<double> retValue(scal.size()); 
   for(int i=0;i<scal.size();i++) 
     {
@@ -749,7 +749,7 @@ void foam_addMesh(std::string name,std::vector<double> points,  std::vector<int>
     nOfFaces+= 1;
     find+=facepoints[find]+1;
   }
-  Info <<"number faces " << nOfFaces <<endl;
+  //  Info <<"number faces " << nOfFaces <<endl;
 
   // create faces list
   faceList faces(nOfFaces);
@@ -915,108 +915,36 @@ void foam_setFaceVectorData(std::string name, std::string dataname, std::vector<
 
 void foam_setCellData(std::string name, int label,std::string dataname,double value)
 {    
+  std::string except = "not implemented";
+  FatalErrorIn("simphonyInterface:foam_setCellData") << except <<exit(FatalError);
+  throw;
 
-  volScalarField field = find_scalarData(name,dataname);
-
-  field[label] = value;
 }
 
 
 
-void foam_setCellVectorData(std::string name, int label,std::string dataname,std::vector<double> values)
+void foam_setCellVectorData(std::string name, int label,std::string dataname,std::vector<double> newvalues)
 {
-  volVectorField field = find_vectorData(name, dataname);
-  
-  vector newValues(values[0],values[1],values[2]);
-
-  field[label] = newValues;
+  std::string except = "not implemented";
+  FatalErrorIn("simphonyInterface:foam_setCellVectorData") << except <<exit(FatalError);
+  throw;
 
 }
+
 
 void foam_setCellData(std::string name, std::string dataname, std::vector<int> dimensionset, std::vector<double> values) 
   {
-    Foam::Time *runTime = runTimes[name];
-    const fvMesh & mesh = runTime->db().parent().lookupObject<fvMesh>(Foam::fvMesh::defaultRegion); 
-
-
-    word scalarName(dataname);
-    const scalar mass = dimensionset[0];
-    const scalar length = dimensionset[1];
-    const scalar time = dimensionset[2];
-    const scalar temperature = dimensionset[3];
-    const scalar moles = dimensionset[4];
-    const scalar current = dimensionset[5];
-    const scalar luminousIntensity = dimensionset[6];
-    dimensionSet dimension(mass, length, time, temperature, moles, current, luminousIntensity);
-
-    volScalarField *scal = new  volScalarField 
-       (
-        IOobject
-        (
-            scalarName,
-            runTime->timeName(),
-            *runTime,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE,
-	    true                
-        ),
-        mesh,
-        dimension
-    );
-
-
-    for (std::vector<double>::size_type i=0;i<values.size();i++)
-    {
-      (*scal)[i] = values[i];
-    }
- // Transfer ownership of this object to the objectRegistry
- 
-    scal->store(scal);
+  std::string except = "not implemented";
+  FatalErrorIn("simphonyInterface:foam_setCellData") << except <<exit(FatalError);
+  throw;
 
   } 
 
 void foam_setCellVectorData(std::string name, std::string dataname, std::vector<int> dimensionset, std::vector<double> values) 
   {
-
-    Foam::Time *runTime = runTimes[name];
-    const fvMesh & mesh = runTime->db().parent().lookupObject<fvMesh>(Foam::fvMesh::defaultRegion);
-
-    word vectorName(dataname);
-    const scalar mass = dimensionset[0];
-    const scalar length = dimensionset[1];
-    const scalar time = dimensionset[2];
-    const scalar temperature = dimensionset[3];
-    const scalar moles = dimensionset[4];
-    const scalar current = dimensionset[5];
-    const scalar luminousIntensity = dimensionset[6];
-    dimensionSet dimension(mass, length, time, temperature, moles, current, luminousIntensity);
-
-    volVectorField *vect = new volVectorField 
-    (
-        IOobject
-        (
-            vectorName,
-            runTime->timeName(),
-            *runTime,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE,
-	    true                 // this to register object
-        ),
-        mesh,
-        dimension
-    );
-
-    int k=0;
-    for (std::vector<double>::size_type i=0;i<values.size();i+=3)
-    { 
-      vector newValues(values[i],values[i+1],values[i+2]);
-      (*vect)[k] = newValues;
-      k++;
-    }
-
-// Transfer ownership of this object to the objectRegistry
-
-    vect->store(vect);
+  std::string except = "not implemented";
+  FatalErrorIn("simphonyInterface:foam_setCellVectorData") << except <<exit(FatalError);
+  throw;
 
   } 
 
@@ -1040,13 +968,13 @@ void foam_deleteMesh(std::string name)
 
 void foam_writeCellData(std::string name,std::string dataname)
 {
-  volScalarField field = find_scalarData(name,dataname);
+  const volScalarField & field = find_scalarData(name,dataname);
   field.write();
 }
 
 void foam_writeCellVectorData(std::string name,std::string dataname)
 {
-  volVectorField field = find_vectorData(name,dataname);
+  const volVectorField & field = find_vectorData(name,dataname);
   field.write();
 }
 
