@@ -7,6 +7,7 @@ import os
 from foam_templates import head, dictionaryTemplates
 from foam_templates import scalarTemplates, vectorTemplates
 from simphony.core.cuba import CUBA
+from cuba_extension import CUBAExt
 from PyFoam.RunDictionary.SolutionDirectory import SolutionDirectory
 from PyFoam.RunDictionary.ParsedParameterFile import ParsedParameterFile
 
@@ -23,35 +24,32 @@ class FoamFiles():
         version = '2.2'
         foamClass = 'dictionary'
         fileContent = {}
-        for solver in dictionaryTemplates:
-            for foamFile in dictionaryTemplates[solver]:
-                foamClass = 'dictionary'
-                location = '\"' + os.path.dirname(foamFile) + '\"'
-                foamObject = os.path.basename(foamFile)
-                heading = head.format(version=version, foamclass=foamClass,
-                                      location=location, foamobject=foamObject)
-                fileContent[foamFile] = heading +\
-                    dictionaryTemplates[solver][foamFile]
+        for foamFile in dictionaryTemplates[solver]:
+            foamClass = 'dictionary'
+            location = '\"' + os.path.dirname(foamFile) + '\"'
+            foamObject = os.path.basename(foamFile)
+            heading = head.format(version=version, foamclass=foamClass,
+                                  location=location, foamobject=foamObject)
+            fileContent[foamFile] = heading +\
+                                    dictionaryTemplates[solver][foamFile]
 
-        for solver in scalarTemplates:
-            for foamFile in scalarTemplates[solver]:
-                foamClass = 'volScalarField'
-                location = '\"' + os.path.dirname(foamFile) + '\"'
-                foamObject = os.path.basename(foamFile)
-                heading = head.format(version=version, foamclass=foamClass,
-                                      location=location, foamobject=foamObject)
-                fileContent[foamFile] = heading +\
-                    scalarTemplates[solver][foamFile]
+        for foamFile in scalarTemplates[solver]:
+            foamClass = 'volScalarField'
+            location = '\"' + os.path.dirname(foamFile) + '\"'
+            foamObject = os.path.basename(foamFile)
+            heading = head.format(version=version, foamclass=foamClass,
+                                  location=location, foamobject=foamObject)
+            fileContent[foamFile] = heading +\
+                scalarTemplates[solver][foamFile]
 
-        for solver in vectorTemplates:
-            for foamFile in vectorTemplates[solver]:
-                foamClass = 'volVectorField'
-                location = '\"' + os.path.dirname(foamFile) + '\"'
-                foamObject = os.path.basename(foamFile)
-                heading = head.format(version=version, foamclass=foamClass,
-                                      location=location, foamobject=foamObject)
-                fileContent[foamFile] = heading +\
-                    vectorTemplates[solver][foamFile]
+        for foamFile in vectorTemplates[solver]:
+            foamClass = 'volVectorField'
+            location = '\"' + os.path.dirname(foamFile) + '\"'
+            foamObject = os.path.basename(foamFile)
+            heading = head.format(version=version, foamclass=foamClass,
+                                  location=location, foamobject=foamObject)
+            fileContent[foamFile] = heading +\
+                vectorTemplates[solver][foamFile]
 
         return fileContent
 
@@ -95,7 +93,7 @@ class FoamFiles():
                 raise ValueError(error_str.format(os.path.join(caseDirectory,
                                                                file)))
 
-    def modify_files(self, case, SP, BC):
+    def modify_files(self, case, SP, BC, solver,SPExt):
 
         dire = SolutionDirectory(case, archive="SimPhoNy")
         dire.clearResults()
@@ -119,11 +117,9 @@ class FoamFiles():
         try:
             control = ParsedParameterFile(boundaryFile, boundaryDict=True)
             boundaries = control.content
-            print boundaries
             for boundary in emptyBoundaries:
                 for bi in range(len(boundaries)):
                     filb = boundaries[bi]
-                    print type(filb)
                     if filb == boundary:
                         boundaries[bi+1]['type'] = "empty"
                         break
@@ -154,7 +150,7 @@ class FoamFiles():
             error_str = "Can't write file with content: {}"
             raise ValueError(error_str.format(control))
 
-        if CUBAExt.VOF:
+        if solver == "interFoam":
             density = SP[CUBA.DENSITY]
             viscosity = SP[CUBA.DYNAMIC_VISCOSITY]
 
@@ -162,11 +158,11 @@ class FoamFiles():
             parFile = os.path.join(case, 'constant', 'transportProperties')
             try:
                 control = ParsedParameterFile(parFile)
-#                control["twoPhase"]["phase1"] = SP[CUBAExt.PHASE_LIST][0]
-#                control["twoPhase"]["phase2"] = SP[CUBAExt.PHASE_LIST][1]
+#                control["twoPhase"]["phase1"] = SPExt[CUBAExt.PHASE_LIST][0]
+#                control["twoPhase"]["phase2"] = SPExt[CUBAExt.PHASE_LIST][1]
                 
-                control["phase1"]["nu"][2] = viscosity[SP[CUBAExt.PHASE_LIST][0]]/density[SP[CUBAExt.PHASE_LIST][0]]
-                control["phase2"]["nu"][2] = viscosity[SP[CUBAExt.PHASE_LIST][1]]/density[SP[CUBAExt.PHASE_LIST][1]]
+                control["phase1"]["nu"][2] = viscosity[SPExt[CUBAExt.PHASE_LIST][0]]/density[SPExt[CUBAExt.PHASE_LIST][0]]
+                control["phase2"]["nu"][2] = viscosity[SPExt[CUBAExt.PHASE_LIST][1]]/density[SPExt[CUBAExt.PHASE_LIST][1]]
             except IOError:
                 error_str = "File {} does not exist"
                 raise ValueError(error_str.format(parFile))
@@ -188,11 +184,11 @@ class FoamFiles():
             except IOError:
                 error_str = "File {} does not exist"
                 raise ValueError(error_str.format(parFile))
-                try:
-                    control.writeFile()
-                except IOError:
-                    error_str = "Can't write file with content: {}"
-                    raise ValueError(error_str.format(control))
+            try:
+                control.writeFile()
+            except IOError:
+                error_str = "Can't write file with content: {}"
+                raise ValueError(error_str.format(control))
         
             
         velocityBCs = BC[CUBA.VELOCITY]                    
@@ -233,7 +229,7 @@ class FoamFiles():
 
 # parse startTime/p -file in case directory
         pname = 'p'
-        if CUBAExt.VOF:
+        if solver == "interFoam":
             pname = 'p_rgh'
         parFile = os.path.join(case, str(startTime), pname)
         try:
@@ -269,7 +265,7 @@ class FoamFiles():
             raise ValueError(error_str.format(control))
 
  
-        if CUBAExt.VOF:
+        if solver == "interFoam":
             volumeFractionBCs = BC[CUBA.VOLUME_FRACTION]
             # parse startTime/alpha1 -file in case directory
             parFile = os.path.join(case, str(startTime), 'alpha1')

@@ -1141,7 +1141,7 @@ extern "C" {
     int label;
     char *dataname;
     PyObject *values;
-    if (!PyArg_ParseTuple(args,"sisO!",&name,&label,&dataname,&values,&PyList_Type)) {
+    if (!PyArg_ParseTuple(args,"sisO!",&name,&label,&dataname,&PyList_Type,&values)) {
       PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
       return NULL;
     }

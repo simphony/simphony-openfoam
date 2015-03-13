@@ -15,3 +15,5 @@ class CUBAExt(IntEnum):
     GE = 5
     PATCH_TYPE = 6
     PHASE_LIST = 7
+    MAX_COURANT_NUMBER = 8
+    SURFACE_TENSION = 9

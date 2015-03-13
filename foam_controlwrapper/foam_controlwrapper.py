@@ -27,8 +27,9 @@ class FoamControlWrapper(ABCModelingEngine):
         self.BC = DataContainer()
         self.SP = DataContainer()
 #: to be able to use CUBAExt keywords, which are not in accepted
-#  CUBA keywords this extension to CM is used
+#  CUBA keywords these extensions to CM and SP is used
         self.CM_extensions = {}
+        self.SP_extensions = {}
 
     def run(self):
         """ run OpenFoam based on CM, BC and SP data
@@ -74,10 +75,11 @@ class FoamControlWrapper(ABCModelingEngine):
             raise NotImplementedError(error_str.format(GE))
 
         turbulent = 'Turbulent' if not (CUBAExt.LAMINAR_MODEL in GE) else ''
-
+        
         foamFiles = FoamFiles()
         # write default files based on solver
-        foamFiles.write_default_files(case, (solver+turbulent))
+        templateName = solver + turbulent
+        foamFiles.write_default_files(case, templateName)
 
         # write first mesh from foams objectRegistry to disk
         mesh.write()
@@ -85,8 +87,10 @@ class FoamControlWrapper(ABCModelingEngine):
         mesh.write_data()
 
         # modify control and boundary data files based on SP and BC
-        dire = foamFiles.modify_files(case, self.SP, self.BC)
+        dire = foamFiles.modify_files(case, self.SP, self.BC, 
+                                      solver, self.SP_extensions)
 
+        print "solver ",solver, " ",case
         # run case
         run = ConvergenceRunner(BoundingLogAnalyzer(),
                                 argv=[solver, "-case", case],
