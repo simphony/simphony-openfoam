@@ -148,6 +148,7 @@ class FoamFiles():
                 control["phase2"]["nu"][2] = \
                     viscosity[SPExt[CUBAExt.PHASE_LIST][1]] / \
                     density[SPExt[CUBAExt.PHASE_LIST][1]]
+                control["sigma"][2] = SPExt[CUBAExt.SURFACE_TENSION]
             except IOError:
                 error_str = "File {} does not exist"
                 raise ValueError(error_str.format(parFile))

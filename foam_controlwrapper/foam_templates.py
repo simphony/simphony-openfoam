@@ -204,6 +204,7 @@ phase2
     transportModel  Newtonian;
     nu              nu [ 0 2 -1 0 0 0 0 ] 1.48e-05;
 }
+sigma           sigma [ 1 0 -2 0 0 0 0 ] 0.07;
 
                         """,
                         os.path.join('constant', 'turbulenceProperties'):
