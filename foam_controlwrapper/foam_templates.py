@@ -18,7 +18,7 @@ FoamFile
 }}
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-         """
+       """
 
 dictionaryTemplates = {'simpleFoam':
                        {os.path.join('constant', 'transportProperties'):

@@ -75,7 +75,7 @@ class FoamControlWrapper(ABCModelingEngine):
             raise NotImplementedError(error_str.format(GE))
 
         turbulent = 'Turbulent' if not (CUBAExt.LAMINAR_MODEL in GE) else ''
-        
+
         foamFiles = FoamFiles()
         # write default files based on solver
         templateName = solver + turbulent
@@ -87,7 +87,7 @@ class FoamControlWrapper(ABCModelingEngine):
         mesh.write_data()
 
         # modify control and boundary data files based on SP and BC
-        dire = foamFiles.modify_files(case, self.SP, self.BC, 
+        dire = foamFiles.modify_files(case, self.SP, self.BC,
                                       solver, self.SP_extensions)
 
         # run case
