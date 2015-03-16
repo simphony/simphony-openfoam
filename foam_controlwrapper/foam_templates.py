@@ -6,7 +6,7 @@ Templates for OpenFOAM -files
 import os
 
 head = \
-       """
+    """
 
 FoamFile
 {{
@@ -18,7 +18,7 @@ FoamFile
 }}
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-       """
+    """
 
 dictionaryTemplates = {'simpleFoam':
                        {os.path.join('constant', 'transportProperties'):

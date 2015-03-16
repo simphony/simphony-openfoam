@@ -305,10 +305,10 @@ class FoamMesh(ABCMesh):
                                                 self._uuidToFoamLabel[uuid])
                 elif dataName == "alpha1":
                     cell.data[CUBA.VOLUME_FRACTION] = \
-                       foamFiles.get_cell_data(self.path,
-                                               self.time,
-                                               dataName,
-                                               self._uuidToFoamLabel[uuid])
+                        foamFiles.get_cell_data(self.path,
+                                                self.time,
+                                                dataName,
+                                                self._uuidToFoamLabel[uuid])
                 elif dataName == "":
                     pass
                 else:
