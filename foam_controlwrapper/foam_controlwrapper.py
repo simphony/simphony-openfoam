@@ -242,19 +242,19 @@ class FoamControlWrapper(ABCModelingEngine):
     def write_foamcelldata(self, name, dataname):
         simphonyfoaminterface.writeCellData(name, dataname)
 
-    def add_particle_container(self, particle_container):
+    def add_particles(self, particle_container):
         message = 'FoamWrapper does not handle particle container'
         raise NotImplementedError(message)
 
-    def get_particle_container(self, name):
+    def get_particles(self, name):
         message = 'FoamWrapper does not handle particle container'
         raise NotImplementedError(message)
 
-    def delete_particle_container(self, name):
+    def delete_particles(self, name):
         message = 'FoamWrapper does not handle particle container'
         raise NotImplementedError(message)
 
-    def iter_particle_containers(self, names=None):
+    def iter_particles(self, names=None):
         message = 'FoamWrapper does not handle particle container'
         raise NotImplementedError(message)
 
