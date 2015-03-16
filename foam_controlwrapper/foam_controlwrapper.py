@@ -77,9 +77,10 @@ class FoamControlWrapper(ABCModelingEngine):
         turbulent = 'Turbulent' if not (CUBAExt.LAMINAR_MODEL in GE) else ''
 
         foamFiles = FoamFiles()
-        # write default files based on solver (not field data files)
+        # write default files based on solver
+        # (not field data files if exists)
         templateName = solver + turbulent
-        foamFiles.write_default_files(case, templateName)
+        foamFiles.write_default_files(case, templateName, mesh.time, True)
 
         # write first mesh from foams objectRegistry to disk
         mesh.write()

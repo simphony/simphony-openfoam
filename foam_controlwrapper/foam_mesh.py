@@ -146,7 +146,8 @@ class FoamMesh(ABCMesh):
                 raise ValueError(error_str.format(mesh.name))
 
             # this to have controlDict file for mesh definition
-            FoamFiles().write_default_files(self.path, 'simpleFoam')
+            FoamFiles().write_default_files(self.path, 'simpleFoam',
+                                            self.time, False)
             # init objectRegistry and map to mesh name
             foamface.init(name, os.path.abspath(os.path.join(self.path,
                                                              os.pardir)))
@@ -481,6 +482,7 @@ class FoamMesh(ABCMesh):
             raise ValueError(error_str.format(os.path.join(self.path,
                                                            self.time,
                                                            data_name)))
+
         FoamFiles().set_all_cell_data(self.path, self.time,
                                       data_name,
                                       values, 'scalar')

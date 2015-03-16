@@ -5,6 +5,7 @@ Module for writing and modifying OpenFOAM files
 """
 import os
 from foam_templates import head, dictionaryTemplates
+from foam_templates import scalarTemplates, vectorTemplates
 from simphony.core.cuba import CUBA
 from cuba_extension import CUBAExt
 from PyFoam.RunDictionary.SolutionDirectory import SolutionDirectory
@@ -16,7 +17,7 @@ class FoamFiles():
     def __init__(self):
         pass
 
-    def create_file_content(self, solver):
+    def create_file_content(self, path, solver, time, writeFields):
         """ create content mapping to files
 
         """
@@ -32,6 +33,33 @@ class FoamFiles():
             fileContent[foamFile] = heading +\
                 dictionaryTemplates[solver][foamFile]
 
+        if writeFields:
+            for foamFile in scalarTemplates[solver]:
+                if not os.path.exists(os.path.join(path, time, foamFile)):
+                    foamClass = 'volScalarField'
+                    location = '\"' + time + '\"'
+                    foamObject = os.path.basename(foamFile)
+                    heading = head.format(version=version,
+                                          foamclass=foamClass,
+                                          location=location,
+                                          foamobject=foamObject)
+                    file_name = os.path.join(time, foamFile)
+                    fileContent[file_name] = heading +\
+                        scalarTemplates[solver][foamFile]
+
+            for foamFile in vectorTemplates[solver]:
+                if not os.path.exists(os.path.join(path, time, foamFile)):
+                    foamClass = 'volVectorField'
+                    location = '\"' + time + '\"'
+                    foamObject = os.path.basename(foamFile)
+                    heading = head.format(version=version,
+                                          foamclass=foamClass,
+                                          location=location,
+                                          foamobject=foamObject)
+                    file_name = os.path.join(time, foamFile)
+                    fileContent[file_name] = heading +\
+                        vectorTemplates[solver][foamFile]
+
         return fileContent
 
     def create_directories(self, caseDirectory):
@@ -45,8 +73,10 @@ class FoamFiles():
             if not os.path.exists(directory):
                 os.makedirs(directory)
 
-    def write_default_files(self, caseDirectory, solver):
-        """ write default OpenFOAM -files base on solver attribute to given directory
+    def write_default_files(self, caseDirectory, solver,
+                            time, writeFields):
+        """ write default OpenFOAM -files base on solver
+        attribute to given directory
 
         Parameters
         ----------
@@ -63,10 +93,12 @@ class FoamFiles():
         """
 
         self.create_directories(caseDirectory)
-        fileContent = self.create_file_content(solver)
+        fileContent = self.create_file_content(caseDirectory, solver,
+                                               time, writeFields)
         for file in fileContent:
             try:
-                f = open(os.path.join(caseDirectory, file), 'w')
+                full_name = os.path.join(caseDirectory, file)
+                f = open(full_name, 'w')
                 f.write(fileContent[file])
                 f.close()
             except IOError:
@@ -358,8 +390,10 @@ class FoamFiles():
             control = ParsedParameterFile(os.path.join(dir_name, data_name))
 
             values = control['internalField']
-            return values.val[label]
-
+            if type(values.val) == 'list':
+                return values.val[label]
+            else:
+                return values.val
         except IOError:
             error_str = "Can't read file: {}"
             raise ValueError(error_str.format(os.path.join(dir_name,
