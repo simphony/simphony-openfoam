@@ -5,6 +5,8 @@ and modify a mesh and related data
 
 """
 import uuid
+from  collections import OrderedDict
+
 from simphony.cuds.abstractmesh import ABCMesh
 from simphony.core.cuba import CUBA
 from simphony.cuds.mesh import Point, Face, Cell
@@ -93,7 +95,7 @@ class FoamMesh(ABCMesh):
                 label += 1
 
             # find out boundary patches
-            patchNameFacesMap = {}
+            patchNameFacesMap = OrderedDict()
             facePoints = []
             for face in mesh.iter_faces():
                 if CUBA.LABEL in face.data:
