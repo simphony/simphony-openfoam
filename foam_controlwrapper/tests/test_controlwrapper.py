@@ -6,19 +6,17 @@ foam_controlwrapper module functionalities
 """
 
 import unittest
-from simphony.cuds.mesh import Mesh, Face, Point, Cell
-from simphony.core.data_container import DataContainer
-from foam_controlwrapper.foam_controlwrapper import FoamControlWrapper
-from simphony.core.cuba import CUBA
-import logging
 
-logger = logging.getLogger(__name__)
+from simphony.cuds.mesh import Mesh, Face, Point, Cell
+from simphony.core.cuba import CUBA
+from simphony.core.data_container import DataContainer
+
+from foam_controlwrapper.foam_controlwrapper import FoamControlWrapper
 
 
 class FoamControlWrapperTestCase(unittest.TestCase):
     """Test case for FoamControlWrapper class"""
     def setUp(self):
-
         self.mesh = Mesh(name="mesh1")
 
         self.points = [
@@ -82,15 +80,21 @@ class FoamControlWrapperTestCase(unittest.TestCase):
         wrapper = FoamControlWrapper()
         wrapper.add_mesh(self.mesh)
 
-    def test_get_mesh(self):
-        """Test get_mesh method
-
-        """
-
+    def test_add_get_mesh(self):
         wrapper = FoamControlWrapper()
         wrapper.add_mesh(self.mesh)
         mesh_inside_wrapper = wrapper.get_mesh(self.mesh.name)
         self.assertEquals(self.mesh.name, mesh_inside_wrapper.name)
+
+        for point in self.mesh.iter_points():
+            point_w = mesh_inside_wrapper.get_point(point.uid)
+            self.assertEquals(point.uid, point_w.uid)
+            self.assertEquals(point.coordinates, point_w.coordinates)
+
+        for face in self.mesh.iter_faces():
+            face_w = mesh_inside_wrapper.get_face(face.uid)
+            self.assertEquals(face.uid, face_w.uid)
+            self.assertEquals(face.points, face_w.points)
 
     def test_multiple_meshes(self):
         """Test multiple meshes inside wrapper
