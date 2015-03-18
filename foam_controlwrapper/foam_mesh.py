@@ -5,7 +5,7 @@ and modify a mesh and related data
 
 """
 import uuid
-from  collections import OrderedDict
+from collections import OrderedDict
 
 from simphony.cuds.abstractmesh import ABCMesh
 from simphony.core.cuba import CUBA
