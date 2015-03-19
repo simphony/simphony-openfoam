@@ -335,19 +335,17 @@ std::vector<int> get_ordered_points(const fvMesh & mesh, const labelListList &ce
  
 }
 
+std::vector<int> foam_getCellPoints(std::string name, int label) {
+    const fvMesh &mesh = runTimes[name]->db().parent().lookupObject<fvMesh>(Foam::fvMesh::defaultRegion);
+    const labelList &cellPoints = mesh.cellPoints()[label];
 
-std::vector<int> foam_getCellPoints(std::string name, int label)
-{
-   const fvMesh & mesh = runTimes[name]->db().parent().lookupObject<fvMesh>(Foam::fvMesh::defaultRegion);
-  const labelListList &cellPoints = mesh.cellPoints();
-  const cellList &cellFaces = mesh.cells();
-  // gives vertices connected to vertex
-  const labelListList &pointPoints = mesh.pointPoints();
-  const labelListList &pointFaces = mesh.pointFaces();
-  const faceList &facePoints = mesh.faces();
-
-  return order_cellPoints(label, mesh, cellPoints, cellFaces, facePoints, pointFaces, pointPoints);
-
+    std::vector<int> result;
+    for (labelList::const_iterator iter = cellPoints.begin();
+         iter < cellPoints.end();
+         iter++) {
+        result.push_back(*iter);
+    }
+    return result;
 }
 
 
