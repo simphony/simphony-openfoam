@@ -98,13 +98,12 @@ class FoamFiles():
         for file in fileContent:
             try:
                 full_name = os.path.join(caseDirectory, file)
-                f = open(full_name, 'w')
-                f.write(fileContent[file])
-                f.close()
+                with open(full_name, 'w') as f:
+                    f.write(fileContent[file])
             except IOError:
                 error_str = "Can't write file: {}"
-                raise ValueError(error_str.format(os.path.join(caseDirectory,
-                                                               file)))
+                raise IOError(error_str.format(os.path.join(caseDirectory,
+                                                            file)))
 
     def modify_files(self, case, SP, BC, solver, SPExt):
 
@@ -139,12 +138,12 @@ class FoamFiles():
 
         except IOError:
             error_str = "File {} does not exist"
-            raise ValueError(error_str.format(boundaryFile))
+            raise IOError(error_str.format(boundaryFile))
         try:
             control.writeFile()
         except IOError:
             error_str = "Can't write file with content: {}"
-            raise ValueError(error_str.format(control))
+            raise IOError(error_str.format(control))
 
 # parse system/controlDict -file in case directory
         parFile = os.path.join(case, 'system', 'controlDict')
@@ -156,12 +155,12 @@ class FoamFiles():
             control["writeInterval"] = writeInterval
         except IOError:
             error_str = "File {} does not exist"
-            raise ValueError(error_str.format(parFile))
+            raise IOError(error_str.format(parFile))
         try:
             control.writeFile()
         except IOError:
             error_str = "Can't write file with content: {}"
-            raise ValueError(error_str.format(control))
+            raise IOError(error_str.format(control))
 
         if solver == "interFoam":
             density = SP[CUBA.DENSITY]
@@ -171,9 +170,6 @@ class FoamFiles():
             parFile = os.path.join(case, 'constant', 'transportProperties')
             try:
                 control = ParsedParameterFile(parFile)
-#                control["twoPhase"]["phase1"] = SPExt[CUBAExt.PHASE_LIST][0]
-#                control["twoPhase"]["phase2"] = SPExt[CUBAExt.PHASE_LIST][1]
-
                 control["phase1"]["nu"][2] = \
                     viscosity[SPExt[CUBAExt.PHASE_LIST][0]] / \
                     density[SPExt[CUBAExt.PHASE_LIST][0]]
@@ -183,12 +179,12 @@ class FoamFiles():
                 control["sigma"][2] = SPExt[CUBAExt.SURFACE_TENSION]
             except IOError:
                 error_str = "File {} does not exist"
-                raise ValueError(error_str.format(parFile))
+                raise IOError(error_str.format(parFile))
                 try:
                     control.writeFile()
                 except IOError:
                     error_str = "Can't write file with content: {}"
-                    raise ValueError(error_str.format(control))
+                    raise IOError(error_str.format(control))
         else:
             density = SP[CUBA.DENSITY]
             viscosity = SP[CUBA.DYNAMIC_VISCOSITY]
@@ -201,12 +197,12 @@ class FoamFiles():
                 control["nu"][2] = kinematicViscosity
             except IOError:
                 error_str = "File {} does not exist"
-                raise ValueError(error_str.format(parFile))
+                raise IOError(error_str.format(parFile))
             try:
                 control.writeFile()
             except IOError:
                 error_str = "Can't write file with content: {}"
-                raise ValueError(error_str.format(control))
+                raise IOError(error_str.format(control))
 
         velocityBCs = BC[CUBA.VELOCITY]
         # parse startTime/U -file in case directory
@@ -234,12 +230,12 @@ class FoamFiles():
                         valueString
         except IOError:
             error_str = "File {} does not exist"
-            raise ValueError(error_str.format(parFile))
+            raise IOError(error_str.format(parFile))
         try:
             control.writeFile()
         except IOError:
             error_str = "Can't write file with content: {}"
-            raise ValueError(error_str.format(control))
+            raise IOError(error_str.format(control))
 
         pressureBCs = BC[CUBA.PRESSURE]
 
@@ -273,12 +269,12 @@ class FoamFiles():
                         valueString
         except IOError:
             error_str = "File {} does not exist"
-            raise ValueError(error_str.format(parFile))
+            raise IOError(error_str.format(parFile))
         try:
             control.writeFile()
         except IOError:
             error_str = "Can't write file with content: {}"
-            raise ValueError(error_str.format(control))
+            raise IOError(error_str.format(control))
 
         if solver == "interFoam":
             volumeFractionBCs = BC[CUBA.VOLUME_FRACTION]
@@ -305,12 +301,12 @@ class FoamFiles():
                             valueString
             except IOError:
                 error_str = "File {} does not exist"
-                raise ValueError(error_str.format(parFile))
+                raise IOError(error_str.format(parFile))
             try:
                 control.writeFile()
             except IOError:
                 error_str = "Can't write file with content: {}"
-                raise ValueError(error_str.format(control))
+                raise IOError(error_str.format(control))
 
         return dire
 
@@ -331,14 +327,14 @@ class FoamFiles():
 
         except IOError:
             error_str = "Can't read file: {}"
-            raise ValueError(error_str.format(os.path.join(dir_name,
-                                                           data_name)))
+            raise IOError(error_str.format(os.path.join(dir_name,
+                                                        data_name)))
         try:
             control.writeFile()
         except IOError:
             error_str = "Can't write file: {}"
-            raise ValueError(error_str.format(os.path.join(dir_name,
-                                                           data_name)))
+            raise IOError(error_str.format(os.path.join(dir_name,
+                                                        data_name)))
 
     def set_cell_data(self, path, time_name,
                       data_name, label, value, value_type):
@@ -360,14 +356,14 @@ class FoamFiles():
 
         except IOError:
             error_str = "Can't read file: {}"
-            raise ValueError(error_str.format(os.path.join(dir_name,
-                                                           data_name)))
+            raise IOError(error_str.format(os.path.join(dir_name,
+                                                        data_name)))
         try:
             control.writeFile()
         except IOError:
             error_str = "Can't write file: {}"
-            raise ValueError(error_str.format(os.path.join(dir_name,
-                                                           data_name)))
+            raise IOError(error_str.format(os.path.join(dir_name,
+                                                        data_name)))
 
     def get_all_cell_data(self, path, time_name, data_name):
 
@@ -380,8 +376,8 @@ class FoamFiles():
 
         except IOError:
             error_str = "Can't read file: {}"
-            raise ValueError(error_str.format(os.path.join(dir_name,
-                                                           data_name)))
+            raise IOError(error_str.format(os.path.join(dir_name,
+                                                        data_name)))
 
     def get_cell_data(self, path, time_name, data_name, label):
 
@@ -396,8 +392,8 @@ class FoamFiles():
                 return values.val
         except IOError:
             error_str = "Can't read file: {}"
-            raise ValueError(error_str.format(os.path.join(dir_name,
-                                                           data_name)))
+            raise IOError(error_str.format(os.path.join(dir_name,
+                                                        data_name)))
 
     def get_cell_data_names(self, path, time_name):
 

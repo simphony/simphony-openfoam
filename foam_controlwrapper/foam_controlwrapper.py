@@ -80,7 +80,7 @@ class FoamControlWrapper(ABCModelingEngine):
         # write default files based on solver
         # (not field data files if exists)
         templateName = solver + turbulent
-        foamFiles.write_default_files(case, templateName, mesh.time, True)
+        foamFiles.write_default_files(case, templateName, mesh._time, True)
 
         # write first mesh from foams objectRegistry to disk
         mesh.write()
@@ -103,7 +103,10 @@ class FoamControlWrapper(ABCModelingEngine):
         if os.path.exists('PlyParser_FoamFileParser_parsetab.pyc'):
             os.remove('PlyParser_FoamFileParser_parsetab.pyc')
 
-        return dire.getLast()
+        # save timestep to mesh
+        mesh._time = dire.getLast()
+
+        return mesh._time
 
     def add_mesh(self, mesh):
         """Add a mesh to the OpenFoam modeling engine.
