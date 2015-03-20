@@ -7,9 +7,13 @@ foam_controlwrapper module functionalities
 
 import unittest
 
+from functools import partial
+
+
 from simphony.cuds.mesh import Mesh, Face, Point, Cell
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
+from simphony.testing.utils import compare_data_containers
 
 from foam_controlwrapper.foam_controlwrapper import FoamControlWrapper
 
@@ -17,6 +21,9 @@ from foam_controlwrapper.foam_controlwrapper import FoamControlWrapper
 class FoamControlWrapperTestCase(unittest.TestCase):
     """Test case for FoamControlWrapper class"""
     def setUp(self):
+        self.addTypeEqualityFunc(
+            DataContainer, partial(compare_data_containers, testcase=self))
+
         self.mesh = Mesh(name="mesh1")
 
         self.points = [
@@ -90,6 +97,7 @@ class FoamControlWrapperTestCase(unittest.TestCase):
             point_w = mesh_inside_wrapper.get_point(point.uid)
             self.assertEquals(point.uid, point_w.uid)
             self.assertEquals(point.coordinates, point_w.coordinates)
+            self.assertEquals(point.data, point_w.data)
 
         for face in self.mesh.iter_faces():
             face_w = mesh_inside_wrapper.get_face(face.uid)
