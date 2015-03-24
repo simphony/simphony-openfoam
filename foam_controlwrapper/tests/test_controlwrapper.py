@@ -96,6 +96,11 @@ class FoamControlWrapperTestCase(unittest.TestCase):
             self.assertEquals(face.uid, face_w.uid)
             self.assertEquals(face.points, face_w.points)
 
+        for cell in self.mesh.iter_cells():
+            cell_w = mesh_inside_wrapper.get_cell(cell.uid)
+            self.assertEquals(cell.uid, cell_w.uid)
+            self.assertEquals(cell.points, cell_w.points)
+
     def test_multiple_meshes(self):
         """Test multiple meshes inside wrapper
 
