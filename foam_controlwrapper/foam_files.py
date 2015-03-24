@@ -110,7 +110,6 @@ class FoamFiles():
         dire = SolutionDirectory(case, archive="SimPhoNy")
         dire.clearResults()
 
-#        startTime = SP["startTime"]
         startTime = 0
         nOfTimeSteps = SP[CUBA.NUMBER_OF_TIME_STEPS]
         deltaT = SP[CUBA.TIME_STEP]
@@ -173,8 +172,12 @@ class FoamFiles():
                 control["phase1"]["nu"][2] = \
                     viscosity[SPExt[CUBAExt.PHASE_LIST][0]] / \
                     density[SPExt[CUBAExt.PHASE_LIST][0]]
+                control["phase1"]["rho"][2] = \
+                    density[SPExt[CUBAExt.PHASE_LIST][0]]
                 control["phase2"]["nu"][2] = \
                     viscosity[SPExt[CUBAExt.PHASE_LIST][1]] / \
+                    density[SPExt[CUBAExt.PHASE_LIST][1]]
+                control["phase2"]["rho"][2] = \
                     density[SPExt[CUBAExt.PHASE_LIST][1]]
                 control["sigma"][2] = SPExt[CUBAExt.SURFACE_TENSION]
             except IOError:
@@ -282,14 +285,14 @@ class FoamFiles():
             parFile = os.path.join(case, str(startTime), 'alpha1')
             try:
                 control = ParsedParameterFile(parFile)
-                for boundary in pressureBCs:
+                for boundary in volumeFractionBCs:
                     control["boundaryField"][boundary] = {}
-                    if pressureBCs[boundary] == "zeroGradient":
+                    if volumeFractionBCs[boundary] == "zeroGradient":
                         control["boundaryField"][boundary]["type"] = \
                             "zeroGradient"
                         control["boundaryField"][boundary]["value"] = \
                             "uniform 0"
-                    elif pressureBCs[boundary] == "empty":
+                    elif volumeFractionBCs[boundary] == "empty":
                         control["boundaryField"][boundary]["type"] = \
                             "empty"
                     else:

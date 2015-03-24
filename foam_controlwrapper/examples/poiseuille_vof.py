@@ -36,7 +36,7 @@ wrapper.BC[CUBA.PRESSURE] = {'boundary0': 'zeroGradient',
                              'boundary2': 0,
                              'boundary3': 'empty'}
 wrapper.BC[CUBA.VOLUME_FRACTION] = {'boundary0': 'zeroGradient',
-                                    'boundary1': 0,
+                                    'boundary1': 1,
                                     'boundary2': 'zeroGradient',
                                     'boundary3': 'empty'}
 

@@ -198,12 +198,14 @@ phase1
 {
     transportModel  Newtonian;
     nu              nu [ 0 2 -1 0 0 0 0 ] 1e-06;
-}
+    rho             rho [ 1 -3 0 0 0 0 0 ] 1000;
+ }
 phase2
 {
     transportModel  Newtonian;
     nu              nu [ 0 2 -1 0 0 0 0 ] 1.48e-05;
-}
+    rho             rho [ 1 -3 0 0 0 0 0 ] 1;
+ }
 sigma           sigma [ 1 0 -2 0 0 0 0 ] 0.07;
 
                         """,
@@ -220,6 +222,11 @@ turbulence      off;
 
 printCoeffs     on;
 
+                        """,
+                        os.path.join('constant', 'g'):
+                        """
+dimensions      [0 1 -2 0 0 0 0];
+value           ( 0 0 0 );
                         """,
                         os.path.join('system', 'controlDict'):
                         """
@@ -408,7 +415,7 @@ boundaryField
                    'interFoam':
                    {'p_rgh':
                     """
-dimensions [ 0 2 -2 0 0 0 0 ];
+dimensions [1 -1 -2 0 0 0 0];
 
 internalField uniform 0;
 
