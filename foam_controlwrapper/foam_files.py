@@ -400,4 +400,7 @@ class FoamFiles():
     def get_cell_data_names(self, path, time_name):
 
         dir_name = os.path.join(path, time_name)
-        return [f for f in os.listdir(dir_name)]
+        if os.path.exists(dir_name):
+            return [f for f in os.listdir(dir_name)]
+        else:
+            return []
