@@ -105,16 +105,15 @@ class FoamFiles():
                 raise IOError(error_str.format(os.path.join(caseDirectory,
                                                             file)))
 
-    def modify_files(self, case, SP, BC, solver, SPExt):
+    def modify_files(self, case, startTime, SP, BC, solver, SPExt):
 
         dire = SolutionDirectory(case, archive="SimPhoNy")
         dire.clearResults()
 
-        startTime = 0
         nOfTimeSteps = SP[CUBA.NUMBER_OF_TIME_STEPS]
         deltaT = SP[CUBA.TIME_STEP]
         endTime = nOfTimeSteps*deltaT
-        writeInterval = endTime-startTime
+        writeInterval = endTime-int(startTime)
         # if empty type boundary condition is used this must be
         # changed in foam's polyMesh/boundary file to the same
         # type (default type is patch)

@@ -86,7 +86,7 @@ class FoamControlWrapper(ABCModelingEngine):
         mesh.write()
 
         # modify control and boundary data files based on SP and BC
-        dire = foamFiles.modify_files(case, self.SP, self.BC,
+        dire = foamFiles.modify_files(case, mesh._time, self.SP, self.BC,
                                       solver, self.SP_extensions)
 
         # run case
