@@ -160,6 +160,10 @@ class FoamMesh(ABCMesh):
             # write mesh to disk
             foamface.writeMesh(name)
 
+            # write possible cell data to time directory
+            for cell in mesh.iter_cells():
+                self.update_cell(cell)
+
     def get_point(self, uuid):
         """ Returns a point with a given uuid.
 
@@ -313,6 +317,8 @@ class FoamMesh(ABCMesh):
                                                 self._time,
                                                 dataName,
                                                 self._uuidToFoamLabel[uuid])
+                elif dataName == "phi":
+                    pass
                 elif dataName == "":
                     pass
                 else:
@@ -342,82 +348,24 @@ class FoamMesh(ABCMesh):
         raise NotImplementedError(message)
 
     def update_point(self, point):
-        """ Updates the information of a point.
-
-        Gets the mesh point identified by the same
-        id as the provided point and updates its information
-        with the one provided with the new point.
-
-        Parameters
-        ----------
-        point : Point
-            Point to be updated
-
-        Raises
-        ------
-        KeyError
-            If the point was not found in the mesh
-
-        TypeError
-            If the object provided is not a point
-
-        """
-
-        if point.uid not in self._uuidToFoamLabel:
-            error_str = "Trying to update a non-existing point with uuid: "\
-                + str(point.uid)
-            raise KeyError(error_str)
-
-        foamface.setPointCoordinates(self.name,
-                                     self._uuidToFoamLabel[point.uid],
-                                     point.coordinates)
+        message = 'Point update not supported yet'
+        raise NotImplementedError(message)
 
     def update_edge(self, edge):
         message = 'Edge update not supported yet'
         raise NotImplementedError(message)
 
     def update_face(self, face):
-        """ Updates the information of a face.
-
-        Gets the mesh face identified by the same
-        uuid as the provided face and updates its information
-        with the one provided with the new face.
-
-        Parameters
-        ----------
-        face : Face
-            Face to be updated
-
-        Raises
-        ------
-        KeyError
-            If the face was not found in the mesh
-
-        TypeError
-            If the object provided is not a face
-
-        """
-
-        if face.uid not in self._uuidToFoamLabel:
-            error_str = "Trying to update a non-existing face with uuid: "\
-                + str(face.uid)
-            raise KeyError(error_str)
-
-        if not isinstance(face, Face):
-            error_str = "Trying to update an object with the wrong type. "\
-                + "Face expected."
-            raise TypeError(error_str)
-
-        foamface.setFacePoints(self.name,
-                               self._uuidToFoamLabel[face.uid],
-                               face.points)
-
+        message = 'Face update not supported yet'
+        raise NotImplementedError(message)
+ 
     def update_cell(self, cell):
         """ Updates the information of a cell.
 
         Gets the mesh cell identified by the same
-        uuid as the provided cell and updates its information
-        with the one provided with the new cell.
+        uuid as the provided cell and updates its data
+        with the one provided with the new cell. Cell points
+        are not updated.
 
         Parameters
         ----------
@@ -443,6 +391,21 @@ class FoamMesh(ABCMesh):
             error_str = "Trying to update an object with the wrong type. "\
                 + "Cell expected."
             raise TypeError(error_str)
+
+        # if points are changed raise warning
+        pointLabels = foamface.getCellPoints(self.name,
+                                             self._uuidToFoamLabel[cell.uid])
+        puids = [self._foamPointLabelToUuid[lbl] for lbl in pointLabels]
+        # this needed while FileMesh can give puid as numpy.string (bug)
+        cell_puids = []
+        for puid in cell.points:
+            if type(puid) is not numpy.string_:
+                cell_puids.append(puid)
+            else:
+                cell_puids.append(uuid.UUID(puid,version=4))
+
+        if set(puids) != set(cell_puids):
+            raise Warning("Cell points can't be updated")
 
         # test if data exists and if not create
         # (must be changed in the future,
@@ -569,7 +532,7 @@ class FoamMesh(ABCMesh):
                 # here we assume that the boundaries are named as boundary0,...
                 # this to overcome limitation in tableextensio.pyx at a moment
                 facePatchMap[patchFaces[j]] = \
-                    patchNames[k].replace('boundary', '')
+                    int(patchNames[k].replace('boundary', ''))
                 i += 1
             k += 1
 
@@ -585,7 +548,7 @@ class FoamMesh(ABCMesh):
                 face = self.get_face(uid)
                 label = self._uuidToFoamLabel[uid]
                 if label in facePatchMap:
-                    face.add[CUBA.LABEL] = facePatchMap[label]
+                    face.data[CUBA.LABEL] = facePatchMap[label]
                 yield face
 
     def iter_cells(self, cell_uuids=None):

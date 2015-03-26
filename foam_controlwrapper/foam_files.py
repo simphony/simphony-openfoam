@@ -10,7 +10,7 @@ from simphony.core.cuba import CUBA
 from cuba_extension import CUBAExt
 from PyFoam.RunDictionary.SolutionDirectory import SolutionDirectory
 from PyFoam.RunDictionary.ParsedParameterFile import ParsedParameterFile
-
+from PyFoam.Basics.DataStructures import Vector
 
 class FoamFiles():
 
@@ -108,11 +108,10 @@ class FoamFiles():
     def modify_files(self, case, startTime, SP, BC, solver, SPExt):
 
         dire = SolutionDirectory(case, archive="SimPhoNy")
-        dire.clearResults()
 
         nOfTimeSteps = SP[CUBA.NUMBER_OF_TIME_STEPS]
         deltaT = SP[CUBA.TIME_STEP]
-        endTime = nOfTimeSteps*deltaT
+        endTime = int(startTime) + nOfTimeSteps*deltaT
         writeInterval = endTime-int(startTime)
         # if empty type boundary condition is used this must be
         # changed in foam's polyMesh/boundary file to the same
@@ -388,8 +387,11 @@ class FoamFiles():
             control = ParsedParameterFile(os.path.join(dir_name, data_name))
 
             values = control['internalField']
-            if type(values.val) == 'list':
-                return values.val[label]
+            if isinstance(values.val, list):
+                if isinstance(values.val[label], Vector):
+                    return tuple([v for v in values.val[label].vals])
+                else:
+                    return values.val[label]
             else:
                 return values.val
         except IOError:
@@ -401,6 +403,10 @@ class FoamFiles():
 
         dir_name = os.path.join(path, time_name)
         if os.path.exists(dir_name):
-            return [f for f in os.listdir(dir_name)]
+            file_names=[]
+            for file_name in os.listdir(dir_name):
+                if os.path.isfile(os.path.join(dir_name,file_name)):
+                    file_names.append(file_name)
+            return file_names
         else:
             return []

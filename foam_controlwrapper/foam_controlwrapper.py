@@ -26,8 +26,8 @@ class FoamControlWrapper(ABCModelingEngine):
         self.CM = DataContainer()
         self.BC = DataContainer()
         self.SP = DataContainer()
-#: to be able to use CUBAExt keywords, which are not in accepted
-#  CUBA keywords these extensions to CM and SP is used
+        #: to be able to use CUBAExt keywords, which are not in accepted
+        #  CUBA keywords these extensions to CM and SP is used
         self.CM_extensions = {}
         self.SP_extensions = {}
 
@@ -94,8 +94,9 @@ class FoamControlWrapper(ABCModelingEngine):
                                 argv=[solver, "-case", case],
                                 logname="SimPhoNy",
                                 silent=True,
-                                noLog=True)
+                                noLog=False)
         run.start()
+
 
         # remove PyFoam parser files
         if os.path.exists('PlyParser_FoamFileParser_parsetab.py'):
@@ -241,9 +242,6 @@ class FoamControlWrapper(ABCModelingEngine):
         foamMesh = FoamMesh(name)
         foamMesh.generate_uuidmapping(nPoints, nEdges, nFaces, nCells)
         return foamMesh
-
-    def write_foamcelldata(self, name, dataname):
-        simphonyfoaminterface.writeCellData(name, dataname)
 
     def add_particles(self, particle_container):
         message = 'FoamWrapper does not handle particle container'
