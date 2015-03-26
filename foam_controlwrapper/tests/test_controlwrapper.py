@@ -265,6 +265,7 @@ class FoamControlWrapperTestCase(unittest.TestCase):
         if os.path.exists(mesh_inside_wrapper.path):
             shutil.rmtree(mesh_inside_wrapper.path)
 
+        mesh_file.close()
 
 if __name__ == '__main__':
     unittest.main()
