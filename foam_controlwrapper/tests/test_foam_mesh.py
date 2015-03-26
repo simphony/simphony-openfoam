@@ -11,6 +11,8 @@ from simphony.cuds.mesh import Mesh, Face, Point, Cell, Edge
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
 from foam_controlwrapper.foam_mesh import FoamMesh
+from foam_controlwrapper.foam_files import FoamFiles
+import os
 
 
 class FoamMeshTestCase(unittest.TestCase):
@@ -68,6 +70,9 @@ class FoamMeshTestCase(unittest.TestCase):
         self.puids = puids
 
         [self.mesh.add_cell(cell) for cell in self.cells]
+
+    def tearDown(self):
+        FoamFiles().remove_parser_files(os.getcwd())
 
     def test_get_point(self):
         """Test get_point method

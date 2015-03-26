@@ -12,13 +12,28 @@ from PyFoam.RunDictionary.SolutionDirectory import SolutionDirectory
 from PyFoam.RunDictionary.ParsedParameterFile import ParsedParameterFile
 from PyFoam.Basics.DataStructures import Vector
 
+
 class FoamFiles():
+    """ Module for OpenFOAM file management
+
+    """
 
     def __init__(self):
         pass
 
     def create_file_content(self, path, solver, time, writeFields):
-        """ create content mapping to files
+        """Create content mapping to files
+
+        Parameters
+        ----------
+        path : str
+            path to case directory
+        solver : str
+            name of the solver
+        time : str
+            time name
+        writeFields : bool
+            flag to tell whether field variables are written or not
 
         """
         version = '2.2'
@@ -63,9 +78,15 @@ class FoamFiles():
         return fileContent
 
     def create_directories(self, caseDirectory):
-        """ create default directories
+        """Create default directories
+
+        Parameters
+        ----------
+        caseDirectory : str
+            directory to create directories on.
 
         """
+
         directories = ('constant', 'system', '0',
                        os.path.join('constant', 'polyMesh'))
         for dir in directories:
@@ -75,7 +96,7 @@ class FoamFiles():
 
     def write_default_files(self, caseDirectory, solver,
                             time, writeFields):
-        """ write default OpenFOAM -files base on solver
+        """Write default OpenFOAM -files base on solver
         attribute to given directory
 
         Parameters
@@ -106,6 +127,24 @@ class FoamFiles():
                                                             file)))
 
     def modify_files(self, case, startTime, SP, BC, solver, SPExt):
+        """Modify OpenFoam case files according to user settings
+
+        Parameters
+        ----------
+        case : str
+            case directory
+        startTime : str
+            start time
+        SP : DataContainer
+            System Parameters
+        BC : DataContainer
+            Boundary Conditions
+        solver : str
+            solver name
+        SPExt : dictionary
+            extension to SP
+
+        """
 
         dire = SolutionDirectory(case, archive="SimPhoNy")
 
@@ -313,6 +352,23 @@ class FoamFiles():
 
     def set_all_cell_data(self, path, time_name, data_name,
                           values, value_type):
+        """Set cell variable values
+
+
+        Parameters
+        ----------
+        path : str
+            path to case directory
+        time_name : str
+            name of time directory
+        data_name : str
+            name of data variable
+        values : list
+            list of new values
+        value_type : str
+            OpenFOAM variable type (volScalarField, volVectorField, ...)
+
+        """
 
         try:
             dir_name = os.path.join(path, time_name)
@@ -339,6 +395,25 @@ class FoamFiles():
 
     def set_cell_data(self, path, time_name,
                       data_name, label, value, value_type):
+        """Set data to specific cell
+
+       Parameters
+        ----------
+        path : str
+            path to case directory
+        time_name : str
+            name of time directory
+        data_name : str
+            name of data variable
+        label : int
+            cell label
+        value : list
+            new value
+        value_type : str
+            OpenFOAM variable type (volScalarField, volVectorField, ...)
+
+
+        """
 
         try:
             dir_name = os.path.join(path, time_name)
@@ -367,6 +442,18 @@ class FoamFiles():
                                                         data_name)))
 
     def get_all_cell_data(self, path, time_name, data_name):
+        """Get specific data from every cell
+
+        Parameters
+        ----------
+        path : str
+            path to case directory
+        time_name : str
+            name of time directory
+        data_name : str
+            name of data variable
+
+        """
 
         try:
             dir_name = os.path.join(path, time_name)
@@ -381,6 +468,21 @@ class FoamFiles():
                                                         data_name)))
 
     def get_cell_data(self, path, time_name, data_name, label):
+        """Get specific cell data for specific cell
+
+
+        Parameters
+        ----------
+        path : str
+            path to case directory
+        time_name : str
+            name of time directory
+        data_name : str
+            name of data variable
+        label : int
+            cell label
+
+        """
 
         try:
             dir_name = os.path.join(path, time_name)
@@ -400,13 +502,40 @@ class FoamFiles():
                                                         data_name)))
 
     def get_cell_data_names(self, path, time_name):
+        """Get cell data names
+
+        Parameters
+        ----------
+        path : str
+            path to case directory
+        time_name : str
+            name of time directory
+
+        """
 
         dir_name = os.path.join(path, time_name)
         if os.path.exists(dir_name):
-            file_names=[]
+            file_names = []
             for file_name in os.listdir(dir_name):
-                if os.path.isfile(os.path.join(dir_name,file_name)):
+                if os.path.isfile(os.path.join(dir_name, file_name)):
                     file_names.append(file_name)
             return file_names
         else:
             return []
+
+    def remove_parser_files(self, path):
+        """Remove PyFoam parser files
+
+        Parameters
+        ----------
+        path : str
+            path to directory
+
+        """
+
+        fileName = os.path.join(path, 'PlyParser_FoamFileParser_parsetab.py')
+        if os.path.exists(fileName):
+            os.remove(fileName)
+        fileName = os.path.join(path, 'PlyParser_FoamFileParser_parsetab.pyc')
+        if os.path.exists(fileName):
+            os.remove(fileName)

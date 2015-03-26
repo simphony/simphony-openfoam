@@ -165,7 +165,7 @@ class FoamMesh(ABCMesh):
                 self.update_cell(cell)
 
     def get_point(self, uuid):
-        """ Returns a point with a given uuid.
+        """Returns a point with a given uuid.
 
         Returns the point stored in the mesh
         identified by uuid. If such point do not
@@ -198,7 +198,7 @@ class FoamMesh(ABCMesh):
             raise ValueError(error_str.format(uuid))
 
     def get_edge(self, uuid):
-        """ Returns an edge with a given uuid.
+        """Returns an edge with a given uuid.
 
         Returns the edge stored in the mesh
         identified by uuid. If such edge do not
@@ -224,7 +224,7 @@ class FoamMesh(ABCMesh):
         raise NotImplementedError(message)
 
     def get_face(self, uuid):
-        """ Returns a face with a given uuid.
+        """Returns a face with a given uuid.
 
         Returns the face stored in the mesh
         identified by uuid. If such face do not
@@ -259,7 +259,7 @@ class FoamMesh(ABCMesh):
             raise ValueError(error_str.format(uuid))
 
     def get_cell(self, uuid):
-        """ Returns a cell with a given uuid.
+        """Returns a cell with a given uuid.
 
         Returns the cell stored in the mesh
         identified by uuid . If such cell do not
@@ -358,7 +358,7 @@ class FoamMesh(ABCMesh):
     def update_face(self, face):
         message = 'Face update not supported yet'
         raise NotImplementedError(message)
- 
+
     def update_cell(self, cell):
         """ Updates the information of a cell.
 
@@ -402,7 +402,7 @@ class FoamMesh(ABCMesh):
             if type(puid) is not numpy.string_:
                 cell_puids.append(puid)
             else:
-                cell_puids.append(uuid.UUID(puid,version=4))
+                cell_puids.append(uuid.UUID(puid, version=4))
 
         if set(puids) != set(cell_puids):
             raise Warning("Cell points can't be updated")
@@ -459,7 +459,7 @@ class FoamMesh(ABCMesh):
                 raise NotImplementedError(error_str)
 
     def iter_points(self, point_uuids=None):
-        """ Returns an iterator over the selected points.
+        """Returns an iterator over the selected points.
 
         Returns an iterator over the points with uuid in
         point_ids. If none of the ids in point_ids exists,
@@ -489,7 +489,7 @@ class FoamMesh(ABCMesh):
                 yield point
 
     def iter_edges(self, edge_uuids=None):
-        """ Return empty list while edges are not supported yet
+        """Return empty list while edges are not supported yet
         Needs to return empty list to get for example H5CUDS add_mesh
         method working with FoamMesh
 
@@ -498,7 +498,7 @@ class FoamMesh(ABCMesh):
         return []
 
     def iter_faces(self, face_uuids=None):
-        """ Returns an iterator over the selected faces.
+        """Returns an iterator over the selected faces.
 
         Returns an iterator over the faces with uuid in
         face_uuids. If none of the uuids in face_uuids exists,
@@ -552,7 +552,7 @@ class FoamMesh(ABCMesh):
                 yield face
 
     def iter_cells(self, cell_uuids=None):
-        """ Returns an iterator over the selected cells.
+        """Returns an iterator over the selected cells.
 
         Returns an iterator over the cells with uuid in
         cell_uuids. If none of the uuids in cell_uuids exists,
@@ -582,14 +582,14 @@ class FoamMesh(ABCMesh):
                 yield cell
 
     def has_edges(self):
-        """ Return false while edges are not supported yet
+        """Return false while edges are not supported yet
 
         """
 
         return False
 
     def has_faces(self):
-        """ Check if the mesh has faces
+        """Check if the mesh has faces
 
         Returns
         -------
@@ -602,7 +602,7 @@ class FoamMesh(ABCMesh):
         return numberFaces > 0
 
     def has_cells(self):
-        """ Check if the mesh has cells
+        """Check if the mesh has cells
 
         Returns
         -------
@@ -615,16 +615,16 @@ class FoamMesh(ABCMesh):
         return numberCells > 0
 
     def write(self):
-        """ Writes mesh from OpenFOAM's objectRegistry to disk
+        """Writes mesh from OpenFOAM's objectRegistry to disk
 
         """
 
         foamface.writeMesh(self.name)
 
     def generate_uuidmapping(self, nPoints, nEdges, nFaces, nCells):
-        '''generate uuid mapping assuming continuous ordering of mesh objects
+        """Generate uuid mapping assuming continuous ordering of mesh objects
 
-        '''
+        """
 
         for point in range(nPoints):
             uuid = self._generate_uuid()
@@ -647,7 +647,7 @@ class FoamMesh(ABCMesh):
             self._foamCellLabelToUuid[cell] = uuid
 
     def _generate_uuid(self):
-        """ Provides an uuid for the object
+        """Provides an uuid for the object
 
         Provides san uuid as defined in the standard RFC 4122
         """

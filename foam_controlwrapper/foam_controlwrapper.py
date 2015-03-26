@@ -32,7 +32,7 @@ class FoamControlWrapper(ABCModelingEngine):
         self.SP_extensions = {}
 
     def run(self):
-        """ run OpenFoam based on CM, BC and SP data
+        """Run OpenFoam based on CM, BC and SP data
 
         Returns
         -------
@@ -97,12 +97,8 @@ class FoamControlWrapper(ABCModelingEngine):
                                 noLog=False)
         run.start()
 
-
         # remove PyFoam parser files
-        if os.path.exists('PlyParser_FoamFileParser_parsetab.py'):
-            os.remove('PlyParser_FoamFileParser_parsetab.py')
-        if os.path.exists('PlyParser_FoamFileParser_parsetab.pyc'):
-            os.remove('PlyParser_FoamFileParser_parsetab.pyc')
+        foamFiles.remove_parser_files(os.getcwd())
 
         # save timestep to mesh
         mesh._time = dire.getLast()

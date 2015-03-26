@@ -13,7 +13,9 @@ from simphony.core.data_container import DataContainer
 from simphony.io.h5_cuds import H5CUDS
 from foam_controlwrapper.foam_controlwrapper import FoamControlWrapper
 from foam_controlwrapper.cuba_extension import CUBAExt
+from foam_controlwrapper.foam_files import FoamFiles
 import os
+import shutil
 
 
 class FoamControlWrapperTestCase(unittest.TestCase):
@@ -68,6 +70,9 @@ class FoamControlWrapperTestCase(unittest.TestCase):
 
         [self.mesh.add_cell(cell) for cell in self.cells]
 
+    def tearDown(self):
+        FoamFiles().remove_parser_files(os.getcwd())
+
     def test_add_mesh(self):
         """Test add_mesh method
 
@@ -120,7 +125,7 @@ class FoamControlWrapperTestCase(unittest.TestCase):
         mesh2.name = "mesh2"
         wrapper.add_mesh(mesh2)
 
-        self.assetEqual(sum(1 for _ in wrapper.iter_meshess()), 2)
+        self.assertEqual(sum(1 for _ in wrapper.iter_meshes()), 2)
 
     def test_multiple_meshes(self):
         """Test multiple meshes inside wrapper
@@ -256,6 +261,10 @@ class FoamControlWrapperTestCase(unittest.TestCase):
 
         self.assertNotEqual(old_vel, new_vel)
         self.assertNotEqual(old_pres, new_pres)
+
+        if os.path.exists(mesh_inside_wrapper.path):
+            shutil.rmtree(mesh_inside_wrapper.path)
+
 
 if __name__ == '__main__':
     unittest.main()

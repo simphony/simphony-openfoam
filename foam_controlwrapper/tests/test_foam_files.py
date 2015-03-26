@@ -13,6 +13,7 @@ from foam_controlwrapper.foam_files import FoamFiles
 from foam_controlwrapper.foam_controlwrapper import FoamControlWrapper
 from simphony.io.h5_cuds import H5CUDS
 import os
+import shutil
 
 
 class FoamFilesTestCase(unittest.TestCase):
@@ -38,6 +39,11 @@ class FoamFilesTestCase(unittest.TestCase):
                                   'boundary1': 0,
                                   'boundary2': 'zeroGradient',
                                   'boundary3': 'empty'}
+
+    def tearDown(self):
+        FoamFiles().remove_parser_files(os.getcwd())
+        if os.path.exists(self.path):
+            shutil.rmtree(self.path)
 
     def test_create_file_content(self):
         """Test create_file_content method
@@ -86,5 +92,7 @@ class FoamFilesTestCase(unittest.TestCase):
         self.files.modify_files(mesh_inside_wrapper.path, self.time, self.SP,
                                 self.BC, self.solver,
                                 self.SPExt)
+
+
 if __name__ == '__main__':
     unittest.main()
