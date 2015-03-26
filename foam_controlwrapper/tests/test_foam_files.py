@@ -92,6 +92,7 @@ class FoamFilesTestCase(unittest.TestCase):
         self.files.modify_files(mesh_inside_wrapper.path, self.time, self.SP,
                                 self.BC, self.solver,
                                 self.SPExt)
+        mesh_file.close()
 
 
 if __name__ == '__main__':
