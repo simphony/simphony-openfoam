@@ -109,10 +109,12 @@ class FoamControlWrapperTestCase(unittest.TestCase):
             face_w = mesh_inside_wrapper.get_face(face.uid)
             self.assertEqual(face.uid, face_w.uid)
             self.assertEqual(face.points, face_w.points)
+            self.assertEqual(face.data, face_w.data)
 
         for cell in self.mesh.iter_cells():
             cell_w = mesh_inside_wrapper.get_cell(cell.uid)
             self.assertEqual(cell.uid, cell_w.uid)
+            self.assertEqual(set(cell.points), set(cell_w.points))
 
     def test_iter_meshes(self):
         """Test iter_meshes method
