@@ -17,3 +17,4 @@ class CUBAExt(IntEnum):
     PHASE_LIST = 7
     MAX_COURANT_NUMBER = 8
     SURFACE_TENSION = 9
+    NUMBER_OF_CORES = 10

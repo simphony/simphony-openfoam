@@ -86,10 +86,15 @@ class FoamControlWrapper(ABCModelingEngine):
 
         # modify control and boundary data files based on SP and BC
         foamFiles.modify_files(case, mesh._time, self.SP, self.BC,
-                               solver, self.SP_extensions)
+                               solver, self.SP_extensions,
+                               self.CM_extensions)
 
         # run case
-        runner = FoamRunner(solver, case)
+        if CUBAExt.NUMBER_OF_CORES in self.CM_extensions:
+            ncores = self.CM_extensions[CUBAExt.NUMBER_OF_CORES]
+        else:
+            ncores = 1
+        runner = FoamRunner(solver, case, ncores)
         runner.run()
 
         # remove PyFoam parser files

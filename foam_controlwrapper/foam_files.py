@@ -8,7 +8,6 @@ from foam_templates import head, dictionaryTemplates
 from foam_templates import scalarTemplates, vectorTemplates
 from simphony.core.cuba import CUBA
 from cuba_extension import CUBAExt
-from PyFoam.RunDictionary.SolutionDirectory import SolutionDirectory
 from PyFoam.RunDictionary.ParsedParameterFile import ParsedParameterFile
 from PyFoam.Basics.DataStructures import Vector
 
@@ -126,7 +125,7 @@ class FoamFiles():
                 raise IOError(error_str.format(os.path.join(caseDirectory,
                                                             file)))
 
-    def modify_files(self, case, startTime, SP, BC, solver, SPExt):
+    def modify_files(self, case, startTime, SP, BC, solver, SPExt, CMExt):
         """Modify OpenFoam case files according to user settings
 
         Parameters
@@ -144,9 +143,10 @@ class FoamFiles():
         SPExt : dictionary
             extension to SP
 
-        """
+        CMExt : dictionary
+            extension to CM
 
-        dire = SolutionDirectory(case, archive="SimPhoNy")
+        """
 
         nOfTimeSteps = SP[CUBA.NUMBER_OF_TIME_STEPS]
         deltaT = SP[CUBA.TIME_STEP]
@@ -197,6 +197,22 @@ class FoamFiles():
         except IOError:
             error_str = "Can't write file with content: {}"
             raise IOError(error_str.format(control))
+
+        if CUBAExt.NUMBER_OF_CORES in CMExt:
+            # parse system/decomposeParDict -file in case directory
+            parFile = os.path.join(case, 'system', 'decomposeParDict')
+            try:
+                control = ParsedParameterFile(parFile)
+                control["numberOfSubdomains"] =\
+                    CMExt[CUBAExt.NUMBER_OF_CORES]
+            except IOError:
+                error_str = "File {} does not exist"
+                raise IOError(error_str.format(parFile))
+            try:
+                control.writeFile()
+            except IOError:
+                error_str = "Can't write file with content: {}"
+                raise IOError(error_str.format(control))
 
         if solver == "interFoam":
             density = SP[CUBA.DENSITY]
@@ -347,8 +363,6 @@ class FoamFiles():
             except IOError:
                 error_str = "Can't write file with content: {}"
                 raise IOError(error_str.format(control))
-
-        return dire
 
     def set_all_cell_data(self, path, time_name, data_name,
                           values, value_type):

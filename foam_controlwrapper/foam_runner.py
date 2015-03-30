@@ -13,19 +13,38 @@ class FoamRunner():
 
     """
 
-    def __init__(self, solver, case):
+    def __init__(self, solver, case, ncores):
         self.solver = solver
         self.case = case
+        self.ncores = ncores
 
     def run(self):
         """Run specified OpenFoam solver in specified case directory
         as external command
 
         """
+        if self.ncores < 1:
+            raise ValueError('Number of cores must be greater than zero')
+        elif self.ncores == 1:
+            cmd = self.solver + " -case "+self.case + " > " +\
+                  os.path.join(self.case, 'log') + ' 2>&1'
+            subprocess.call(cmd, shell=True)
+        else:
+            # write and modify decomposeParDict file
 
-        cmd = self.solver + " -case "+self.case + " > " +\
-            os.path.join(self.case, 'log') + '2>&1'
-        subprocess.call(cmd, shell=True)
+            # decompose
+            cmd = "decomposePar -force -case " + self.case + " > " +\
+                  os.path.join(self.case, 'log.decompose') + ' 2>&1'
+            subprocess.call(cmd, shell=True)
+            cmd = "mpirun -np " + str(self.ncores) + " " + self.solver +\
+                  " -parallel -case " + self.case + " > " +\
+                  os.path.join(self.case, 'log') +\
+                  ' 2>&1'
+            subprocess.call(cmd, shell=True)
+            # reconstruct
+            cmd = "reconstructPar  -case " + self.case + " > " +\
+                  os.path.join(self.case, 'log.reconstruct') + ' 2>&1'
+            subprocess.call(cmd, shell=True)
 
     def get_last_time(self):
         """Return last time step in OpenFoam case directory

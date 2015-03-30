@@ -71,6 +71,13 @@ timePrecision 6;
 
 runTimeModifiable yes;
                         """,
+                        os.path.join('system', 'decomposeParDict'):
+                        """
+numberOfSubdomains 4;
+
+method          scotch;
+
+                        """,
                         os.path.join('system', 'fvSolution'):
                         """
 
@@ -266,6 +273,13 @@ maxCo           0.2;
 maxAlphaCo      0.2;
 
 maxDeltaT       1;
+
+                        """,
+                        os.path.join('system', 'decomposeParDict'):
+                        """
+numberOfSubdomains 4;
+
+method          scotch;
 
                         """,
                         os.path.join('system', 'fvSolution'):
