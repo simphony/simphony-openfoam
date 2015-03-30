@@ -6,11 +6,10 @@ Wrapper module for OpenFOAM
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
-from PyFoam.Execution.ConvergenceRunner import ConvergenceRunner
-from PyFoam.LogAnalysis.BoundingLogAnalyzer import BoundingLogAnalyzer
 from foam_files import FoamFiles
 from cuba_extension import CUBAExt
 from foam_mesh import FoamMesh
+from foam_runner import FoamRunner
 import simphonyfoaminterface
 import os
 
@@ -86,23 +85,18 @@ class FoamControlWrapper(ABCModelingEngine):
         mesh.write()
 
         # modify control and boundary data files based on SP and BC
-        dire = foamFiles.modify_files(case, mesh._time, self.SP, self.BC,
-                                      solver, self.SP_extensions)
+        foamFiles.modify_files(case, mesh._time, self.SP, self.BC,
+                               solver, self.SP_extensions)
 
         # run case
-        run = ConvergenceRunner(BoundingLogAnalyzer(),
-                                argv=[solver, "-case", case],
-                                logname="SimPhoNy",
-                                silent=True,
-                                noLog=False)
-        run.start()
+        runner = FoamRunner(solver, case)
+        runner.run()
 
         # remove PyFoam parser files
         foamFiles.remove_parser_files(os.getcwd())
 
         # save timestep to mesh
-        mesh._time = dire.getLast()
-
+        mesh._time = runner.get_last_time()
         return mesh._time
 
     def add_mesh(self, mesh):

@@ -228,7 +228,8 @@ class FoamMesh(ABCMesh):
 
         Returns the face stored in the mesh
         identified by uuid. If such face do not
-        exists an exception is raised.
+        exists an exception is raised. Only CUBA.LABEL
+        data marking boundary faces is returned.
 
         Parameters
         ----------
@@ -251,8 +252,31 @@ class FoamMesh(ABCMesh):
             pointLabels = foamface.getFacePoints(self.name,
                                                  self._uuidToFoamLabel[uuid])
             puids = [self._foamPointLabelToUuid[lbl] for lbl in pointLabels]
-            face = Face(puids, uuid)
 
+            # create patch data
+            patchNames = foamface.getBoundaryPatchNames(self.name)
+            patchFaces = foamface.getBoundaryPatchFaces(self.name)
+            i = 0
+            k = 0
+            facePatchMap = {}
+            while i < len(patchFaces):
+                start = i+1
+                end = start+patchFaces[i]
+                i += 1
+                for j in range(start, end):
+                    # here we assume that the boundaries are named
+                    # as boundary0,...
+                    # this to overcome limitation in tableextensio.pyx
+                    # at a moment
+                    facePatchMap[patchFaces[j]] = \
+                        int(patchNames[k].replace('boundary', ''))
+                    i += 1
+                k += 1
+
+            face = Face(puids, uuid)
+            if self._uuidToFoamLabel[uuid] in facePatchMap:
+                face.data[CUBA.LABEL] =\
+                    facePatchMap[self._uuidToFoamLabel[uuid]]
             return face
         except KeyError:
             error_str = "Trying to get an non-existing edge with uuid: {}"
