@@ -27,7 +27,7 @@ class FoamRunner():
             raise ValueError('Number of cores must be greater than zero')
         elif self.ncores == 1:
             cmd = self.solver + " -case "+self.case + " > " +\
-                  os.path.join(self.case, 'log') + ' 2>&1'
+                os.path.join(self.case, 'log') + ' 2>&1'
             subprocess.call(cmd, shell=True)
         else:
             # write and modify decomposeParDict file

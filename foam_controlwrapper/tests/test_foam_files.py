@@ -26,6 +26,7 @@ class FoamFilesTestCase(unittest.TestCase):
         self.SP = DataContainer()
         self.BC = DataContainer()
         self.SPExt = {}
+        self.CMExt = {}
 
         self.SP[CUBA.NUMBER_OF_TIME_STEPS] = 1
         self.SP[CUBA.TIME_STEP] = 1
@@ -91,7 +92,7 @@ class FoamFilesTestCase(unittest.TestCase):
                                        self.time, True)
         self.files.modify_files(mesh_inside_wrapper.path, self.time, self.SP,
                                 self.BC, self.solver,
-                                self.SPExt)
+                                self.SPExt, self.CMExt)
         mesh_file.close()
 
 
