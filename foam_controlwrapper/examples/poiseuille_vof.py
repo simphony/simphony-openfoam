@@ -68,4 +68,4 @@ for cell in mesh_inside_wrapper.iter_cells():
 
 # run returns the latest time
 lastTime = wrapper.run()
-print "Timesteps taken ", lastTime
+print "Simulation run up to time: ", lastTime
