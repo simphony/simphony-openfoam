@@ -501,7 +501,7 @@ void foam_addMesh(std::string name,std::vector<double> points,  std::vector<int>
 	labels[i] = cellpoints[cind];	
       }
     
-    if (np == 3)
+    if (np == 4)
       cellShapes[icell] = cellShape(tet,labels);	
     else if (np == 5)
       cellShapes[icell] = cellShape(pyr,labels);
