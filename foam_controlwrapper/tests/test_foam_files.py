@@ -6,20 +6,20 @@ foam_files module functionalities
 """
 
 import unittest
+import os
+import shutil
 
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
-from foam_controlwrapper.foam_files import FoamFiles
-from foam_controlwrapper.foam_controlwrapper import FoamControlWrapper
 from simphony.io.h5_cuds import H5CUDS
-import os
-import shutil
+
+from foam_controlwrapper import foam_files
+from foam_controlwrapper.foam_controlwrapper import FoamControlWrapper
 
 
 class FoamFilesTestCase(unittest.TestCase):
     """Test case for FoamFiles class"""
     def setUp(self):
-        self.files = FoamFiles()
         self.path = 'test_path'
         self.solver = 'simpleFoam'
         self.time = '0'
@@ -42,7 +42,7 @@ class FoamFilesTestCase(unittest.TestCase):
                                   'boundary3': 'empty'}
 
     def tearDown(self):
-        FoamFiles().remove_parser_files(os.getcwd())
+        foam_files.remove_parser_files(os.getcwd())
         if os.path.exists(self.path):
             shutil.rmtree(self.path)
 
@@ -51,7 +51,7 @@ class FoamFilesTestCase(unittest.TestCase):
 
         """
 
-        self.files.create_file_content(self.path,
+        foam_files.create_file_content(self.path,
                                        self.solver,
                                        self.time,
                                        True)
@@ -61,14 +61,14 @@ class FoamFilesTestCase(unittest.TestCase):
 
         """
 
-        self.files.create_directories(self.path)
+        foam_files.create_directories(self.path)
 
     def test_write_default_files(self):
         """Test write_default_files method
 
         """
 
-        self.files.write_default_files(self.path,
+        foam_files.write_default_files(self.path,
                                        self.solver,
                                        self.time,
                                        True)
@@ -87,10 +87,10 @@ class FoamFilesTestCase(unittest.TestCase):
 
         mesh_inside_wrapper = wrapper.add_mesh(mesh_from_file)
 
-        self.files.write_default_files(mesh_inside_wrapper.path,
+        foam_files.write_default_files(mesh_inside_wrapper.path,
                                        self.solver,
                                        self.time, True)
-        self.files.modify_files(mesh_inside_wrapper.path, self.time, self.SP,
+        foam_files.modify_files(mesh_inside_wrapper.path, self.time, self.SP,
                                 self.BC, self.solver,
                                 self.SPExt, self.CMExt)
         mesh_file.close()
