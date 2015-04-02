@@ -411,7 +411,6 @@ class FoamMesh(ABCMesh):
                 + str(cell.uid)
             raise KeyError(error_str)
 
-
         # if points are changed raise warning
         pointLabels = foamface.getCellPoints(self.name,
                                              self._uuidToFoamLabel[cell.uid])
