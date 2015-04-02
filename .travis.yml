@@ -4,9 +4,13 @@ python:
 virtualenv:
   system_site_packages: true
 
-matrix:
+env:
   - REQUIREMENTS=stable_requirements.txt
   - REQUIREMENTS=latest_requirements.txt
+
+matrix:
+  allow_failures:
+    - env: REQUIREMENTS=latest_requirements.txt
 
 before_install:
   - sudo sh -c "echo deb http://www.openfoam.org/download/ubuntu precise main > /etc/apt/sources.list.d/openfoam.list"
@@ -24,10 +28,13 @@ before_install:
   - pip install -r $REQUIREMENTS
   - pip install -r dev_requirements.txt
   - pip install coveralls
+
 install:
   - python setup.py develop
+
 script:
   - coverage run -m unittest discover
   - flake8 .
+
 after_success:
   - coveralls
