@@ -3,6 +3,11 @@ python:
   - "2.7"
 virtualenv:
   system_site_packages: true
+
+matrix:
+  - REQUIREMENTS=stable_requirements.txt
+  - REQUIREMENTS=latest_requirements.txt
+
 before_install:
   - sudo sh -c "echo deb http://www.openfoam.org/download/ubuntu precise main > /etc/apt/sources.list.d/openfoam.list"
   - sudo apt-get update -qq
@@ -16,9 +21,8 @@ before_install:
   # (2) Pytables breaks with latest Cython
   #     see https://github.com/PyTables/PyTables/issues/388
   - pip install numexpr cython==0.20
-  - pip install -r requirements.txt
+  - pip install -r $REQUIREMENTS
   - pip install -r dev_requirements.txt
-  - pip install -r doc_requirements.txt
   - pip install coveralls
 install:
   - python setup.py develop
