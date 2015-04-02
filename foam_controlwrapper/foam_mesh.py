@@ -411,10 +411,6 @@ class FoamMesh(ABCMesh):
                 + str(cell.uid)
             raise KeyError(error_str)
 
-        if not isinstance(cell, Cell):
-            error_str = "Trying to update an object with the wrong type. "\
-                + "Cell expected."
-            raise TypeError(error_str)
 
         # if points are changed raise warning
         pointLabels = foamface.getCellPoints(self.name,

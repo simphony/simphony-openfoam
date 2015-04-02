@@ -105,25 +105,15 @@ class FoamFiles():
         solver : solver
             name of the solver
 
-
-        Raises
-        ------
-        Exception when IOError occurs.
-
         """
 
         self.create_directories(caseDirectory)
         fileContent = self.create_file_content(caseDirectory, solver,
                                                time, writeFields)
         for file in fileContent:
-            try:
-                full_name = os.path.join(caseDirectory, file)
-                with open(full_name, 'w') as f:
-                    f.write(fileContent[file])
-            except IOError:
-                error_str = "Can't write file: {}"
-                raise IOError(error_str.format(os.path.join(caseDirectory,
-                                                            file)))
+            full_name = os.path.join(caseDirectory, file)
+            with open(full_name, 'w') as f:
+                f.write(fileContent[file])
 
     def modify_files(self, case, startTime, SP, BC, solver, SPExt, CMExt):
         """Modify OpenFoam case files according to user settings
@@ -162,57 +152,33 @@ class FoamFiles():
                 emptyBoundaries.append(boundary)
 
         boundaryFile = os.path.join(case, 'constant', 'polyMesh', 'boundary')
-        try:
-            control = ParsedParameterFile(boundaryFile, boundaryDict=True)
-            boundaries = control.content
-            for boundary in emptyBoundaries:
-                for bi in range(len(boundaries)):
-                    filb = boundaries[bi]
-                    if filb == boundary:
-                        boundaries[bi+1]['type'] = "empty"
-                        break
+        control = ParsedParameterFile(boundaryFile, boundaryDict=True)
+        boundaries = control.content
+        for boundary in emptyBoundaries:
+            for bi in range(len(boundaries)):
+                filb = boundaries[bi]
+                if filb == boundary:
+                    boundaries[bi+1]['type'] = "empty"
+                    break
 
-        except IOError:
-            error_str = "File {} does not exist"
-            raise IOError(error_str.format(boundaryFile))
-        try:
-            control.writeFile()
-        except IOError:
-            error_str = "Can't write file with content: {}"
-            raise IOError(error_str.format(control))
+        control.writeFile()
 
-# parse system/controlDict -file in case directory
+        # parse system/controlDict -file in case directory
         parFile = os.path.join(case, 'system', 'controlDict')
-        try:
-            control = ParsedParameterFile(parFile)
-            control["startTime"] = startTime
-            control["endTime"] = endTime
-            control["deltaT"] = deltaT
-            control["writeInterval"] = writeInterval
-        except IOError:
-            error_str = "File {} does not exist"
-            raise IOError(error_str.format(parFile))
-        try:
-            control.writeFile()
-        except IOError:
-            error_str = "Can't write file with content: {}"
-            raise IOError(error_str.format(control))
+        control = ParsedParameterFile(parFile)
+        control["startTime"] = startTime
+        control["endTime"] = endTime
+        control["deltaT"] = deltaT
+        control["writeInterval"] = writeInterval
+        control.writeFile()
 
         if CUBAExt.NUMBER_OF_CORES in CMExt:
             # parse system/decomposeParDict -file in case directory
             parFile = os.path.join(case, 'system', 'decomposeParDict')
-            try:
-                control = ParsedParameterFile(parFile)
-                control["numberOfSubdomains"] =\
-                    CMExt[CUBAExt.NUMBER_OF_CORES]
-            except IOError:
-                error_str = "File {} does not exist"
-                raise IOError(error_str.format(parFile))
-            try:
-                control.writeFile()
-            except IOError:
-                error_str = "Can't write file with content: {}"
-                raise IOError(error_str.format(control))
+            control = ParsedParameterFile(parFile)
+            control["numberOfSubdomains"] =\
+                CMExt[CUBAExt.NUMBER_OF_CORES]
+            control.writeFile()
 
         if solver == "interFoam":
             density = SP[CUBA.DENSITY]
@@ -220,27 +186,19 @@ class FoamFiles():
 
             # parse constant/transportProperties -file in case directory
             parFile = os.path.join(case, 'constant', 'transportProperties')
-            try:
-                control = ParsedParameterFile(parFile)
-                control["phase1"]["nu"][2] = \
-                    viscosity[SPExt[CUBAExt.PHASE_LIST][0]] / \
-                    density[SPExt[CUBAExt.PHASE_LIST][0]]
-                control["phase1"]["rho"][2] = \
-                    density[SPExt[CUBAExt.PHASE_LIST][0]]
-                control["phase2"]["nu"][2] = \
-                    viscosity[SPExt[CUBAExt.PHASE_LIST][1]] / \
-                    density[SPExt[CUBAExt.PHASE_LIST][1]]
-                control["phase2"]["rho"][2] = \
-                    density[SPExt[CUBAExt.PHASE_LIST][1]]
-                control["sigma"][2] = SPExt[CUBAExt.SURFACE_TENSION]
-            except IOError:
-                error_str = "File {} does not exist"
-                raise IOError(error_str.format(parFile))
-                try:
-                    control.writeFile()
-                except IOError:
-                    error_str = "Can't write file with content: {}"
-                    raise IOError(error_str.format(control))
+            control = ParsedParameterFile(parFile)
+            control["phase1"]["nu"][2] = \
+                viscosity[SPExt[CUBAExt.PHASE_LIST][0]] / \
+                density[SPExt[CUBAExt.PHASE_LIST][0]]
+            control["phase1"]["rho"][2] = \
+                density[SPExt[CUBAExt.PHASE_LIST][0]]
+            control["phase2"]["nu"][2] = \
+                viscosity[SPExt[CUBAExt.PHASE_LIST][1]] / \
+                density[SPExt[CUBAExt.PHASE_LIST][1]]
+            control["phase2"]["rho"][2] = \
+                density[SPExt[CUBAExt.PHASE_LIST][1]]
+            control["sigma"][2] = SPExt[CUBAExt.SURFACE_TENSION]
+            control.writeFile()
         else:
             density = SP[CUBA.DENSITY]
             viscosity = SP[CUBA.DYNAMIC_VISCOSITY]
@@ -248,50 +206,34 @@ class FoamFiles():
 
             # parse constant/transportProperties -file in case directory
             parFile = os.path.join(case, 'constant', 'transportProperties')
-            try:
-                control = ParsedParameterFile(parFile)
-                control["nu"][2] = kinematicViscosity
-            except IOError:
-                error_str = "File {} does not exist"
-                raise IOError(error_str.format(parFile))
-            try:
-                control.writeFile()
-            except IOError:
-                error_str = "Can't write file with content: {}"
-                raise IOError(error_str.format(control))
+            control = ParsedParameterFile(parFile)
+            control["nu"][2] = kinematicViscosity
+            control.writeFile()
 
         velocityBCs = BC[CUBA.VELOCITY]
         # parse startTime/U -file in case directory
         parFile = os.path.join(case, str(startTime), 'U')
-        try:
-            control = ParsedParameterFile(parFile)
-            for boundary in velocityBCs:
-                control["boundaryField"][boundary] = {}
-                if velocityBCs[boundary] == "zeroGradient":
-                    control["boundaryField"][boundary]["type"] = \
-                        "zeroGradient"
-                    control["boundaryField"][boundary]["value"] = \
-                        "uniform (0 0 0)"
-                elif velocityBCs[boundary] == "empty":
-                    control["boundaryField"][boundary]["type"] = \
-                        "empty"
-                else:
-                    control["boundaryField"][boundary]["type"] = \
-                        "fixedValue"
-                    valueString = "uniform ( " \
-                                  + str(velocityBCs[boundary][0]) + " " \
-                                  + str(velocityBCs[boundary][1]) + " " \
-                                  + str(velocityBCs[boundary][2]) + " )"
-                    control["boundaryField"][boundary]["value"] = \
-                        valueString
-        except IOError:
-            error_str = "File {} does not exist"
-            raise IOError(error_str.format(parFile))
-        try:
-            control.writeFile()
-        except IOError:
-            error_str = "Can't write file with content: {}"
-            raise IOError(error_str.format(control))
+        control = ParsedParameterFile(parFile)
+        for boundary in velocityBCs:
+            control["boundaryField"][boundary] = {}
+            if velocityBCs[boundary] == "zeroGradient":
+                control["boundaryField"][boundary]["type"] = \
+                    "zeroGradient"
+                control["boundaryField"][boundary]["value"] = \
+                    "uniform (0 0 0)"
+            elif velocityBCs[boundary] == "empty":
+                control["boundaryField"][boundary]["type"] = \
+                    "empty"
+            else:
+                control["boundaryField"][boundary]["type"] = \
+                    "fixedValue"
+                valueString = "uniform ( " \
+                              + str(velocityBCs[boundary][0]) + " " \
+                              + str(velocityBCs[boundary][1]) + " " \
+                              + str(velocityBCs[boundary][2]) + " )"
+                control["boundaryField"][boundary]["value"] = \
+                    valueString
+        control.writeFile()
 
         pressureBCs = BC[CUBA.PRESSURE]
 
@@ -300,69 +242,53 @@ class FoamFiles():
         if solver == "interFoam":
             pname = 'p_rgh'
         parFile = os.path.join(case, str(startTime), pname)
-        try:
-            control = ParsedParameterFile(parFile)
-            for boundary in pressureBCs:
-                control["boundaryField"][boundary] = {}
-                if pressureBCs[boundary] == "zeroGradient":
-                    control["boundaryField"][boundary]["type"] = \
-                        "zeroGradient"
-                    control["boundaryField"][boundary]["value"] = \
-                        "uniform 0"
-                elif pressureBCs[boundary] == "fixedFluxPressure":
-                    control["boundaryField"][boundary]["type"] = \
-                        "fixedFluxPressure"
-                    control["boundaryField"][boundary]["value"] = \
-                        "uniform 0"
-                elif pressureBCs[boundary] == "empty":
-                    control["boundaryField"][boundary]["type"] = \
-                        "empty"
-                else:
-                    control["boundaryField"][boundary]["type"] = \
-                        "fixedValue"
-                    valueString = "uniform "+str(pressureBCs[boundary])
-                    control["boundaryField"][boundary]["value"] = \
-                        valueString
-        except IOError:
-            error_str = "File {} does not exist"
-            raise IOError(error_str.format(parFile))
-        try:
-            control.writeFile()
-        except IOError:
-            error_str = "Can't write file with content: {}"
-            raise IOError(error_str.format(control))
+        control = ParsedParameterFile(parFile)
+        for boundary in pressureBCs:
+            control["boundaryField"][boundary] = {}
+            if pressureBCs[boundary] == "zeroGradient":
+                control["boundaryField"][boundary]["type"] = \
+                    "zeroGradient"
+                control["boundaryField"][boundary]["value"] = \
+                    "uniform 0"
+            elif pressureBCs[boundary] == "fixedFluxPressure":
+                control["boundaryField"][boundary]["type"] = \
+                    "fixedFluxPressure"
+                control["boundaryField"][boundary]["value"] = \
+                    "uniform 0"
+            elif pressureBCs[boundary] == "empty":
+                control["boundaryField"][boundary]["type"] = \
+                    "empty"
+            else:
+                control["boundaryField"][boundary]["type"] = \
+                    "fixedValue"
+                valueString = "uniform "+str(pressureBCs[boundary])
+                control["boundaryField"][boundary]["value"] = \
+                    valueString
+        control.writeFile()
 
         if solver == "interFoam":
             volumeFractionBCs = BC[CUBA.VOLUME_FRACTION]
             # parse startTime/alpha1 -file in case directory
             parFile = os.path.join(case, str(startTime), 'alpha1')
-            try:
-                control = ParsedParameterFile(parFile)
-                for boundary in volumeFractionBCs:
-                    control["boundaryField"][boundary] = {}
-                    if volumeFractionBCs[boundary] == "zeroGradient":
-                        control["boundaryField"][boundary]["type"] = \
-                            "zeroGradient"
-                        control["boundaryField"][boundary]["value"] = \
-                            "uniform 0"
-                    elif volumeFractionBCs[boundary] == "empty":
-                        control["boundaryField"][boundary]["type"] = \
-                            "empty"
-                    else:
-                        control["boundaryField"][boundary]["type"] = \
-                            "fixedValue"
-                        valueString = "uniform " + \
-                                      str(volumeFractionBCs[boundary])
-                        control["boundaryField"][boundary]["value"] = \
-                            valueString
-            except IOError:
-                error_str = "File {} does not exist"
-                raise IOError(error_str.format(parFile))
-            try:
-                control.writeFile()
-            except IOError:
-                error_str = "Can't write file with content: {}"
-                raise IOError(error_str.format(control))
+            control = ParsedParameterFile(parFile)
+            for boundary in volumeFractionBCs:
+                control["boundaryField"][boundary] = {}
+                if volumeFractionBCs[boundary] == "zeroGradient":
+                    control["boundaryField"][boundary]["type"] = \
+                        "zeroGradient"
+                    control["boundaryField"][boundary]["value"] = \
+                        "uniform 0"
+                elif volumeFractionBCs[boundary] == "empty":
+                    control["boundaryField"][boundary]["type"] = \
+                        "empty"
+                else:
+                    control["boundaryField"][boundary]["type"] = \
+                        "fixedValue"
+                    valueString = "uniform " + \
+                        str(volumeFractionBCs[boundary])
+                    control["boundaryField"][boundary]["value"] = \
+                        valueString
+            control.writeFile()
 
     def set_all_cell_data(self, path, time_name, data_name,
                           values, value_type):
@@ -384,28 +310,18 @@ class FoamFiles():
 
         """
 
-        try:
-            dir_name = os.path.join(path, time_name)
-            control = ParsedParameterFile(os.path.join(dir_name, data_name))
+        dir_name = os.path.join(path, time_name)
+        control = ParsedParameterFile(os.path.join(dir_name, data_name))
 
-            field_str = 'nonuniform List<' + value_type + '>\n'
-            field_str += str(len(values)) + '\n' + '(' + '\n'
-            for value in values:
-                field_str += str(value).replace(',', '') + '\n'
-            field_str += ')'
+        field_str = 'nonuniform List<' + value_type + '>\n'
+        field_str += str(len(values)) + '\n' + '(' + '\n'
+        for value in values:
+            field_str += str(value).replace(',', '') + '\n'
+        field_str += ')'
 
-            control['internalField'] = field_str
+        control['internalField'] = field_str
 
-        except IOError:
-            error_str = "Can't read file: {}"
-            raise IOError(error_str.format(os.path.join(dir_name,
-                                                        data_name)))
-        try:
-            control.writeFile()
-        except IOError:
-            error_str = "Can't write file: {}"
-            raise IOError(error_str.format(os.path.join(dir_name,
-                                                        data_name)))
+        control.writeFile()
 
     def set_cell_data(self, path, time_name,
                       data_name, label, value, value_type):
@@ -429,31 +345,21 @@ class FoamFiles():
 
         """
 
-        try:
-            dir_name = os.path.join(path, time_name)
-            control = ParsedParameterFile(os.path.join(dir_name, data_name))
+        dir_name = os.path.join(path, time_name)
+        control = ParsedParameterFile(os.path.join(dir_name, data_name))
 
-            values = control['internalField']
-            values[label] = value
+        values = control['internalField']
+        values[label] = value
 
-            field_str = 'nonuniform List<' + value_type + '>\n'
-            field_str += str(len(values.val)) + '\n' + '(' + '\n'
-            for value in values:
-                field_str += str(value).replace(',', '') + '\n'
-            field_str += ')'
+        field_str = 'nonuniform List<' + value_type + '>\n'
+        field_str += str(len(values.val)) + '\n' + '(' + '\n'
+        for value in values:
+            field_str += str(value).replace(',', '') + '\n'
+        field_str += ')'
 
-            control['internalField'] = field_str
+        control['internalField'] = field_str
 
-        except IOError:
-            error_str = "Can't read file: {}"
-            raise IOError(error_str.format(os.path.join(dir_name,
-                                                        data_name)))
-        try:
-            control.writeFile()
-        except IOError:
-            error_str = "Can't write file: {}"
-            raise IOError(error_str.format(os.path.join(dir_name,
-                                                        data_name)))
+        control.writeFile()
 
     def get_all_cell_data(self, path, time_name, data_name):
         """Get specific data from every cell
@@ -469,17 +375,11 @@ class FoamFiles():
 
         """
 
-        try:
-            dir_name = os.path.join(path, time_name)
-            control = ParsedParameterFile(os.path.join(dir_name, data_name))
+        dir_name = os.path.join(path, time_name)
+        control = ParsedParameterFile(os.path.join(dir_name, data_name))
 
-            values = control['internalField']
-            return values.val
-
-        except IOError:
-            error_str = "Can't read file: {}"
-            raise IOError(error_str.format(os.path.join(dir_name,
-                                                        data_name)))
+        values = control['internalField']
+        return values.val
 
     def get_cell_data(self, path, time_name, data_name, label):
         """Get specific cell data for specific cell
@@ -498,22 +398,17 @@ class FoamFiles():
 
         """
 
-        try:
-            dir_name = os.path.join(path, time_name)
-            control = ParsedParameterFile(os.path.join(dir_name, data_name))
+        dir_name = os.path.join(path, time_name)
+        control = ParsedParameterFile(os.path.join(dir_name, data_name))
 
-            values = control['internalField']
-            if isinstance(values.val, list):
-                if isinstance(values.val[label], Vector):
-                    return tuple([v for v in values.val[label].vals])
-                else:
-                    return values.val[label]
+        values = control['internalField']
+        if isinstance(values.val, list):
+            if isinstance(values.val[label], Vector):
+                return tuple([v for v in values.val[label].vals])
             else:
-                return values.val
-        except IOError:
-            error_str = "Can't read file: {}"
-            raise IOError(error_str.format(os.path.join(dir_name,
-                                                        data_name)))
+                return values.val[label]
+        else:
+            return values.val
 
     def get_cell_data_names(self, path, time_name):
         """Get cell data names
