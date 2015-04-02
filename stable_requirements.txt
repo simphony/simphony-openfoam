@@ -1,1 +1,1 @@
-git://github.com/simphony/simphony-common.git@0.1.0#egg=simphony
+git+https://github.com/simphony/simphony-common.git@0.1.0#egg=simphony
