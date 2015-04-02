@@ -237,7 +237,7 @@ class FoamFiles():
 
         pressureBCs = BC[CUBA.PRESSURE]
 
-# parse startTime/p -file in case directory
+        # parse startTime/p -file in case directory
         pname = 'p'
         if solver == "interFoam":
             pname = 'p_rgh'
