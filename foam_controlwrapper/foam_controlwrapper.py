@@ -3,15 +3,17 @@
 Wrapper module for OpenFOAM
 
 """
+import os
+
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
-from foam_files import FoamFiles
-from cuba_extension import CUBAExt
-from foam_mesh import FoamMesh
-from foam_runner import FoamRunner
+
+from .cuba_extension import CUBAExt
+from .foam_mesh import FoamMesh
+from .foam_runner import FoamRunner
+from .foam_files import modify_files, write_default_files, remove_parser_files
 import simphonyfoaminterface
-import os
 
 
 class FoamControlWrapper(ABCModelingEngine):
@@ -75,19 +77,18 @@ class FoamControlWrapper(ABCModelingEngine):
 
         turbulent = 'Turbulent' if not (CUBAExt.LAMINAR_MODEL in GE) else ''
 
-        foamFiles = FoamFiles()
         # write default files based on solver
         # (not field data files if exists)
         templateName = solver + turbulent
-        foamFiles.write_default_files(case, templateName, mesh._time, True)
+        write_default_files(case, templateName, mesh._time, True)
 
         # write first mesh from foams objectRegistry to disk
         mesh.write()
 
         # modify control and boundary data files based on SP and BC
-        foamFiles.modify_files(case, mesh._time, self.SP, self.BC,
-                               solver, self.SP_extensions,
-                               self.CM_extensions)
+        modify_files(
+            case, mesh._time, self.SP, self.BC,
+            solver, self.SP_extensions, self.CM_extensions)
 
         # run case
         if CUBAExt.NUMBER_OF_CORES in self.CM_extensions:
@@ -98,7 +99,7 @@ class FoamControlWrapper(ABCModelingEngine):
         runner.run()
 
         # remove PyFoam parser files
-        foamFiles.remove_parser_files(os.getcwd())
+        remove_parser_files(os.getcwd())
 
         # save timestep to mesh
         mesh._time = runner.get_last_time()
