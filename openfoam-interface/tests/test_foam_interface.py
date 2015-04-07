@@ -6,14 +6,16 @@ OpenFoam native interface functionalities
 """
 
 import unittest
+import os
+import shutil
+from collections import OrderedDict
+
 from simphony.cuds.mesh import Mesh, Face, Point, Cell
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
 import simphonyfoaminterface as foamface
-from foam_controlwrapper.foam_files import FoamFiles
-from collections import OrderedDict
-import os
-import shutil
+
+from foam_controlwrapper import foam_files
 
 
 class FoamInterfaceTestCase(unittest.TestCase):
@@ -150,8 +152,8 @@ class FoamInterfaceTestCase(unittest.TestCase):
             raise ValueError(error_str.format(self.mesh.name))
 
         # this to have controlDict file for mesh definition
-        FoamFiles().write_default_files(self.path, 'simpleFoam',
-                                        self.time, False)
+        foam_files.write_default_files(
+            self.path, 'simpleFoam', self.time, False)
 
         foamface.init(self.name, os.path.abspath(os.path.join(self.path,
                                                               os.pardir)))
