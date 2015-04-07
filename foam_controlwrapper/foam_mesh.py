@@ -153,7 +153,7 @@ class FoamMesh(ABCMesh):
 
             # this to have controlDict file for mesh definition
             write_default_files(self.path, 'simpleFoam',
-                                            self._time, False)
+                                self._time, False)
             # init objectRegistry and map to mesh name
             foamface.init(name, os.path.abspath(os.path.join(self.path,
                                                              os.pardir)))

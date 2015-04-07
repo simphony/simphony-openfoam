@@ -3,4 +3,3 @@
 from .foam_controlwrapper import FoamControlWrapper, read_foammesh
 from .cuba_extension import CUBAExt
 __all__ = ['FoamControlWrapper', 'CUBAExt', 'read_foammesh']
-

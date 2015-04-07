@@ -244,6 +244,7 @@ class FoamControlWrapper(ABCModelingEngine):
         message = 'FoamWrapper does not handle lattice'
         raise NotImplementedError(message)
 
+
 def read_foammesh(name, path):
     """Read mesh from OpenFoam case files.
 
