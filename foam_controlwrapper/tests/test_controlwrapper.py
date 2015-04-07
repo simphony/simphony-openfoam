@@ -6,16 +6,17 @@ foam_controlwrapper module functionalities
 """
 
 import unittest
+import os
+import shutil
 
 from simphony.cuds.mesh import Mesh, Face, Point, Cell
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
 from simphony.io.h5_cuds import H5CUDS
+
 from foam_controlwrapper.foam_controlwrapper import FoamControlWrapper
 from foam_controlwrapper.cuba_extension import CUBAExt
-from foam_controlwrapper.foam_files import FoamFiles
-import os
-import shutil
+from foam_controlwrapper import foam_files
 
 
 class FoamControlWrapperTestCase(unittest.TestCase):
@@ -71,7 +72,7 @@ class FoamControlWrapperTestCase(unittest.TestCase):
         [self.mesh.add_cell(cell) for cell in self.cells]
 
     def tearDown(self):
-        FoamFiles().remove_parser_files(os.getcwd())
+        foam_files.remove_parser_files(os.getcwd())
 
     def test_add_mesh(self):
         """Test add_mesh method

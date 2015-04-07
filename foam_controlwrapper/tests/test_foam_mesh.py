@@ -6,13 +6,14 @@ foam_mesh module functionalities
 """
 
 import unittest
+import os
 
 from simphony.cuds.mesh import Mesh, Face, Point, Cell, Edge
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
+
 from foam_controlwrapper.foam_mesh import FoamMesh
-from foam_controlwrapper.foam_files import FoamFiles
-import os
+from foam_controlwrapper import foam_files
 
 
 class FoamMeshTestCase(unittest.TestCase):
@@ -72,7 +73,7 @@ class FoamMeshTestCase(unittest.TestCase):
         [self.mesh.add_cell(cell) for cell in self.cells]
 
     def tearDown(self):
-        FoamFiles().remove_parser_files(os.getcwd())
+        foam_files.remove_parser_files(os.getcwd())
 
     def test_get_point(self):
         """Test get_point method
@@ -188,7 +189,8 @@ class FoamMeshTestCase(unittest.TestCase):
         cell.data[CUBA.VELOCITY] = (2, 1, 3)
         foam_mesh.update_cell(cell)
         cell_f = foam_mesh.get_cell(cell.uid)
-        self.assertEqual(cell.data[CUBA.VELOCITY], cell_f.data[CUBA.VELOCITY])
+        self.assertIsInstance(cell_f.data, DataContainer)
+        self.assertEqual(cell.data, cell_f.data)
 
         cell.points = [self.points[1].uid, self.points[2].uid,
                        self.points[3].uid]

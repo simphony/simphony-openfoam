@@ -12,439 +12,438 @@ from PyFoam.RunDictionary.ParsedParameterFile import ParsedParameterFile
 from PyFoam.Basics.DataStructures import Vector
 
 
-class FoamFiles():
-    """ Module for OpenFOAM file management
+def create_file_content(path, solver, time, writeFields):
+    """Create content mapping to files
+
+    Parameters
+    ----------
+    path : str
+        path to case directory
+    solver : str
+        name of the solver
+    time : str
+        time name
+    writeFields : bool
+        flag to tell whether field variables are written or not
+
+    """
+    version = '2.2'
+    foamClass = 'dictionary'
+    fileContent = {}
+    for foamFile in dictionaryTemplates[solver]:
+        foamClass = 'dictionary'
+        location = '\"' + os.path.dirname(foamFile) + '\"'
+        foamObject = os.path.basename(foamFile)
+        heading = head.format(version=version, foamclass=foamClass,
+                              location=location, foamobject=foamObject)
+        fileContent[foamFile] = heading +\
+            dictionaryTemplates[solver][foamFile]
+
+    if writeFields:
+        for foamFile in scalarTemplates[solver]:
+            if not os.path.exists(os.path.join(path, time, foamFile)):
+                foamClass = 'volScalarField'
+                location = '\"' + time + '\"'
+                foamObject = os.path.basename(foamFile)
+                heading = head.format(version=version,
+                                      foamclass=foamClass,
+                                      location=location,
+                                      foamobject=foamObject)
+                file_name = os.path.join(time, foamFile)
+                fileContent[file_name] = heading +\
+                    scalarTemplates[solver][foamFile]
+
+        for foamFile in vectorTemplates[solver]:
+            if not os.path.exists(os.path.join(path, time, foamFile)):
+                foamClass = 'volVectorField'
+                location = '\"' + time + '\"'
+                foamObject = os.path.basename(foamFile)
+                heading = head.format(version=version,
+                                      foamclass=foamClass,
+                                      location=location,
+                                      foamobject=foamObject)
+                file_name = os.path.join(time, foamFile)
+                fileContent[file_name] = heading +\
+                    vectorTemplates[solver][foamFile]
+
+    return fileContent
+
+
+def create_directories(caseDirectory):
+    """Create default directories
+
+    Parameters
+    ----------
+    caseDirectory : str
+        directory to create directories on.
 
     """
 
-    def __init__(self):
-        pass
+    directories = ('constant', 'system', '0',
+                   os.path.join('constant', 'polyMesh'))
+    for dir in directories:
+        directory = os.path.join(caseDirectory, dir)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
 
-    def create_file_content(self, path, solver, time, writeFields):
-        """Create content mapping to files
 
-        Parameters
-        ----------
-        path : str
-            path to case directory
-        solver : str
-            name of the solver
-        time : str
-            time name
-        writeFields : bool
-            flag to tell whether field variables are written or not
+def write_default_files(caseDirectory, solver, time, writeFields):
+    """Write default OpenFOAM -files base on solver
+    attribute to given directory
 
-        """
-        version = '2.2'
-        foamClass = 'dictionary'
-        fileContent = {}
-        for foamFile in dictionaryTemplates[solver]:
-            foamClass = 'dictionary'
-            location = '\"' + os.path.dirname(foamFile) + '\"'
-            foamObject = os.path.basename(foamFile)
-            heading = head.format(version=version, foamclass=foamClass,
-                                  location=location, foamobject=foamObject)
-            fileContent[foamFile] = heading +\
-                dictionaryTemplates[solver][foamFile]
+    Parameters
+    ----------
+    caseDirectory : caseDirectory
+        directory to write files on.
+    solver : solver
+        name of the solver
 
-        if writeFields:
-            for foamFile in scalarTemplates[solver]:
-                if not os.path.exists(os.path.join(path, time, foamFile)):
-                    foamClass = 'volScalarField'
-                    location = '\"' + time + '\"'
-                    foamObject = os.path.basename(foamFile)
-                    heading = head.format(version=version,
-                                          foamclass=foamClass,
-                                          location=location,
-                                          foamobject=foamObject)
-                    file_name = os.path.join(time, foamFile)
-                    fileContent[file_name] = heading +\
-                        scalarTemplates[solver][foamFile]
+    """
 
-            for foamFile in vectorTemplates[solver]:
-                if not os.path.exists(os.path.join(path, time, foamFile)):
-                    foamClass = 'volVectorField'
-                    location = '\"' + time + '\"'
-                    foamObject = os.path.basename(foamFile)
-                    heading = head.format(version=version,
-                                          foamclass=foamClass,
-                                          location=location,
-                                          foamobject=foamObject)
-                    file_name = os.path.join(time, foamFile)
-                    fileContent[file_name] = heading +\
-                        vectorTemplates[solver][foamFile]
+    create_directories(caseDirectory)
+    fileContent = create_file_content(caseDirectory, solver, time, writeFields)
+    for file in fileContent:
+        full_name = os.path.join(caseDirectory, file)
+        with open(full_name, 'w') as f:
+            f.write(fileContent[file])
 
-        return fileContent
 
-    def create_directories(self, caseDirectory):
-        """Create default directories
+def modify_files(case, startTime, SP, BC, solver, SPExt, CMExt):
+    """Modify OpenFoam case files according to user settings
 
-        Parameters
-        ----------
-        caseDirectory : str
-            directory to create directories on.
+    Parameters
+    ----------
+    case : str
+        case directory
+    startTime : str
+        start time
+    SP : DataContainer
+        System Parameters
+    BC : DataContainer
+        Boundary Conditions
+    solver : str
+        solver name
+    SPExt : dictionary
+        extension to SP
 
-        """
+    CMExt : dictionary
+        extension to CM
 
-        directories = ('constant', 'system', '0',
-                       os.path.join('constant', 'polyMesh'))
-        for dir in directories:
-            directory = os.path.join(caseDirectory, dir)
-            if not os.path.exists(directory):
-                os.makedirs(directory)
+    """
 
-    def write_default_files(self, caseDirectory, solver,
-                            time, writeFields):
-        """Write default OpenFOAM -files base on solver
-        attribute to given directory
+    nOfTimeSteps = SP[CUBA.NUMBER_OF_TIME_STEPS]
+    deltaT = SP[CUBA.TIME_STEP]
+    endTime = int(startTime) + nOfTimeSteps*deltaT
+    writeInterval = endTime-int(startTime)
+    # if empty type boundary condition is used this must be
+    # changed in foam's polyMesh/boundary file to the same
+    # type (default type is patch)
+    pressureBCs = BC[CUBA.PRESSURE]
+    emptyBoundaries = []
+    for boundary in pressureBCs:
+        if pressureBCs[boundary] == "empty":
+            emptyBoundaries.append(boundary)
 
-        Parameters
-        ----------
-        caseDirectory : caseDirectory
-            directory to write files on.
-        solver : solver
-            name of the solver
+    boundaryFile = os.path.join(case, 'constant', 'polyMesh', 'boundary')
+    control = ParsedParameterFile(boundaryFile, boundaryDict=True)
+    boundaries = control.content
+    for boundary in emptyBoundaries:
+        for bi in range(len(boundaries)):
+            filb = boundaries[bi]
+            if filb == boundary:
+                boundaries[bi+1]['type'] = "empty"
+                break
 
-        """
+    control.writeFile()
 
-        self.create_directories(caseDirectory)
-        fileContent = self.create_file_content(caseDirectory, solver,
-                                               time, writeFields)
-        for file in fileContent:
-            full_name = os.path.join(caseDirectory, file)
-            with open(full_name, 'w') as f:
-                f.write(fileContent[file])
+    # parse system/controlDict -file in case directory
+    parFile = os.path.join(case, 'system', 'controlDict')
+    control = ParsedParameterFile(parFile)
+    control["startTime"] = startTime
+    control["endTime"] = endTime
+    control["deltaT"] = deltaT
+    control["writeInterval"] = writeInterval
+    control.writeFile()
 
-    def modify_files(self, case, startTime, SP, BC, solver, SPExt, CMExt):
-        """Modify OpenFoam case files according to user settings
-
-        Parameters
-        ----------
-        case : str
-            case directory
-        startTime : str
-            start time
-        SP : DataContainer
-            System Parameters
-        BC : DataContainer
-            Boundary Conditions
-        solver : str
-            solver name
-        SPExt : dictionary
-            extension to SP
-
-        CMExt : dictionary
-            extension to CM
-
-        """
-
-        nOfTimeSteps = SP[CUBA.NUMBER_OF_TIME_STEPS]
-        deltaT = SP[CUBA.TIME_STEP]
-        endTime = int(startTime) + nOfTimeSteps*deltaT
-        writeInterval = endTime-int(startTime)
-        # if empty type boundary condition is used this must be
-        # changed in foam's polyMesh/boundary file to the same
-        # type (default type is patch)
-        pressureBCs = BC[CUBA.PRESSURE]
-        emptyBoundaries = []
-        for boundary in pressureBCs:
-            if pressureBCs[boundary] == "empty":
-                emptyBoundaries.append(boundary)
-
-        boundaryFile = os.path.join(case, 'constant', 'polyMesh', 'boundary')
-        control = ParsedParameterFile(boundaryFile, boundaryDict=True)
-        boundaries = control.content
-        for boundary in emptyBoundaries:
-            for bi in range(len(boundaries)):
-                filb = boundaries[bi]
-                if filb == boundary:
-                    boundaries[bi+1]['type'] = "empty"
-                    break
-
-        control.writeFile()
-
-        # parse system/controlDict -file in case directory
-        parFile = os.path.join(case, 'system', 'controlDict')
+    if CUBAExt.NUMBER_OF_CORES in CMExt:
+        # parse system/decomposeParDict -file in case directory
+        parFile = os.path.join(case, 'system', 'decomposeParDict')
         control = ParsedParameterFile(parFile)
-        control["startTime"] = startTime
-        control["endTime"] = endTime
-        control["deltaT"] = deltaT
-        control["writeInterval"] = writeInterval
+        control["numberOfSubdomains"] =\
+            CMExt[CUBAExt.NUMBER_OF_CORES]
         control.writeFile()
 
-        if CUBAExt.NUMBER_OF_CORES in CMExt:
-            # parse system/decomposeParDict -file in case directory
-            parFile = os.path.join(case, 'system', 'decomposeParDict')
-            control = ParsedParameterFile(parFile)
-            control["numberOfSubdomains"] =\
-                CMExt[CUBAExt.NUMBER_OF_CORES]
-            control.writeFile()
+    if solver == "interFoam":
+        density = SP[CUBA.DENSITY]
+        viscosity = SP[CUBA.DYNAMIC_VISCOSITY]
 
-        if solver == "interFoam":
-            density = SP[CUBA.DENSITY]
-            viscosity = SP[CUBA.DYNAMIC_VISCOSITY]
+        # parse constant/transportProperties -file in case directory
+        parFile = os.path.join(case, 'constant', 'transportProperties')
+        control = ParsedParameterFile(parFile)
+        control["phase1"]["nu"][2] = \
+            viscosity[SPExt[CUBAExt.PHASE_LIST][0]] / \
+            density[SPExt[CUBAExt.PHASE_LIST][0]]
+        control["phase1"]["rho"][2] = \
+            density[SPExt[CUBAExt.PHASE_LIST][0]]
+        control["phase2"]["nu"][2] = \
+            viscosity[SPExt[CUBAExt.PHASE_LIST][1]] / \
+            density[SPExt[CUBAExt.PHASE_LIST][1]]
+        control["phase2"]["rho"][2] = \
+            density[SPExt[CUBAExt.PHASE_LIST][1]]
+        control["sigma"][2] = SPExt[CUBAExt.SURFACE_TENSION]
+        control.writeFile()
+    else:
+        density = SP[CUBA.DENSITY]
+        viscosity = SP[CUBA.DYNAMIC_VISCOSITY]
+        kinematicViscosity = viscosity/density
 
-            # parse constant/transportProperties -file in case directory
-            parFile = os.path.join(case, 'constant', 'transportProperties')
-            control = ParsedParameterFile(parFile)
-            control["phase1"]["nu"][2] = \
-                viscosity[SPExt[CUBAExt.PHASE_LIST][0]] / \
-                density[SPExt[CUBAExt.PHASE_LIST][0]]
-            control["phase1"]["rho"][2] = \
-                density[SPExt[CUBAExt.PHASE_LIST][0]]
-            control["phase2"]["nu"][2] = \
-                viscosity[SPExt[CUBAExt.PHASE_LIST][1]] / \
-                density[SPExt[CUBAExt.PHASE_LIST][1]]
-            control["phase2"]["rho"][2] = \
-                density[SPExt[CUBAExt.PHASE_LIST][1]]
-            control["sigma"][2] = SPExt[CUBAExt.SURFACE_TENSION]
-            control.writeFile()
+        # parse constant/transportProperties -file in case directory
+        parFile = os.path.join(case, 'constant', 'transportProperties')
+        control = ParsedParameterFile(parFile)
+        control["nu"][2] = kinematicViscosity
+        control.writeFile()
+
+    velocityBCs = BC[CUBA.VELOCITY]
+    # parse startTime/U -file in case directory
+    parFile = os.path.join(case, str(startTime), 'U')
+    control = ParsedParameterFile(parFile)
+    for boundary in velocityBCs:
+        control["boundaryField"][boundary] = {}
+        if velocityBCs[boundary] == "zeroGradient":
+            control["boundaryField"][boundary]["type"] = \
+                "zeroGradient"
+            control["boundaryField"][boundary]["value"] = \
+                "uniform (0 0 0)"
+        elif velocityBCs[boundary] == "empty":
+            control["boundaryField"][boundary]["type"] = \
+                "empty"
         else:
-            density = SP[CUBA.DENSITY]
-            viscosity = SP[CUBA.DYNAMIC_VISCOSITY]
-            kinematicViscosity = viscosity/density
+            control["boundaryField"][boundary]["type"] = \
+                "fixedValue"
+            valueString = "uniform ( " \
+                          + str(velocityBCs[boundary][0]) + " " \
+                          + str(velocityBCs[boundary][1]) + " " \
+                          + str(velocityBCs[boundary][2]) + " )"
+            control["boundaryField"][boundary]["value"] = \
+                valueString
+    control.writeFile()
 
-            # parse constant/transportProperties -file in case directory
-            parFile = os.path.join(case, 'constant', 'transportProperties')
-            control = ParsedParameterFile(parFile)
-            control["nu"][2] = kinematicViscosity
-            control.writeFile()
+    pressureBCs = BC[CUBA.PRESSURE]
 
-        velocityBCs = BC[CUBA.VELOCITY]
-        # parse startTime/U -file in case directory
-        parFile = os.path.join(case, str(startTime), 'U')
+    # parse startTime/p -file in case directory
+    pname = 'p'
+    if solver == "interFoam":
+        pname = 'p_rgh'
+    parFile = os.path.join(case, str(startTime), pname)
+    control = ParsedParameterFile(parFile)
+    for boundary in pressureBCs:
+        control["boundaryField"][boundary] = {}
+        if pressureBCs[boundary] == "zeroGradient":
+            control["boundaryField"][boundary]["type"] = \
+                "zeroGradient"
+            control["boundaryField"][boundary]["value"] = \
+                "uniform 0"
+        elif pressureBCs[boundary] == "fixedFluxPressure":
+            control["boundaryField"][boundary]["type"] = \
+                "fixedFluxPressure"
+            control["boundaryField"][boundary]["value"] = \
+                "uniform 0"
+        elif pressureBCs[boundary] == "empty":
+            control["boundaryField"][boundary]["type"] = \
+                "empty"
+        else:
+            control["boundaryField"][boundary]["type"] = \
+                "fixedValue"
+            valueString = "uniform "+str(pressureBCs[boundary])
+            control["boundaryField"][boundary]["value"] = \
+                valueString
+    control.writeFile()
+
+    if solver == "interFoam":
+        volumeFractionBCs = BC[CUBA.VOLUME_FRACTION]
+        # parse startTime/alpha1 -file in case directory
+        parFile = os.path.join(case, str(startTime), 'alpha1')
         control = ParsedParameterFile(parFile)
-        for boundary in velocityBCs:
+        for boundary in volumeFractionBCs:
             control["boundaryField"][boundary] = {}
-            if velocityBCs[boundary] == "zeroGradient":
+            if volumeFractionBCs[boundary] == "zeroGradient":
                 control["boundaryField"][boundary]["type"] = \
                     "zeroGradient"
                 control["boundaryField"][boundary]["value"] = \
-                    "uniform (0 0 0)"
-            elif velocityBCs[boundary] == "empty":
+                    "uniform 0"
+            elif volumeFractionBCs[boundary] == "empty":
                 control["boundaryField"][boundary]["type"] = \
                     "empty"
             else:
                 control["boundaryField"][boundary]["type"] = \
                     "fixedValue"
-                valueString = "uniform ( " \
-                              + str(velocityBCs[boundary][0]) + " " \
-                              + str(velocityBCs[boundary][1]) + " " \
-                              + str(velocityBCs[boundary][2]) + " )"
+                valueString = "uniform " + \
+                    str(volumeFractionBCs[boundary])
                 control["boundaryField"][boundary]["value"] = \
                     valueString
         control.writeFile()
 
-        pressureBCs = BC[CUBA.PRESSURE]
 
-        # parse startTime/p -file in case directory
-        pname = 'p'
-        if solver == "interFoam":
-            pname = 'p_rgh'
-        parFile = os.path.join(case, str(startTime), pname)
-        control = ParsedParameterFile(parFile)
-        for boundary in pressureBCs:
-            control["boundaryField"][boundary] = {}
-            if pressureBCs[boundary] == "zeroGradient":
-                control["boundaryField"][boundary]["type"] = \
-                    "zeroGradient"
-                control["boundaryField"][boundary]["value"] = \
-                    "uniform 0"
-            elif pressureBCs[boundary] == "fixedFluxPressure":
-                control["boundaryField"][boundary]["type"] = \
-                    "fixedFluxPressure"
-                control["boundaryField"][boundary]["value"] = \
-                    "uniform 0"
-            elif pressureBCs[boundary] == "empty":
-                control["boundaryField"][boundary]["type"] = \
-                    "empty"
-            else:
-                control["boundaryField"][boundary]["type"] = \
-                    "fixedValue"
-                valueString = "uniform "+str(pressureBCs[boundary])
-                control["boundaryField"][boundary]["value"] = \
-                    valueString
-        control.writeFile()
-
-        if solver == "interFoam":
-            volumeFractionBCs = BC[CUBA.VOLUME_FRACTION]
-            # parse startTime/alpha1 -file in case directory
-            parFile = os.path.join(case, str(startTime), 'alpha1')
-            control = ParsedParameterFile(parFile)
-            for boundary in volumeFractionBCs:
-                control["boundaryField"][boundary] = {}
-                if volumeFractionBCs[boundary] == "zeroGradient":
-                    control["boundaryField"][boundary]["type"] = \
-                        "zeroGradient"
-                    control["boundaryField"][boundary]["value"] = \
-                        "uniform 0"
-                elif volumeFractionBCs[boundary] == "empty":
-                    control["boundaryField"][boundary]["type"] = \
-                        "empty"
-                else:
-                    control["boundaryField"][boundary]["type"] = \
-                        "fixedValue"
-                    valueString = "uniform " + \
-                        str(volumeFractionBCs[boundary])
-                    control["boundaryField"][boundary]["value"] = \
-                        valueString
-            control.writeFile()
-
-    def set_all_cell_data(self, path, time_name, data_name,
-                          values, value_type):
-        """Set cell variable values
+def set_all_cell_data(path, time_name, data_name,
+                      values, value_type):
+    """Set cell variable values
 
 
-        Parameters
-        ----------
-        path : str
-            path to case directory
-        time_name : str
-            name of time directory
-        data_name : str
-            name of data variable
-        values : list
-            list of new values
-        value_type : str
-            OpenFOAM variable type (volScalarField, volVectorField, ...)
+    Parameters
+    ----------
+    path : str
+        path to case directory
+    time_name : str
+        name of time directory
+    data_name : str
+        name of data variable
+    values : list
+        list of new values
+    value_type : str
+        OpenFOAM variable type (volScalarField, volVectorField, ...)
 
-        """
+    """
 
-        dir_name = os.path.join(path, time_name)
-        control = ParsedParameterFile(os.path.join(dir_name, data_name))
+    dir_name = os.path.join(path, time_name)
+    control = ParsedParameterFile(os.path.join(dir_name, data_name))
 
-        field_str = 'nonuniform List<' + value_type + '>\n'
-        field_str += str(len(values)) + '\n' + '(' + '\n'
-        for value in values:
-            field_str += str(value).replace(',', '') + '\n'
-        field_str += ')'
+    field_str = 'nonuniform List<' + value_type + '>\n'
+    field_str += str(len(values)) + '\n' + '(' + '\n'
+    for value in values:
+        field_str += str(value).replace(',', '') + '\n'
+    field_str += ')'
 
-        control['internalField'] = field_str
+    control['internalField'] = field_str
 
-        control.writeFile()
-
-    def set_cell_data(self, path, time_name,
-                      data_name, label, value, value_type):
-        """Set data to specific cell
-
-       Parameters
-        ----------
-        path : str
-            path to case directory
-        time_name : str
-            name of time directory
-        data_name : str
-            name of data variable
-        label : int
-            cell label
-        value : list
-            new value
-        value_type : str
-            OpenFOAM variable type (volScalarField, volVectorField, ...)
+    control.writeFile()
 
 
-        """
+def set_cell_data(path, time_name,
+                  data_name, label, value, value_type):
+    """Set data to specific cell
 
-        dir_name = os.path.join(path, time_name)
-        control = ParsedParameterFile(os.path.join(dir_name, data_name))
+   Parameters
+    ----------
+    path : str
+        path to case directory
+    time_name : str
+        name of time directory
+    data_name : str
+        name of data variable
+    label : int
+        cell label
+    value : list
+        new value
+    value_type : str
+        OpenFOAM variable type (volScalarField, volVectorField, ...)
 
-        values = control['internalField']
-        values[label] = value
 
-        field_str = 'nonuniform List<' + value_type + '>\n'
-        field_str += str(len(values.val)) + '\n' + '(' + '\n'
-        for value in values:
-            field_str += str(value).replace(',', '') + '\n'
-        field_str += ')'
+    """
 
-        control['internalField'] = field_str
+    dir_name = os.path.join(path, time_name)
+    control = ParsedParameterFile(os.path.join(dir_name, data_name))
 
-        control.writeFile()
+    values = control['internalField']
+    values[label] = value
 
-    def get_all_cell_data(self, path, time_name, data_name):
-        """Get specific data from every cell
+    field_str = 'nonuniform List<' + value_type + '>\n'
+    field_str += str(len(values.val)) + '\n' + '(' + '\n'
+    for value in values:
+        field_str += str(value).replace(',', '') + '\n'
+    field_str += ')'
 
-        Parameters
-        ----------
-        path : str
-            path to case directory
-        time_name : str
-            name of time directory
-        data_name : str
-            name of data variable
+    control['internalField'] = field_str
 
-        """
+    control.writeFile()
 
-        dir_name = os.path.join(path, time_name)
-        control = ParsedParameterFile(os.path.join(dir_name, data_name))
 
-        values = control['internalField']
+def get_all_cell_data(path, time_name, data_name):
+    """Get specific data from every cell
+
+    Parameters
+    ----------
+    path : str
+        path to case directory
+    time_name : str
+        name of time directory
+    data_name : str
+        name of data variable
+
+    """
+
+    dir_name = os.path.join(path, time_name)
+    control = ParsedParameterFile(os.path.join(dir_name, data_name))
+
+    values = control['internalField']
+    return values.val
+
+
+def get_cell_data(path, time_name, data_name, label):
+    """Get specific cell data for specific cell
+
+
+    Parameters
+    ----------
+    path : str
+        path to case directory
+    time_name : str
+        name of time directory
+    data_name : str
+        name of data variable
+    label : int
+        cell label
+
+    """
+
+    dir_name = os.path.join(path, time_name)
+    control = ParsedParameterFile(os.path.join(dir_name, data_name))
+
+    values = control['internalField']
+    if isinstance(values.val, list):
+        if isinstance(values.val[label], Vector):
+            return tuple([v for v in values.val[label].vals])
+        else:
+            return values.val[label]
+    else:
         return values.val
 
-    def get_cell_data(self, path, time_name, data_name, label):
-        """Get specific cell data for specific cell
+
+def get_cell_data_names(path, time_name):
+    """Get cell data names
+
+    Parameters
+    ----------
+    path : str
+        path to case directory
+    time_name : str
+        name of time directory
+
+    """
+
+    dir_name = os.path.join(path, time_name)
+    if os.path.exists(dir_name):
+        file_names = []
+        for file_name in os.listdir(dir_name):
+            if os.path.isfile(os.path.join(dir_name, file_name)):
+                file_names.append(file_name)
+        return file_names
+    else:
+        return []
 
 
-        Parameters
-        ----------
-        path : str
-            path to case directory
-        time_name : str
-            name of time directory
-        data_name : str
-            name of data variable
-        label : int
-            cell label
+def remove_parser_files(path):
+    """Remove PyFoam parser files
 
-        """
+    Parameters
+    ----------
+    path : str
+        path to directory
 
-        dir_name = os.path.join(path, time_name)
-        control = ParsedParameterFile(os.path.join(dir_name, data_name))
+    """
 
-        values = control['internalField']
-        if isinstance(values.val, list):
-            if isinstance(values.val[label], Vector):
-                return tuple([v for v in values.val[label].vals])
-            else:
-                return values.val[label]
-        else:
-            return values.val
-
-    def get_cell_data_names(self, path, time_name):
-        """Get cell data names
-
-        Parameters
-        ----------
-        path : str
-            path to case directory
-        time_name : str
-            name of time directory
-
-        """
-
-        dir_name = os.path.join(path, time_name)
-        if os.path.exists(dir_name):
-            file_names = []
-            for file_name in os.listdir(dir_name):
-                if os.path.isfile(os.path.join(dir_name, file_name)):
-                    file_names.append(file_name)
-            return file_names
-        else:
-            return []
-
-    def remove_parser_files(self, path):
-        """Remove PyFoam parser files
-
-        Parameters
-        ----------
-        path : str
-            path to directory
-
-        """
-
-        fileName = os.path.join(path, 'PlyParser_FoamFileParser_parsetab.py')
-        if os.path.exists(fileName):
-            os.remove(fileName)
-        fileName = os.path.join(path, 'PlyParser_FoamFileParser_parsetab.pyc')
-        if os.path.exists(fileName):
-            os.remove(fileName)
+    fileName = os.path.join(path, 'PlyParser_FoamFileParser_parsetab.py')
+    if os.path.exists(fileName):
+        os.remove(fileName)
+    fileName = os.path.join(path, 'PlyParser_FoamFileParser_parsetab.pyc')
+    if os.path.exists(fileName):
+        os.remove(fileName)
