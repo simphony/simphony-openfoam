@@ -259,6 +259,22 @@ class FoamMeshTestCase(unittest.TestCase):
 
         foam_mesh = FoamMesh('test_mesh', self.mesh)
         foam_mesh.write()
+        meshpath = os.path.join(foam_mesh.path, 'constant', 'polyMesh')
+        self.assertEqual(os.path.exists(
+            os.path.join(meshpath, 'points')),
+                         True)
+        self.assertEqual(os.path.exists(
+            os.path.join(meshpath, 'owner')),
+                         True)
+        self.assertEqual(os.path.exists(
+            os.path.join(meshpath, 'neighbour')),
+                         True)
+        self.assertEqual(os.path.exists(
+            os.path.join(meshpath, 'boundary')),
+                         True)
+        self.assertEqual(os.path.exists(
+            os.path.join(meshpath, 'faces')),
+                         True)
 
     def test_generate_uuidmapping(self):
         """Test generate_uuidmapping method

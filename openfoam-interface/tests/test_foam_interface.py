@@ -170,6 +170,16 @@ class FoamInterfaceTestCase(unittest.TestCase):
         foamface.addMesh(self.name, self.pointCoordinates,
                          self.cellPoints, self.facePoints,
                          self.patchNames, self.patchFaces)
+        pointCoordinates = foamface.getAllPointCoordinates(self.name)
+        self.assertEqual(self.pointCoordinates, pointCoordinates)
+        cellPoints = foamface.getAllCellPoints(self.name)
+        self.assertEqual(set(self.cellPoints), set(cellPoints))
+        facePoints = foamface.getAllFacePoints(self.name)
+        self.assertEqual(self.facePoints, facePoints)
+        patchNames = foamface.getBoundaryPatchNames(self.name)
+        self.assertEqual(self.patchNames, patchNames)
+        patchFaces = foamface.getBoundaryPatchFaces(self.name)
+        self.assertEqual(self.patchFaces, patchFaces)
 
     def test_write_mesh(self):
         """Test writeMesh method
@@ -180,6 +190,23 @@ class FoamInterfaceTestCase(unittest.TestCase):
                          self.cellPoints, self.facePoints,
                          self.patchNames, self.patchFaces)
         foamface.writeMesh(self.name)
+        meshpath = os.path.join(self.test_dir, self.name,
+                                'constant', 'polyMesh')
+        self.assertEqual(os.path.exists(
+            os.path.join(meshpath, 'points')),
+                         True)
+        self.assertEqual(os.path.exists(
+            os.path.join(meshpath, 'owner')),
+                         True)
+        self.assertEqual(os.path.exists(
+            os.path.join(meshpath, 'neighbour')),
+                         True)
+        self.assertEqual(os.path.exists(
+            os.path.join(meshpath, 'boundary')),
+                         True)
+        self.assertEqual(os.path.exists(
+            os.path.join(meshpath, 'faces')),
+                         True)
 
     def test_get_point_coordinates(self):
         """Test getPointCoordinates method

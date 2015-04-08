@@ -7,6 +7,7 @@ foam_controlwrapper module functionalities
 
 import unittest
 import os
+import re
 import shutil
 
 from simphony.cuds.mesh import Mesh, Face, Point, Cell
@@ -81,6 +82,7 @@ class FoamControlWrapperTestCase(unittest.TestCase):
 
         wrapper = FoamControlWrapper()
         wrapper.add_mesh(self.mesh)
+        self.assertEqual(sum(1 for _ in wrapper.iter_meshes()), 1)
 
     def test_delete_mesh(self):
         """Test delete_mesh method
@@ -90,6 +92,8 @@ class FoamControlWrapperTestCase(unittest.TestCase):
         wrapper = FoamControlWrapper()
         wrapper.add_mesh(self.mesh)
         wrapper.delete_mesh(self.mesh.name)
+        with self.assertRaises(ValueError):
+            wrapper.get_mesh(self.mesh.name)
 
     def test_get_mesh(self):
         """Test get_mesh method
@@ -302,6 +306,12 @@ class FoamControlWrapperTestCase(unittest.TestCase):
         mesh_inside_wrapper = wrapper.add_mesh(mesh_from_file)
 
         wrapper.run()
+
+        os.listdir(mesh_inside_wrapper.path)
+        self.assertEqual(wrapper.CM_extensions[CUBAExt.NUMBER_OF_CORES],
+                         len([d for d in
+                              os.listdir(mesh_inside_wrapper.path)
+                              if re.match(r'processor*', d)]))
 
         if os.path.exists(mesh_inside_wrapper.path):
             shutil.rmtree(mesh_inside_wrapper.path)

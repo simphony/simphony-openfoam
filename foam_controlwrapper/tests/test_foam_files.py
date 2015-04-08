@@ -7,6 +7,7 @@ foam_files module functionalities
 
 import unittest
 import os
+import re
 import shutil
 
 from simphony.core.cuba import CUBA
@@ -51,10 +52,14 @@ class FoamFilesTestCase(unittest.TestCase):
 
         """
 
-        foam_files.create_file_content(self.path,
-                                       self.solver,
-                                       self.time,
-                                       True)
+        content = foam_files.create_file_content(self.path,
+                                                 self.solver,
+                                                 self.time,
+                                                 True)
+        file_name = os.path.join('system', 'controlDict')
+        self.assertEqual('controlDict' in
+                         re.findall(r'(\w+)',
+                                    content[file_name]), True)
 
     def test_create_directories(self):
         """Test create_directories method
@@ -62,6 +67,8 @@ class FoamFilesTestCase(unittest.TestCase):
         """
 
         foam_files.create_directories(self.path)
+        self.assertEqual(os.path.exists(
+            os.path.join(self.path, 'system')), True)
 
     def test_write_default_files(self):
         """Test write_default_files method
@@ -72,6 +79,9 @@ class FoamFilesTestCase(unittest.TestCase):
                                        self.solver,
                                        self.time,
                                        True)
+        self.assertEqual(os.path.exists(
+            os.path.join(self.path, 'system', 'controlDict')),
+                         True)
 
     def test_modify_files(self):
         """Test modify_files method
@@ -90,9 +100,19 @@ class FoamFilesTestCase(unittest.TestCase):
         foam_files.write_default_files(mesh_inside_wrapper.path,
                                        self.solver,
                                        self.time, True)
+
+        file_name = os.path.join(mesh_inside_wrapper.path, self.time, 'U')
+        with open(file_name, "r") as ufile:
+            data = ufile.read()
+
         foam_files.modify_files(mesh_inside_wrapper.path, self.time, self.SP,
                                 self.BC, self.solver,
                                 self.SPExt, self.CMExt)
+        with open(file_name, "r") as ufile:
+            moddata = ufile.read()
+
+        self.assertNotEqual(data, moddata)
+
         mesh_file.close()
 
 
