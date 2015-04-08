@@ -80,8 +80,7 @@ class FoamFilesTestCase(unittest.TestCase):
                                        self.time,
                                        True)
         self.assertEqual(os.path.exists(
-            os.path.join(self.path, 'system', 'controlDict')),
-                         True)
+            os.path.join(self.path, 'system', 'controlDict')), True)
 
     def test_modify_files(self):
         """Test modify_files method
