@@ -55,6 +55,7 @@ class FoamMesh(ABCMesh):
     """
 
     def __init__(self, name, mesh=None, path=None):
+        super(FoamMesh, self).__init__()
         self.name = name
         self.data = dc.DataContainer()
         self._time = str(0)

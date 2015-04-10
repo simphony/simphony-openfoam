@@ -20,6 +20,7 @@ from foam_controlwrapper import foam_files
 
 class FoamInterfaceTestCase(unittest.TestCase):
     """Test case for OpenFOAM native interface"""
+
     def setUp(self):
         self.name = 'mesh1'
         self.test_dir = 'test'
@@ -192,16 +193,11 @@ class FoamInterfaceTestCase(unittest.TestCase):
         foamface.writeMesh(self.name)
         meshpath = os.path.join(self.test_dir, self.name,
                                 'constant', 'polyMesh')
-        self.assertEqual(os.path.exists(
-            os.path.join(meshpath, 'points')), True)
-        self.assertEqual(os.path.exists(
-            os.path.join(meshpath, 'owner')), True)
-        self.assertEqual(os.path.exists(
-            os.path.join(meshpath, 'neighbour')), True)
-        self.assertEqual(os.path.exists(
-            os.path.join(meshpath, 'boundary')), True)
-        self.assertEqual(os.path.exists(
-            os.path.join(meshpath, 'faces')), True)
+        self.assertTrue(os.path.exists(os.path.join(meshpath, 'points')))
+        self.assertTrue(os.path.exists(os.path.join(meshpath, 'owner')))
+        self.assertTrue(os.path.exists(os.path.join(meshpath, 'neighbour')))
+        self.assertTrue(os.path.exists(os.path.join(meshpath, 'boundary')))
+        self.assertTrue(os.path.exists(os.path.join(meshpath, 'faces')))
 
     def test_get_point_coordinates(self):
         """Test getPointCoordinates method

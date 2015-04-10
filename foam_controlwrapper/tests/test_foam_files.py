@@ -57,9 +57,8 @@ class FoamFilesTestCase(unittest.TestCase):
                                                  self.time,
                                                  True)
         file_name = os.path.join('system', 'controlDict')
-        self.assertEqual('controlDict' in
-                         re.findall(r'(\w+)',
-                                    content[file_name]), True)
+        self.assertTrue('controlDict' in
+                        re.findall(r'(\w+)', content[file_name]))
 
     def test_create_directories(self):
         """Test create_directories method
@@ -67,8 +66,7 @@ class FoamFilesTestCase(unittest.TestCase):
         """
 
         foam_files.create_directories(self.path)
-        self.assertEqual(os.path.exists(
-            os.path.join(self.path, 'system')), True)
+        self.assertTrue(os.path.exists(os.path.join(self.path, 'system')))
 
     def test_write_default_files(self):
         """Test write_default_files method
@@ -79,8 +77,8 @@ class FoamFilesTestCase(unittest.TestCase):
                                        self.solver,
                                        self.time,
                                        True)
-        self.assertEqual(os.path.exists(
-            os.path.join(self.path, 'system', 'controlDict')), True)
+        self.assertTrue(os.path.exists(
+            os.path.join(self.path, 'system', 'controlDict')))
 
     def test_modify_files(self):
         """Test modify_files method

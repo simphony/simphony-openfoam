@@ -275,8 +275,7 @@ class FoamControlWrapperTestCase(unittest.TestCase):
         mesh_file.close()
 
     def test_parallel_run(self):
-        """Test that field variable value is changed after
-        consecutive calls of run method
+        """Test parallel running of OpenFoam
 
         """
 

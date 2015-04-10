@@ -22,7 +22,7 @@ class FoamControlWrapper(ABCModelingEngine):
     """
 
     def __init__(self):
-
+        super(FoamControlWrapper, self).__init__()
         self._meshes = {}
         self.CM = DataContainer()
         self.BC = DataContainer()

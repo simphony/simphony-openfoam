@@ -242,7 +242,7 @@ class FoamMeshTestCase(unittest.TestCase):
         """
 
         foam_mesh = FoamMesh('test_mesh', self.mesh)
-        self.assertEqual(foam_mesh.has_faces(), True)
+        self.assertTrue(foam_mesh.has_faces())
 
     def test_has_cells(self):
         """Test has_cells method
@@ -250,7 +250,7 @@ class FoamMeshTestCase(unittest.TestCase):
         """
 
         foam_mesh = FoamMesh('test_mesh', self.mesh)
-        self.assertEqual(foam_mesh.has_cells(), True)
+        self.assertTrue(foam_mesh.has_cells())
 
     def test_write(self):
         """Test write method
@@ -260,16 +260,11 @@ class FoamMeshTestCase(unittest.TestCase):
         foam_mesh = FoamMesh('test_mesh', self.mesh)
         foam_mesh.write()
         meshpath = os.path.join(foam_mesh.path, 'constant', 'polyMesh')
-        self.assertEqual(os.path.exists(
-            os.path.join(meshpath, 'points')), True)
-        self.assertEqual(os.path.exists(
-            os.path.join(meshpath, 'owner')), True)
-        self.assertEqual(os.path.exists(
-            os.path.join(meshpath, 'neighbour')), True)
-        self.assertEqual(os.path.exists(
-            os.path.join(meshpath, 'boundary')), True)
-        self.assertEqual(os.path.exists(
-            os.path.join(meshpath, 'faces')), True)
+        self.assertTrue(os.path.exists(os.path.join(meshpath, 'points')))
+        self.assertTrue(os.path.exists(os.path.join(meshpath, 'owner')))
+        self.assertTrue(os.path.exists(os.path.join(meshpath, 'neighbour')))
+        self.assertTrue(os.path.exists(os.path.join(meshpath, 'boundary')))
+        self.assertTrue(os.path.exists(os.path.join(meshpath, 'faces')))
 
     def test_generate_uuidmapping(self):
         """Test generate_uuidmapping method
