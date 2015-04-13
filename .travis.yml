@@ -5,8 +5,8 @@ virtualenv:
   system_site_packages: true
 
 env:
-  - REQUIREMENTS=stable_requirements.txt
-  - REQUIREMENTS=latest_requirements.txt
+  - SIMPHONY_VERSION=0.1.3
+  - SIMPHONY_VERSION=master
 
 matrix:
   allow_failures:
@@ -21,12 +21,9 @@ before_install:
   - pip install numpy # pyfoam requires numpy
   - . /opt/openfoam222/etc/bashrc
   - ./install_external.sh
-  # (1) Install cython and numexpr externally because the requirements does
-  #     not work with them
-  # (2) Pytables breaks with latest Cython
-  #     see https://github.com/PyTables/PyTables/issues/388
   - pip install numexpr
-  - pip install -r $REQUIREMENTS
+  - pip install -r git+https://github.com/simphony/simphony-common.git@${SIMPHONY_VERSION}#egg=simphony
+
   - pip install -r dev_requirements.txt
   - pip install coveralls
   - ./install_foam_interface.sh
