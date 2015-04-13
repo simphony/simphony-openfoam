@@ -5,12 +5,12 @@ virtualenv:
   system_site_packages: true
 
 env:
-  - SIMPHONY_VERSION=0.1.3
+  - SIMPHONY_VERSION=0.1.2
   - SIMPHONY_VERSION=master
 
 matrix:
   allow_failures:
-    - env: REQUIREMENTS=latest_requirements.txt
+    - env: SIMPHONY_VERSION=master
 
 before_install:
   - sudo sh -c "echo deb http://www.openfoam.org/download/ubuntu precise main > /etc/apt/sources.list.d/openfoam.list"
