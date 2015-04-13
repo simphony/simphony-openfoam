@@ -14,21 +14,22 @@ matrix:
 
 before_install:
   - sudo sh -c "echo deb http://www.openfoam.org/download/ubuntu precise main > /etc/apt/sources.list.d/openfoam.list"
+  - sudo add-apt-repository ppa:cython-dev/master-ppa -y
   - sudo apt-get update -qq
   - sudo apt-get install -y --force-yes openfoam222
-  - sudo apt-get install libhdf5-serial-dev
+  - sudo apt-get install libhdf5-serial-dev cython
   - pip install numpy # pyfoam requires numpy
-  - source /opt/openfoam222/etc/bashrc
-  - sudo ./install_external.sh
+  - . /opt/openfoam222/etc/bashrc
+  - ./install_external.sh
   # (1) Install cython and numexpr externally because the requirements does
   #     not work with them
   # (2) Pytables breaks with latest Cython
   #     see https://github.com/PyTables/PyTables/issues/388
-  - pip install numexpr cython==0.20
+  - pip install numexpr
   - pip install -r $REQUIREMENTS
   - pip install -r dev_requirements.txt
   - pip install coveralls
-
+  - ./install_foam_interface.sh
 install:
   - python setup.py develop
 
