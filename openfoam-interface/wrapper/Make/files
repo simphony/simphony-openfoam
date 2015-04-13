@@ -1,0 +1,7 @@
+simphonyInterface.C
+singlePhaseTransportModel/singlePhaseTransportModel.C
+transportModel/transportModel.C
+fvSchemes/fvSchemes.C
+solution/solution.C
+
+LIB = $(FOAM_USER_LIBBIN)/libfoaminterfaceII

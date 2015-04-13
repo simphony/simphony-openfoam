@@ -1,0 +1,12 @@
+How to test the OpenFoam internal interfaces implementation
+
+#installing the wrapper
+$ ./install_foam_interface.sh 
+
+#installing the python module
+$ python setup.py install
+
+#running the case
+$ cd foam_controlwrapper/examples/
+$ python poiseuille.py 
+

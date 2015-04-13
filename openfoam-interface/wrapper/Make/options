@@ -1,0 +1,21 @@
+sinclude $(GENERAL_RULES)/mplib$(WM_MPLIB)
+sinclude $(RULES)/mplib$(WM_MPLIB)
+
+EXE_INC = \
+    $(PFLAGS) $(PINC) \
+    -I$(LIB_SRC)/finiteVolume/lnInclude \
+    -I$(LIB_SRC)/transportModels \
+    -I$(LIB_SRC)/transportModels/incompressible/lnInclude \
+    -I$(LIB_SRC)/turbulenceModels \
+    -I$(FOAM_SOLVERS) \
+    -I../libs/incompressibleTurbulenceModel/RAS/lnInclude
+
+LIB_LIBS = \
+    -lincompressibleTurbulenceModelSimphony \
+    -lincompressibleRASModelsSimphony \
+    -lfiniteVolume \
+    $(PLIBS) \
+	-L$(FOAM_USER_LIBBIN)
+
+
+
