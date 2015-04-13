@@ -22,7 +22,7 @@ before_install:
   - . /opt/openfoam222/etc/bashrc
   - ./install_external.sh
   - pip install numexpr
-  - pip install -r git+https://github.com/simphony/simphony-common.git@${SIMPHONY_VERSION}#egg=simphony
+  - pip install git+https://github.com/simphony/simphony-common.git@${SIMPHONY_VERSION}#egg=simphony
 
   - pip install -r dev_requirements.txt
   - pip install coveralls
