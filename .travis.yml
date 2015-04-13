@@ -2,15 +2,15 @@ language: python
 python:
   - "2.7"
 virtualenv:
-  system_site_packages: true
+  system_site_packages: false
 before_install:
   - sudo sh -c "echo deb http://www.openfoam.org/download/ubuntu precise main > /etc/apt/sources.list.d/openfoam.list"
   - sudo apt-get update -qq
   - sudo apt-get install -y --force-yes openfoam222
   - sudo apt-get install libhdf5-serial-dev
   - pip install numpy # pyfoam requires numpy
-  - source /opt/openfoam222/etc/bashrc
-  - sudo ./install_external.sh
+  - . /opt/openfoam222/etc/bashrc
+  - ./install_external.sh
   # (1) Install cython and numexpr externally because the requirements does
   #     not work with them
   # (2) Pytables breaks with latest Cython
@@ -20,6 +20,7 @@ before_install:
   - pip install -r dev_requirements.txt
   - pip install -r doc_requirements.txt
   - pip install coveralls
+  - ./install_foam_interface.sh
 install:
   - python setup.py develop
 script:

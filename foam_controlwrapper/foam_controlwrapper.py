@@ -1,36 +1,39 @@
 """ foam_controlwrapper module
 
-Wrapper module for OpenFOAM control using pyFoam -package
+Wrapper module for OpenFOAM
 
 """
+import os
+
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
-from PyFoam.Execution.ConvergenceRunner import ConvergenceRunner
-from PyFoam.RunDictionary.SolutionDirectory import SolutionDirectory
-from PyFoam.LogAnalysis.BoundingLogAnalyzer import BoundingLogAnalyzer
-from PyFoam.RunDictionary.ParsedParameterFile import ParsedParameterFile
-import os
-from foam_files import FoamFiles
-from cuba_extension import CUBAExt
+
+from .cuba_extension import CUBAExt
+from .foam_mesh import FoamMesh
+from .foam_runner import FoamRunner
+from .foam_files import modify_files, write_default_files, remove_parser_files
+import simphonyfoaminterface
 
 
 class FoamControlWrapper(ABCModelingEngine):
-    """ Wrapper to OpenFOAM control using pyFoam -package
+    """ Wrapper to OpenFOAM
 
     """
 
     def __init__(self):
-
+        super(FoamControlWrapper, self).__init__()
+        self._meshes = {}
         self.CM = DataContainer()
         self.BC = DataContainer()
         self.SP = DataContainer()
-#: to be able to use CUBAExt keywords, which are not in accepted
-#  CUBA keywords this extension to CM is used
+        #: to be able to use CUBAExt keywords, which are not in accepted
+        #  CUBA keywords these extensions to CM and SP is used
         self.CM_extensions = {}
+        self.SP_extensions = {}
 
     def run(self):
-        """ run OpenFoam based on CM, BC and SP data
+        """Run OpenFoam based on CM, BC and SP data
 
         Returns
         -------
@@ -44,172 +47,227 @@ class FoamControlWrapper(ABCModelingEngine):
 
         """
 
-        case = self.CM[CUBA.NAME]
+        if not self.CM[CUBA.NAME]:
+            error_str = "Mesh name must be defined in CM[CUBA.NAME]"
+            raise ValueError(error_str)
+
+        if not self._meshes:
+            error_str = "Meshes not added to wrapper. Use add_mesh method"
+            raise ValueError(error_str)
+
+        name = self.CM[CUBA.NAME]
+
+        if not self._meshes[name]:
+            error_str = "Mesh {} does not exist"
+            raise ValueError(error_str.format(name))
+
+        mesh = self._meshes[name]
+        case = mesh.path
 
         GE = self.CM_extensions[CUBAExt.GE]
         solver = "simpleFoam"
-        if CUBAExt.LAMINAR_MODEL in GE and not(CUBAExt.VOF in GE):
-            solver = "simpleFoam"
+        if CUBAExt.LAMINAR_MODEL in GE:
+            if CUBAExt.VOF in GE:
+                solver = "interFoam"
+            else:
+                solver = "simpleFoam"
         else:
             error_str = "GE does not define supported solver: GE = {}"
             raise NotImplementedError(error_str.format(GE))
 
         turbulent = 'Turbulent' if not (CUBAExt.LAMINAR_MODEL in GE) else ''
-        FoamFiles().writeFoamFiles(case, (solver+turbulent))
 
-        dire = SolutionDirectory(case, archive="SimPhoNy")
-        dire.clearResults()
+        # write default files based on solver
+        # (not field data files if exists)
+        templateName = solver + turbulent
+        write_default_files(case, templateName, mesh._time, True)
 
-#        startTime = self.SP["startTime"]
-        startTime = 0
-        nOfTimeSteps = self.SP[CUBA.NUMBER_OF_TIME_STEPS]
-        deltaT = self.SP[CUBA.TIME_STEP]
-        endTime = nOfTimeSteps*deltaT
-        writeInterval = endTime-startTime
-# parse system/controlDict -file in case directory
-        parFile = os.path.join(case, 'system', 'controlDict')
-        try:
-            control = ParsedParameterFile(parFile)
-            control["startTime"] = startTime
-            control["endTime"] = endTime
-            control["deltaT"] = deltaT
-            control["writeInterval"] = writeInterval
-        except IOError:
-            error_str = "File {} does not exist"
-            raise ValueError(error_str.format(parFile))
-        try:
-            control.writeFile()
-        except IOError:
-            error_str = "Can't write file with content: {}"
-            raise ValueError(error_str.format(control))
+        # write first mesh from foams objectRegistry to disk
+        mesh.write()
 
-        density = self.SP[CUBA.DENSITY]
-        viscosity = self.SP[CUBA.DYNAMIC_VISCOSITY]
-        kinematicViscosity = viscosity/density
+        # modify control and boundary data files based on SP and BC
+        modify_files(
+            case, mesh._time, self.SP, self.BC,
+            solver, self.SP_extensions, self.CM_extensions)
 
-# parse constant/transportProperties -file in case directory
-        parFile = os.path.join(case, 'constant', 'transportProperties')
-        try:
-            control = ParsedParameterFile(parFile)
-            nu = control["nu"]
-            nu[2] = kinematicViscosity
-        except IOError:
-            error_str = "File {} does not exist"
-            raise ValueError(error_str.format(parFile))
-        try:
-            control.writeFile()
-        except IOError:
-            error_str = "Can't write file with content: {}"
-            raise ValueError(error_str.format(control))
+        # run case
+        if CUBAExt.NUMBER_OF_CORES in self.CM_extensions:
+            ncores = self.CM_extensions[CUBAExt.NUMBER_OF_CORES]
+        else:
+            ncores = 1
+        runner = FoamRunner(solver, case, ncores)
+        runner.run()
 
-        velocityBCs = self.BC[CUBA.VELOCITY]
+        # remove PyFoam parser files
+        remove_parser_files(os.getcwd())
 
-# parse startTime/U -file in case directory
-        parFile = os.path.join(case, str(startTime), 'U')
-        try:
-            control = ParsedParameterFile(parFile)
-            for boundary in velocityBCs:
-                control["boundaryField"][boundary] = {}
-                if velocityBCs[boundary] == "zeroGradient":
-                    control["boundaryField"][boundary]["type"] = \
-                        "zeroGradient"
-                    control["boundaryField"][boundary]["value"] = \
-                        "uniform (0 0 0)"
-                elif velocityBCs[boundary] == "empty":
-                    control["boundaryField"][boundary]["type"] = \
-                        "empty"
-                else:
-                    control["boundaryField"][boundary]["type"] = \
-                        "fixedValue"
-                    valueString = "uniform ( " \
-                        + str(velocityBCs[boundary][0]) + " " \
-                        + str(velocityBCs[boundary][1]) + " " \
-                        + str(velocityBCs[boundary][2]) + " )"
-                    control["boundaryField"][boundary]["value"] = \
-                        valueString
-        except IOError:
-            error_str = "File {} does not exist"
-            raise ValueError(error_str.format(parFile))
-        try:
-            control.writeFile()
-        except IOError:
-            error_str = "Can't write file with content: {}"
-            raise ValueError(error_str.format(control))
-
-        pressureBCs = self.BC[CUBA.PRESSURE]
-
-# parse startTime/p -file in case directory
-        parFile = os.path.join(case, str(startTime), 'p')
-        try:
-            control = ParsedParameterFile(parFile)
-            for boundary in pressureBCs:
-                control["boundaryField"][boundary] = {}
-                if pressureBCs[boundary] == "zeroGradient":
-                    control["boundaryField"][boundary]["type"] = \
-                        "zeroGradient"
-                    control["boundaryField"][boundary]["value"] = \
-                        "uniform 0"
-                elif pressureBCs[boundary] == "empty":
-                    control["boundaryField"][boundary]["type"] = \
-                        "empty"
-                else:
-                    control["boundaryField"][boundary]["type"] = \
-                        "fixedValue"
-                    valueString = "uniform "+str(pressureBCs[boundary])
-                    control["boundaryField"][boundary]["value"] = \
-                        valueString
-        except IOError:
-            error_str = "File {} does not exist"
-            raise ValueError(error_str.format(parFile))
-        try:
-            control.writeFile()
-        except IOError:
-            error_str = "Can't write file with content: {}"
-            raise ValueError(error_str.format(control))
-
-        run = ConvergenceRunner(BoundingLogAnalyzer(),
-                                argv=[solver, "-case", case],
-                                logname="SimPhoNy",
-                                silent=True,
-                                noLog=True)
-        run.start()
-
-        os.remove('PlyParser_FoamFileParser_parsetab.py')
-
-        return dire.getLast()
-
-    def get_particle_container(self, name):
-        raise NotImplementedError()
-
-    def add_particle_container(self, particle_container):
-        raise NotImplementedError()
-
-    def delete_particle_container(self, name):
-        raise NotImplementedError()
-
-    def iter_particle_containers(self, names=None):
-        raise NotImplementedError()
-
-    def add_lattice(self, lattice):
-        raise NotImplementedError()
+        # save timestep to mesh
+        mesh._time = runner.get_last_time()
+        return mesh._time
 
     def add_mesh(self, mesh):
-        raise NotImplementedError()
+        """Add a mesh to the OpenFoam modeling engine.
 
-    def delete_lattice(self, name):
-        raise NotImplementedError()
+        Parameters
+        ----------
+        mesh : ABCMesh
+            mesh to be added.
+
+        Returns
+        -------
+        proxy : FoamMesh
+            A proxy mesh to be used to update/query the internal representation
+            stored inside the modeling-engine. See get_mesh for more
+            information.
+
+        Raises
+        ------
+        Exception if mesh already exists
+
+        """
+
+        if mesh.name in self._meshes:
+            raise ValueError('Mesh \'{}\` already exists'.format(mesh.name))
+        else:
+            self._meshes[mesh.name] = FoamMesh(mesh.name, mesh)
+            return self._meshes[mesh.name]
 
     def delete_mesh(self, name):
-        raise NotImplementedError()
+        """Delete mesh from the OpenFoam modeling engine.
 
-    def get_lattice(self, name):
-        raise NotImplementedError()
+        Parameters
+        ----------
+        name : str
+            name of the mesh to be deleted.
+
+
+        Raises
+        ------
+        Exception if mesh not found
+
+        """
+
+        if name not in self._meshes:
+            raise ValueError('Mesh \'{}\` does not exists'.format(name))
+        else:
+            simphonyfoaminterface.deleteMesh(name)
+            del self._meshes[name]
 
     def get_mesh(self, name):
-        raise NotImplementedError()
+        """Get a mesh.
 
-    def iter_lattices(self, names=None):
-        raise NotImplementedError()
+        The returned mesh can be used to query and update the state of the
+        mesh inside the OpenFoam modeling engine.
+
+        Parameters
+        ----------
+        name : str
+            name of the mesh to be retrieved.
+
+        Returns
+        -------
+        FoamMesh
+
+        Raises
+        ------
+        Exception if mesh not found
+
+        """
+
+        if name in self._meshes:
+            return self._meshes[name]
+        else:
+            raise ValueError(
+                'Mesh \'{}\` does not exist'.format(name))
 
     def iter_meshes(self, names=None):
-        raise NotImplementedError()
+        """Returns an iterator over a subset or all of the meshes.
+
+        Parameters
+        ----------
+        names : list of str
+            names of specific meshes to be iterated over.
+            If names is not given, then all meshes will
+            be iterated over.
+
+        Returns
+        ----------
+        Iterator over a subset or all of the meshes
+
+        Raises
+        ------
+        Exception if some mesh fron mesh names list not found
+
+        """
+
+        if names is None:
+            for name in self._meshes:
+                yield self._meshes[name]
+        else:
+            for name in names:
+                if name in self._meshes:
+                    yield self._meshes[name]
+                else:
+                    raise ValueError(
+                        'Mesh \'{}\` does not exist'.format(
+                            name))
+
+    def add_particles(self, particle_container):
+        message = 'FoamWrapper does not handle particle container'
+        raise NotImplementedError(message)
+
+    def get_particles(self, name):
+        message = 'FoamWrapper does not handle particle container'
+        raise NotImplementedError(message)
+
+    def delete_particles(self, name):
+        message = 'FoamWrapper does not handle particle container'
+        raise NotImplementedError(message)
+
+    def iter_particles(self, names=None):
+        message = 'FoamWrapper does not handle particle container'
+        raise NotImplementedError(message)
+
+    def add_lattice(self, lattice):
+        message = 'FoamWrapper does not handle lattice'
+        raise NotImplementedError(message)
+
+    def get_lattice(self, name):
+        message = 'FoamWrapper does not handle lattice'
+        raise NotImplementedError(message)
+
+    def delete_lattice(self, name):
+        message = 'FoamWrapper does not handle lattice'
+        raise NotImplementedError(message)
+
+    def iter_lattices(self, names=None):
+        message = 'FoamWrapper does not handle lattice'
+        raise NotImplementedError(message)
+
+
+def read_foammesh(name, path):
+    """Read mesh from OpenFoam case files.
+
+    Parameters
+    ----------
+    name : str
+    name to give to mesh
+    path : str
+    case directory
+
+    Raises
+    ------
+    Exception if some mesh from mesh names list not found
+
+    """
+
+    simphonyfoaminterface.init(name, path)
+    simphonyfoaminterface.readMesh(name)
+    nPoints = simphonyfoaminterface.getPointCount(name)
+    nCells = simphonyfoaminterface.getCellCount(name)
+    nFaces = simphonyfoaminterface.getFaceCount(name)
+    nEdges = 0
+
+    foamMesh = FoamMesh(name)
+    foamMesh.generate_uuidmapping(nPoints, nEdges, nFaces, nCells)
+    return foamMesh
