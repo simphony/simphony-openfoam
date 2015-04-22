@@ -16,6 +16,9 @@ Installation
 
 Package foam_controlwrapper requires python 2.7.x, OpenFOAM 2.2.x and pyFoam 0.6.4
  
+First, install the OpenFoam internal interface wrapper
+    ./install_foam_interface.sh 
+
 Installation is based on setuptools::
 
     # build and install
@@ -26,14 +29,12 @@ or::
     # build for in-place development
     python setup.py develop
 
-Read HOW_TO for detailed installation steps.
-
 Testing
 -------
 
-To run the full test-suite run::
-
-    python -m unittest discover
+An example case can be run
+    cd foam_controlwrapper/examples/
+    python poiseuille.py 
 
 
 Directory structure
