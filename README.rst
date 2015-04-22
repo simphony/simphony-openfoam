@@ -26,6 +26,7 @@ or::
     # build for in-place development
     python setup.py develop
 
+Read HOW_TO for detailed installation steps.
 
 Testing
 -------

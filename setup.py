@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 with open('README.rst', 'r') as readme:
     README_TEXT = readme.read()
 
-VERSION = '0.1.1.dev0'
+VERSION = '0.1.0'
 
 
 def write_version_py(filename=None):
@@ -29,10 +29,10 @@ setup(
     name='foam_controlwrapper',
     version=VERSION,
     author='SimPhoNy FP7 European Project',
-    description='Implementation of OpenFoam wrappers',
+    description='Implementation of OpenFoam wrappers using Internal Interfaces',
     long_description=README_TEXT,
     packages=find_packages(),
     install_requires=['simphony'],
     entry_points={
-        'simphony.engine': ['openfoam = foam_controlwrapper']}
+        'simphony.engine': ['openfoamII = foam_controlwrapper']}
 )

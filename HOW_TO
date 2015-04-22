@@ -1,6 +1,6 @@
 How to test the OpenFoam internal interfaces implementation
 
-#installing the wrapper
+#installing the OpenFoam internal interface wrapper
 $ ./install_foam_interface.sh 
 
 #installing the python module
