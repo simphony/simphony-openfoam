@@ -29,6 +29,9 @@ License
 #define simphonyInterface_H
 
 #include "fvCFD.H"
+#include "simpleControl.H"
+#include "pimpleControl.H"
+
 #include<vector>
 #include<string>
 
@@ -37,7 +40,7 @@ License
 using namespace Foam;
 
 // init Foam mesh name (case name)  and rootPath
-void foam_init(std::string name, std::string rootPath);
+void foam_init(std::string name, std::string rootPath, std::string cD);
 // read Foam mesh from case named name to wrapper
 void foam_readMesh(std::string name);
 // get mesh single point coordinates 
@@ -81,7 +84,7 @@ void foam_updateCellData(std::string name, std::string dataname);
 // update cell vector data (read from file to runTime object registry)
 void foam_updateCellVectorData(std::string name, std::string dataname);
 // add mesh to wrapper registry
-void foam_addMesh(std::string name,std::vector<double> points,  std::vector<int> cellpoints, std::vector<int> facepoints, std::vector<std::string> patchnames, std::vector<int> patchfaces);
+void foam_addMesh(std::string name,std::vector<double> points,  std::vector<int> cellpoints, std::vector<int> facepoints, std::vector<std::string> patchnames, std::vector<int> patchfaces, std::vector<std::string> patchtypes);
 // write mesh
 void foam_writeMesh(std::string name);
 // deletes mesh from wrapper registry
@@ -128,6 +131,24 @@ int foam_getPointCount(std::string name);
 int foam_getCellCount(std::string name);
 // set active mesh
 void foam_setMesh(std::string name);
+
+
+// create default files
+void foam_createDefaultFields(std::string name, std::string solver);
+// modifying numerics fvSolution and fvSchemes
+void foam_modifyNumerics(std::string name, std::string fvSch, std::string fvSol, std::string cD);
+//modifying boundary conditions
+void foam_setBC(std::string name, std::string fieldname, std::string dict);
+//running the time steps
+void foam_run(std::string name, int nproc);
+
+template<class Type> 
+GeometricField<Type, fvPatchField, volMesh> & find_Data(Time& runTime,std::string& dataname)
+{
+  return const_cast< GeometricField < Type, fvPatchField, volMesh > &>(runTime.db().lookupObject< GeometricField <Type, fvPatchField, volMesh> >(word(dataname))); 
+}
+
+
 #endif
 
 // ************************************************************************* //

@@ -6,7 +6,7 @@ Templates for OpenFOAM -files
 import os
 
 head = \
-    """
+       """
 
 FoamFile
 {{
@@ -18,7 +18,7 @@ FoamFile
 }}
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-    """
+       """
 
 dictionaryTemplates = {'simpleFoam':
                        {os.path.join('constant', 'transportProperties'):
@@ -67,16 +67,7 @@ writePrecision 6;
 writeCompression no;
 timeFormat general;
 
-timePrecision 6;
-
 runTimeModifiable yes;
-                        """,
-                        os.path.join('system', 'decomposeParDict'):
-                        """
-numberOfSubdomains 4;
-
-method          scotch;
-
                         """,
                         os.path.join('system', 'fvSolution'):
                         """
@@ -191,6 +182,157 @@ default         no;
 p               ;
 }
                         """},
+			'pimpleFoam':
+                       {os.path.join('constant', 'transportProperties'):
+                        """
+transportModel Newtonian;
+
+nu nu     [ 0 2 -1 0 0 0 0 ]     0.0 ;
+
+                        """,
+                        os.path.join('constant', 'turbulenceProperties'):
+                        """
+simulationType laminar;
+                        """,
+                        os.path.join('constant', 'RASProperties'):
+                        """
+RASModel            laminar;
+
+turbulence          off;
+
+printCoeffs         on;
+                        """,
+                        os.path.join('system', 'controlDict'):
+                        """
+application simpleFoam;
+
+startFrom startTime;
+
+startTime 0;
+
+stopAt endTime;
+
+endTime 10;
+
+deltaT 0.1;
+
+writeControl timeStep;
+
+writeInterval 10000;
+
+purgeWrite 0;
+
+writeFormat ascii;
+
+writePrecision 6;
+
+writeCompression no;
+timeFormat general;
+
+runTimeModifiable yes;
+                        """,
+                        os.path.join('system', 'fvSolution'):
+                        """
+
+solvers
+{
+"(p|pFinal)"
+{
+solver          GAMG;
+tolerance       1e-07;
+relTol          0.001;
+smoother        GaussSeidel;
+nPreSweeps      0;
+nPostSweeps     2;
+cacheAgglomeration true;
+nCellsInCoarsestLevel 10;
+agglomerator    faceAreaPair;
+mergeLevels     1;
+}
+
+"(U|UFinal)"
+{
+solver          smoothSolver;
+smoother        GaussSeidel;
+nSweeps         2;
+tolerance       1e-08;
+relTol          0.01;
+}
+
+nuTilda
+{
+solver          smoothSolver;
+smoother        GaussSeidel;
+nSweeps         2;
+tolerance       1e-08;
+relTol          0.1;
+}
+}
+
+PIMPLE
+{
+nOuterCorrectors    2;
+nCorrectors         3;
+nNonOrthogonalCorrectors 2;
+pRefCell        0;
+pRefValue       0;
+}
+
+relaxationFactors
+{
+fields
+{
+p               0.3;
+}
+equations
+{
+U               0.7;
+nuTilda         0.7;
+}
+}
+                        """,
+                        os.path.join('system', 'fvSchemes'):
+                        """
+ddtSchemes
+{
+    default         Euler;
+}
+
+gradSchemes
+{
+    default         Gauss linear;
+}
+
+divSchemes
+{
+    default         none;
+    div(phi,U)     Gauss upwind;
+    div((nuEff*dev(T(grad(U))))) Gauss linear;
+}
+
+laplacianSchemes
+{
+    default         Gauss linear corrected;
+}
+
+interpolationSchemes
+{
+    default         linear;
+}
+
+snGradSchemes
+{
+    default         corrected;
+}
+
+fluxRequired
+{
+    default         no;
+    pcorr           ;
+    p               ;
+}
+
+                        """},
                        'interFoam':
                        {os.path.join('constant', 'transportProperties'):
                         """
@@ -205,15 +347,12 @@ phase1
 {
     transportModel  Newtonian;
     nu              nu [ 0 2 -1 0 0 0 0 ] 1e-06;
-    rho             rho [ 1 -3 0 0 0 0 0 ] 1000;
- }
+}
 phase2
 {
     transportModel  Newtonian;
     nu              nu [ 0 2 -1 0 0 0 0 ] 1.48e-05;
-    rho             rho [ 1 -3 0 0 0 0 0 ] 1;
- }
-sigma           sigma [ 1 0 -2 0 0 0 0 ] 0.07;
+}
 
                         """,
                         os.path.join('constant', 'turbulenceProperties'):
@@ -225,15 +364,10 @@ simulationType  laminar;
                         """
 RASModel        laminar;
 
-turbulence      off;
+turbulence      on;
 
 printCoeffs     on;
 
-                        """,
-                        os.path.join('constant', 'g'):
-                        """
-dimensions      [0 1 -2 0 0 0 0];
-value           ( 0 0 0 );
                         """,
                         os.path.join('system', 'controlDict'):
                         """
@@ -273,13 +407,6 @@ maxCo           0.2;
 maxAlphaCo      0.2;
 
 maxDeltaT       1;
-
-                        """,
-                        os.path.join('system', 'decomposeParDict'):
-                        """
-numberOfSubdomains 4;
-
-method          scotch;
 
                         """,
                         os.path.join('system', 'fvSolution'):
@@ -389,7 +516,19 @@ fluxRequired
                         """}}
 
 vectorTemplates = {'simpleFoam':
-                   {'U':
+                   {os.path.join('0', 'U'):
+                    """
+dimensions [ 0 1 -1 0 0 0 0 ];
+
+internalField uniform (0 0 0);
+
+boundaryField
+{
+
+}
+                    """},
+                    'pimpleFoam':
+                   {os.path.join('0', 'U'):
                     """
 dimensions [ 0 1 -1 0 0 0 0 ];
 
@@ -401,7 +540,7 @@ boundaryField
 }
                     """},
                    'interFoam':
-                   {'U':
+                   {os.path.join('0', 'U'):
                     """
 dimensions [ 0 1 -1 0 0 0 0 ];
 
@@ -415,7 +554,19 @@ boundaryField
                     """}}
 
 scalarTemplates = {'simpleFoam':
-                   {'p':
+                   {os.path.join('0', 'p'):
+                    """
+dimensions [ 0 2 -2 0 0 0 0 ];
+
+internalField uniform 0;
+
+boundaryField
+{
+
+}
+                    """},
+                    'pimpleFoam':
+                   {os.path.join('0', 'p'):
                     """
 dimensions [ 0 2 -2 0 0 0 0 ];
 
@@ -427,19 +578,7 @@ boundaryField
 }
                     """},
                    'interFoam':
-                   {'p_rgh':
-                    """
-dimensions [1 -1 -2 0 0 0 0];
-
-internalField uniform 0;
-
-boundaryField
-{
-
-}
-
-                    """,
-                    'p':
+                   {os.path.join('0', 'p_rgh'):
                     """
 dimensions [ 0 2 -2 0 0 0 0 ];
 
@@ -451,7 +590,7 @@ boundaryField
 }
 
                     """,
-                    'alpha1':
+                    os.path.join('0', 'alpha1'):
                     """
 dimensions [ 0 0 0 0 0 0 0 ];
 

@@ -3,17 +3,16 @@
 Wrapper module for OpenFOAM
 
 """
-import os
-
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
-
-from .cuba_extension import CUBAExt
-from .foam_mesh import FoamMesh
-from .foam_runner import FoamRunner
-from .foam_files import modify_files, write_default_files, remove_parser_files
-import simphonyfoaminterface
+from PyFoam.Execution.ConvergenceRunner import ConvergenceRunner
+from PyFoam.LogAnalysis.BoundingLogAnalyzer import BoundingLogAnalyzer
+from foam_files import FoamFiles
+from cuba_extension import CUBAExt
+from foam_mesh import FoamMesh
+import simphonyfoaminterfaceII as foamface
+import os
 
 
 class FoamControlWrapper(ABCModelingEngine):
@@ -22,18 +21,18 @@ class FoamControlWrapper(ABCModelingEngine):
     """
 
     def __init__(self):
-        super(FoamControlWrapper, self).__init__()
+
         self._meshes = {}
         self.CM = DataContainer()
         self.BC = DataContainer()
         self.SP = DataContainer()
-        #: to be able to use CUBAExt keywords, which are not in accepted
-        #  CUBA keywords these extensions to CM and SP is used
+#: to be able to use CUBAExt keywords, which are not in accepted
+#  CUBA keywords these extensions to CM and SP is used
         self.CM_extensions = {}
         self.SP_extensions = {}
 
     def run(self):
-        """Run OpenFoam based on CM, BC and SP data
+        """ run OpenFoam based on CM, BC and SP data
 
         Returns
         -------
@@ -65,45 +64,48 @@ class FoamControlWrapper(ABCModelingEngine):
         case = mesh.path
 
         GE = self.CM_extensions[CUBAExt.GE]
-        solver = "simpleFoam"
+        solver = "pimpleFoam"
         if CUBAExt.LAMINAR_MODEL in GE:
             if CUBAExt.VOF in GE:
                 solver = "interFoam"
             else:
-                solver = "simpleFoam"
+                solver = "pimpleFoam"
         else:
             error_str = "GE does not define supported solver: GE = {}"
             raise NotImplementedError(error_str.format(GE))
 
-        turbulent = 'Turbulent' if not (CUBAExt.LAMINAR_MODEL in GE) else ''
+        #turbulent = 'Turbulent' if not (CUBAExt.LAMINAR_MODEL in GE) else ''
 
+        #foamFiles = FoamFiles()
         # write default files based on solver
-        # (not field data files if exists)
-        templateName = solver + turbulent
-        write_default_files(case, templateName, mesh._time, True)
+        #templateName = solver + turbulent
+        #foamFiles.write_default_files(case, templateName)
 
         # write first mesh from foams objectRegistry to disk
-        mesh.write()
+        #mesh.write()
+        # write data linked to mesh
+        #mesh.write_data()
 
         # modify control and boundary data files based on SP and BC
-        modify_files(
-            case, mesh._time, self.SP, self.BC,
-            solver, self.SP_extensions, self.CM_extensions)
+        #dire = foamFiles.modify_files(case, self.SP, self.BC,
+        #                              solver, self.SP_extensions)
 
-        # run case
+
+	#a) Modify fvSchemes and fvSolution
+	mesh.modifyNumerics(self.SP)
+
+	#b) Set boundary condition and Fields
+	mesh.modifyFields(self.BC)
+
+	#c) Call solver
         if CUBAExt.NUMBER_OF_CORES in self.CM_extensions:
-            ncores = self.CM_extensions[CUBAExt.NUMBER_OF_CORES]
+                ncores = self.CM_extensions[CUBAExt.NUMBER_OF_CORES]
         else:
-            ncores = 1
-        runner = FoamRunner(solver, case, ncores)
-        runner.run()
+                ncores = 1
 
-        # remove PyFoam parser files
-        remove_parser_files(os.getcwd())
-
-        # save timestep to mesh
-        mesh._time = runner.get_last_time()
-        return mesh._time
+        mesh.run(ncores)
+    
+        return 0
 
     def add_mesh(self, mesh):
         """Add a mesh to the OpenFoam modeling engine.
@@ -129,7 +131,7 @@ class FoamControlWrapper(ABCModelingEngine):
         if mesh.name in self._meshes:
             raise ValueError('Mesh \'{}\` already exists'.format(mesh.name))
         else:
-            self._meshes[mesh.name] = FoamMesh(mesh.name, mesh)
+            self._meshes[mesh.name] = FoamMesh(mesh.name, self.BC, mesh)
             return self._meshes[mesh.name]
 
     def delete_mesh(self, name):
@@ -150,7 +152,7 @@ class FoamControlWrapper(ABCModelingEngine):
         if name not in self._meshes:
             raise ValueError('Mesh \'{}\` does not exists'.format(name))
         else:
-            simphonyfoaminterface.deleteMesh(name)
+            foamface.deleteMesh(name)
             del self._meshes[name]
 
     def get_mesh(self, name):
@@ -212,6 +214,36 @@ class FoamControlWrapper(ABCModelingEngine):
                         'Mesh \'{}\` does not exist'.format(
                             name))
 
+    def read_foammesh(self, name, path):
+        """Read mesh from OpenFoam case files.
+
+        Parameters
+        ----------
+        name : str
+            name to give to mesh
+        path : str
+            case directory
+
+        Raises
+        ------
+        Exception if some mesh fron mesh names list not found
+
+        """
+
+        foamface.init(name, path)
+        foamface.readMesh(name)
+        nPoints = foamface.getPointCount(name)
+        nCells = foamface.getCellCount(name)
+        nFaces = foamface.getFaceCount(name)
+        nEdges = 0
+
+        foamMesh = FoamMesh(name)
+        foamMesh.generate_uuidmapping(nPoints, nEdges, nFaces, nCells)
+        return foamMesh
+
+    def write_foamcelldata(self, name, dataname):
+        foamface.writeCellData(name, dataname)
+
     def add_particles(self, particle_container):
         message = 'FoamWrapper does not handle particle container'
         raise NotImplementedError(message)
@@ -243,31 +275,3 @@ class FoamControlWrapper(ABCModelingEngine):
     def iter_lattices(self, names=None):
         message = 'FoamWrapper does not handle lattice'
         raise NotImplementedError(message)
-
-
-def read_foammesh(name, path):
-    """Read mesh from OpenFoam case files.
-
-    Parameters
-    ----------
-    name : str
-    name to give to mesh
-    path : str
-    case directory
-
-    Raises
-    ------
-    Exception if some mesh from mesh names list not found
-
-    """
-
-    simphonyfoaminterface.init(name, path)
-    simphonyfoaminterface.readMesh(name)
-    nPoints = simphonyfoaminterface.getPointCount(name)
-    nCells = simphonyfoaminterface.getCellCount(name)
-    nFaces = simphonyfoaminterface.getFaceCount(name)
-    nEdges = 0
-
-    foamMesh = FoamMesh(name)
-    foamMesh.generate_uuidmapping(nPoints, nEdges, nFaces, nCells)
-    return foamMesh
