@@ -33,7 +33,7 @@ Testing
 -------
 
 An example case can be run
-    cd foam_controlwrapper/examples/
+    cd foam_controlwrapper/examples
     python poiseuille.py 
 
 

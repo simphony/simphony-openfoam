@@ -28,13 +28,13 @@ wrapper.SP[CUBA.DENSITY] = 1.0
 wrapper.SP[CUBA.DYNAMIC_VISCOSITY] = 1.0
 
 # this is just an example. It is not enough for general setting of BC's
-wrapper.BC[CUBA.VELOCITY] = {'boundary2': (0.1, 0, 0),
-                             'boundary1': 'zeroGradient',
-                             'boundary0': (0, 0, 0),
+wrapper.BC[CUBA.VELOCITY] = {'boundary0': (0, 0, 0),
+                             'boundary2': 'zeroGradient',
+                             'boundary1': (0.1, 0, 0),
                              'boundary3': 'empty'}
-wrapper.BC[CUBA.PRESSURE] = {'boundary2': 'zeroGradient',
-                             'boundary1': 0,
-                             'boundary0': 'zeroGradient',
+wrapper.BC[CUBA.PRESSURE] = {'boundary0': 'zeroGradient',
+                             'boundary2': 0,
+                             'boundary1': 'zeroGradient',
                              'boundary3': 'empty'}
 
 mesh_file = H5CUDS.open(os.path.join(name, 'poiseuille.cuds'))
@@ -57,6 +57,7 @@ lastTime = wrapper.run()
 print "post-processing"
 XYZUVW = mesh_inside_wrapper.getXYZUVW()
 plt.quiver(XYZUVW[:,0],XYZUVW[:,1],XYZUVW[:,3],XYZUVW[:,4])
+plt.axis('equal')
 plt.savefig("result.png")
 plt.show()
 
