@@ -129,6 +129,10 @@ def modify_files(case, startTime, SP, BC, solver, SPExt, CMExt):
     CMExt : dictionary
         extension to CM
 
+    Raises
+    ------
+    Exception if needed parameters not defined
+
     """
 
     nOfTimeSteps = SP[CUBA.NUMBER_OF_TIME_STEPS]
@@ -190,7 +194,22 @@ def modify_files(case, startTime, SP, BC, solver, SPExt, CMExt):
             density[SPExt[CUBAExt.PHASE_LIST][1]]
         control["phase2"]["rho"][2] = \
             density[SPExt[CUBAExt.PHASE_LIST][1]]
-        control["sigma"][2] = SPExt[CUBAExt.SURFACE_TENSION]
+        phases = SPExt[CUBAExt.PHASE_LIST]
+        if CUBAExt.SURFACE_TENSION in SPExt:
+            if phases in SPExt[CUBAExt.SURFACE_TENSION]:
+                control["sigma"][2] = SPExt[CUBAExt.SURFACE_TENSION][phases]
+            else:
+                phases = SPExt[CUBAExt.PHASE_LIST]
+                if phases in SPExt[CUBAExt.SURFACE_TENSION]:
+                    control["sigma"][2] = \
+                        SPExt[CUBAExt.SURFACE_TENSION][phases]
+                else:
+                    error_str = "Surface tension not specified"
+                    raise ValueError(error_str)
+        else:
+            error_str = "Surface tension not specified"
+            raise ValueError(error_str)
+
         control.writeFile()
     else:
         density = SP[CUBA.DENSITY]
