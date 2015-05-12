@@ -1,12 +1,12 @@
 Simphony-OpenFOAM CHANGELOG
 ======================
 
-Release 0.1.1
+Release 0.1.0
 -------------
 
 * Initial release: IO interface for running OpenFOAM engine
 
-Release 0.1.2
+Release 0.1.1
 -------------
 
 * Surface tension setup fixed (#21)
