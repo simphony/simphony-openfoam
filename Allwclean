@@ -1,0 +1,24 @@
+#!/bin/bash
+python setup.py clean
+rm -rf dist build foam_wrappers.egg-info
+pushd .
+cd openfoam-interface
+wclean
+rm -rf build
+popd
+pushd .
+cd openfoam-interface/internal-interface/libs
+wclean incompressibleTurbulenceModel/turbulenceModel
+wclean incompressibleTurbulenceModel/RAS
+#wclean incompressibleTurbulenceModel/LES
+rm -rf incompressibleTurbulenceModel
+popd
+pushd .
+cd openfoam-interface/internal-interface/wrapper
+python setup.py clean
+wclean
+rm -rf build
+popd
+find . -iname "*~" | xargs rm -f
+find . -iname "log" | xargs rm -f
+find . -iname "*pyc" | xargs rm -f

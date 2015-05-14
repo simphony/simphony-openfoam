@@ -22,17 +22,18 @@ version = '%s'
     finally:
         fh.close()
 
-write_version_py()
+write_version_py(os.path.join(os.path.dirname(__file__), 'foam_controlwrapper', 'version.py'))
+write_version_py(os.path.join(os.path.dirname(__file__), 'foam_internalwrapper', 'version.py'))
 
 
 setup(
-    name='foam_controlwrapper',
+    name='foam_wrappers',
     version=VERSION,
     author='SimPhoNy FP7 European Project',
     description='Implementation of OpenFoam wrappers',
     long_description=README_TEXT,
     packages=find_packages(),
     install_requires=['simphony'],
-    entry_points={
-        'simphony.engine': ['openfoam = foam_controlwrapper']}
+    entry_points={ 'simphony.engine': ['openfoam_file_io = foam_controlwrapper',
+                                      'openfoam_internal = foam_internalwrapper']}
 )
