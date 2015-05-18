@@ -140,7 +140,7 @@ void foam_modifyNumerics(std::string name, std::string fvSch, std::string fvSol,
 //modifying boundary conditions
 void foam_setBC(std::string name, std::string fieldname, std::string dict);
 //running the time steps
-void foam_run(std::string name, int nproc);
+double foam_run(std::string name, int nproc);
 
 template<class Type> 
 GeometricField<Type, fvPatchField, volMesh> & find_Data(Time& runTime,std::string& dataname)

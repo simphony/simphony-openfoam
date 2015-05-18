@@ -1,4 +1,4 @@
-""" foam_controlwrapper module
+""" foam_internalwrapper module
 
 Wrapper module for OpenFOAM
 
@@ -26,8 +26,8 @@ class FoamInternalWrapper(ABCModelingEngine):
         self.CM = DataContainer()
         self.BC = DataContainer()
         self.SP = DataContainer()
-#: to be able to use CUBAExt keywords, which are not in accepted
-#  CUBA keywords these extensions to CM and SP is used
+        #: to be able to use CUBAExt keywords, which are not in accepted
+        #  CUBA keywords these extensions to CM and SP is used
         self.CM_extensions = {}
         self.SP_extensions = {}
 
@@ -74,38 +74,21 @@ class FoamInternalWrapper(ABCModelingEngine):
             error_str = "GE does not define supported solver: GE = {}"
             raise NotImplementedError(error_str.format(GE))
 
-        #turbulent = 'Turbulent' if not (CUBAExt.LAMINAR_MODEL in GE) else ''
+    	#a) Modify fvSchemes and fvSolution
+    	mesh.modifyNumerics(self.SP)
 
-        #foamFiles = FoamFiles()
-        # write default files based on solver
-        #templateName = solver + turbulent
-        #foamFiles.write_default_files(case, templateName)
+    	#b) Set boundary condition and Fields
+    	mesh.modifyFields(self.BC)
 
-        # write first mesh from foams objectRegistry to disk
-        #mesh.write()
-        # write data linked to mesh
-        #mesh.write_data()
-
-        # modify control and boundary data files based on SP and BC
-        #dire = foamFiles.modify_files(case, self.SP, self.BC,
-        #                              solver, self.SP_extensions)
-
-
-	#a) Modify fvSchemes and fvSolution
-	mesh.modifyNumerics(self.SP)
-
-	#b) Set boundary condition and Fields
-	mesh.modifyFields(self.BC)
-
-	#c) Call solver
+    	#c) Call solver
         if CUBAExt.NUMBER_OF_CORES in self.CM_extensions:
                 ncores = self.CM_extensions[CUBAExt.NUMBER_OF_CORES]
         else:
                 ncores = 1
 
-        mesh.run(ncores)
+        time = mesh.run(ncores)
     
-        return 0
+        return time
 
     def add_mesh(self, mesh):
         """Add a mesh to the OpenFoam modeling engine.

@@ -1099,66 +1099,41 @@ void foam_setBC(std::string name, std::string fieldname, std::string dict)
 }
 
 
-void foam_run(std::string name, int nproc){
+double foam_run(std::string name, int nproc){
 	if(nproc<2){
 		Time& runTime = *(runTimes[name]);
 		fvMesh & mesh = const_cast<fvMesh&>(runTime.db().parent().lookupObject<fvMesh>(Foam::fvMesh::defaultRegion));
     	//#include "simpleFoam.H"
     	#include "pimpleFoam.H"
+    	return runTime.timeOutputValue();
     }else{
     
-        FatalErrorIn("simphonyInterface:run") << "Parallel OpenFOAM Internal Interface not implemented yet" <<exit(FatalError);        
-
-        int world_size, universe_size, *universe_sizep, flag; 
-        int rc, send, recv;
-        
-        Info<<endl<<endl<<" POR LLAMAR A LOS WORKERS"<<endl<<endl;
-        
-        // intercommunicator
-        MPI_Comm everyone;
+        //FatalErrorIn("simphonyInterface:run") << "Parallel OpenFOAM Internal Interface not implemented yet" <<exit(FatalError);        
 
         int argc=0;
         char **argv=0;
-        MPI_Init(&argc,&argv); 
         
+        int world_size, universe_size, *universe_sizep, flag; 
+        MPI_Comm everyone;           /* intercommunicator */ 
         MPI_Comm_size(MPI_COMM_WORLD, &world_size); 
+        if (world_size != 1)    error("Top heavy with management"); 
 
-        if (world_size != 1) {
-            cout << "Top heavy with management" << endl;
-        } 
-
-        MPI_Attr_get(MPI_COMM_WORLD, MPI_UNIVERSE_SIZE, &universe_sizep, &flag);  
-        if (!flag) { 
-            cout << "This MPI does not support UNIVERSE_SIZE. How many processes total?";
-            cout << "Enter the universe size: ";
-            cin >> universe_size; 
-        } else {
-            universe_size = *universe_sizep;
-        }
-        if (universe_size == 1) {
-            cout << "No room to start workers" << endl;
-        }
-
-        MPI_Comm_spawn("worker", MPI_ARGV_NULL, universe_size-1,  
+        MPI_Comm_spawn("worker", MPI_ARGV_NULL, nproc,  
                  MPI_INFO_NULL, 0, MPI_COMM_SELF, &everyone,  
                  MPI_ERRCODES_IGNORE);
+                 
+        //decompose()
+        
+        //send()
+        
+        //Espera que los workers terminen
+        
+        //receive()
+        
+        //reconstruct()
 
-        /*
-
-        send = 0;
-
-        rc = MPI_Reduce(&send, &recv, 1, MPI_INT, MPI_SUM, 0, everyone);
-
-        // store result of recv ...
-        // other calculations here
-        cout << "From spawned workers recv: " << recv << endl;
-
-        */
-        MPI_Finalize(); 
-        return;         
+        return 0.0;         
     }
 }
-
-
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

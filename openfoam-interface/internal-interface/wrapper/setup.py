@@ -4,6 +4,7 @@ import os
 openfoam_src_dir = os.environ['FOAM_SRC']
 openfoam_libbin = os.environ['FOAM_LIBBIN']
 openfoam_user_libbin = os.environ['FOAM_USER_LIBBIN']
+openfoam_mpi_include = os.environ['FOAM_MPI_INCLUDE']
 openfoam_user_src_dir = '../libs'
 module = Extension('simphonyfoaminterfaceII',
                    include_dirs=[openfoam_src_dir +
@@ -20,7 +21,9 @@ module = Extension('simphonyfoaminterfaceII',
                                  openfoam_user_src_dir +
                                  'incompressibleturbulenceModels/RAS/RASModel',
                                  openfoam_src_dir +
-                                 '/OSspecific/POSIX/lnInclude'],
+                                 '/OSspecific/POSIX/lnInclude',
+                                 openfoam_mpi_include
+                                 ],
                    libraries=['foaminterfaceII',
                               'finiteVolume',
 							                'incompressibleTurbulenceModelSimphony',

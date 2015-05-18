@@ -14,5 +14,5 @@ Release 0.1.1
 Release 0.1.2
 -------------
 
-* Internal Interfaces wrapper added (#21)
+* Internal Interfaces wrapper added (#23)
 

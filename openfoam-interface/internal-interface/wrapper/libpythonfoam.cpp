@@ -3,6 +3,7 @@
 #include <sstream>
 #include "Python.h"
 #include "simphonyInterface.H"
+//#include "mpi.h"
 
 
 extern "C" {
@@ -1813,14 +1814,15 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
   {   
      char *name;
      int nproc;
+     double time;
 
      if (!PyArg_ParseTuple(args,"si",&name,&nproc)) {
       PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
       return NULL;
     }
     try {
-      foam_run(std::string(name),nproc);
-      return Py_BuildValue("");
+      time = foam_run(std::string(name),nproc);
+      return Py_BuildValue("d",time);
     }
     catch (Foam::error& fErr)
     {

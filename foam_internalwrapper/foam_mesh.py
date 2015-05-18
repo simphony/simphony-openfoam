@@ -53,6 +53,7 @@ class FoamMesh(ABCMesh):
         self._foamFaceLabelToUuid = {}
         self._foamEdgeLabelToUuid = {}
         self._foamPointLabelToUuid = {}
+        self._time = 0.0;
 
         if path:
             self.path = path
@@ -159,23 +160,15 @@ class FoamMesh(ABCMesh):
                 error_str += 'Mesh has not boundary face definitions.'
                 raise ValueError(error_str.format(mesh.name))
 
-            # this to have controlDict file for mesh definition
-            # FoamFiles().write_default_files(self.path, 'simpleFoam')
-
-            #fileContent = FoamFiles().create_file_content('simpleFoam')
             fileContent = FoamFiles().create_file_content('pimpleFoam')
+
             # init objectRegistry and map to mesh name
             foamface.init(name, os.path.abspath(os.path.join(self.path, os.pardir)),fileContent['system/controlDict'])
-            # add mesh to objectRegisty
-            
-            foamface.addMesh(name, pointCoordinates, cellPoints, facePoints,patchNames, patchFaces, patchTypes)
-            #foamface.addMesh(name, pointCoordinates, cellPoints, facePoints,patchNames, patchFaces)
 
-            #foamface.createDefaultFields(name, 'simpleFoam');
+            # add mesh to objectRegisty
+            foamface.addMesh(name, pointCoordinates, cellPoints, facePoints,patchNames, patchFaces, patchTypes)
+
             foamface.createDefaultFields(name, 'pimpleFoam');
-			
-            # write mesh to disk
-            # foamface.writeMesh(name)
 
     def get_point(self, uuid):
         """ Returns a point with a given uuid.
@@ -364,9 +357,6 @@ class FoamMesh(ABCMesh):
                                              dataName)
                 else:
                     pass
-                #else:
-                #    error_str = "Data named "+dataName+" not supported"
-                #    raise NotImplementedError(error_str)
 
             return cell
 
@@ -582,16 +572,6 @@ class FoamMesh(ABCMesh):
                 + "Cell expected."
             raise TypeError(error_str)
 
-# this not included for performance reasons
-#        pointLabels = []
-#        for point in cell.points:
-#            pointLabels.append(self._uuidToFoamLabel[point.uid])
-#        foamface.setCellPoints(self.name,
-#                               self._uuidToFoamLabel[cell.uid],
-#                               pointLabels)
-
-# test if data exists and if not create (must be changed in the future,
-# while not efficient to make this in cell level)
         dataNames = foamface.getCellDataNames(self.name)
         dataNames += foamface.getCellVectorDataNames(self.name)
         for data in cell.data:
@@ -685,7 +665,7 @@ class FoamMesh(ABCMesh):
 
         """
 
-# create patch data
+        # create patch data
         patchNames = foamface.getBoundaryPatchNames(self.name)
         patchFaces = foamface.getBoundaryPatchFaces(self.name)
         i = 0
@@ -809,7 +789,7 @@ class FoamMesh(ABCMesh):
 
         """
 
-# currently only cell data is updated
+        # currently only cell data is updated
         dataNames = foamface.getCellDataNames(self.name)
         for dataName in dataNames:
             foamface.updateCellData(self.name, dataName)
@@ -861,10 +841,11 @@ class FoamMesh(ABCMesh):
         
         nOfTimeSteps = SP[CUBA.NUMBER_OF_TIME_STEPS]
         deltaT = SP[CUBA.TIME_STEP]
-        endTime = nOfTimeSteps*deltaT
+        endTime = nOfTimeSteps*deltaT + self._time
         
-        mapContent['controlDict']['deltaT']=str(deltaT) 
-        mapContent['controlDict']['endTime']=str(endTime)
+        mapContent['controlDict']['startTime'] = str(self._time)
+        mapContent['controlDict']['deltaT'] = str(deltaT) 
+        mapContent['controlDict']['endTime'] = str(endTime)
         
         controlDict = FoamFiles().parse_map(mapContent['controlDict'])
     
@@ -882,8 +863,7 @@ class FoamMesh(ABCMesh):
         for cell in self.iter_cells():
             p_values[self._uuidToFoamLabel[cell.uid]] = cell.data[CUBA.PRESSURE]
             U_values[self._uuidToFoamLabel[cell.uid]] = cell.data[CUBA.VELOCITY]
-            print cell.data[CUBA.VELOCITY]
-
+            
         foamface.setAllCellData(self.name, "p", dimensionset, p_values)
         foamface.setAllCellVectorData(self.name, "U", dimensionset, U_values)
 
@@ -930,7 +910,8 @@ class FoamMesh(ABCMesh):
     def run(self,nproc):
         """ Run the required case
         """
-        foamface.run(self.name,nproc)
+        self._time = foamface.run(self.name,nproc)
+        return self._time
 
 
     def getXYZUVW(self):

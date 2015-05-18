@@ -3,15 +3,22 @@
 """
 
 from simphony.core.cuba import CUBA
-from simphony.engine import openfoamII
+from simphony.engine import openfoam_internal
 from simphony.io.h5_cuds import H5CUDS
 import os
 
 # Only for postprocessing purposes
 import matplotlib.pyplot as plt
 
-wrapper = openfoamII.FoamControlWrapper()
-CUBAExt = openfoamII.CUBAExt
+from mpi4py import MPI
+comm = MPI.COMM_WORLD
+rank = comm.Get_rank()
+size = comm.Get_size()
+
+print "I am process %d of %d." % (rank, size)
+
+wrapper = openfoam_internal.FoamInternalWrapper()
+CUBAExt = openfoam_internal.CUBAExt
 
 name = 'poiseuille'
 
@@ -54,9 +61,9 @@ for cell in mesh_inside_wrapper.iter_cells():
 # run returns the latest time
 lastTime = wrapper.run()
 
-print "post-processing"
-XYZUVW = mesh_inside_wrapper.getXYZUVW()
-plt.quiver(XYZUVW[:,0],XYZUVW[:,1],XYZUVW[:,3],XYZUVW[:,4])
-plt.savefig("result.png")
-plt.show()
+#print "post-processing"
+#XYZUVW = mesh_inside_wrapper.getXYZUVW()
+#plt.quiver(XYZUVW[:,0],XYZUVW[:,1],XYZUVW[:,3],XYZUVW[:,4])
+#plt.savefig("result.png")
+#plt.show()
 

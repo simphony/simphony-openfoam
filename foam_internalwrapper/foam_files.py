@@ -119,7 +119,7 @@ class FoamFiles():
         dire = SolutionDirectory(case, archive="SimPhoNy")
         dire.clearResults()
 
-#        startTime = SP["startTime"]
+        # startTime = SP["startTime"]
         startTime = 0
         nOfTimeSteps = SP[CUBA.NUMBER_OF_TIME_STEPS]
         deltaT = SP[CUBA.TIME_STEP]
@@ -154,7 +154,7 @@ class FoamFiles():
             error_str = "Can't write file with content: {}"
             raise ValueError(error_str.format(control))
 
-# parse system/controlDict -file in case directory
+        # parse system/controlDict -file in case directory
         parFile = os.path.join(case, 'system', 'controlDict')
         try:
             control = ParsedParameterFile(parFile)
@@ -175,12 +175,9 @@ class FoamFiles():
             density = SP[CUBA.DENSITY]
             viscosity = SP[CUBA.DYNAMIC_VISCOSITY]
 
-            # parse constant/transportProperties -file in case directory
             parFile = os.path.join(case, 'constant', 'transportProperties')
             try:
                 control = ParsedParameterFile(parFile)
-#                control["twoPhase"]["phase1"] = SPExt[CUBAExt.PHASE_LIST][0]
-#                control["twoPhase"]["phase2"] = SPExt[CUBAExt.PHASE_LIST][1]
 
                 control["phase1"]["nu"][2] = \
                     viscosity[SPExt[CUBAExt.PHASE_LIST][0]] / \
@@ -201,7 +198,6 @@ class FoamFiles():
             viscosity = SP[CUBA.DYNAMIC_VISCOSITY]
             kinematicViscosity = viscosity/density
 
-            # parse constant/transportProperties -file in case directory
             parFile = os.path.join(case, 'constant', 'transportProperties')
             try:
                 control = ParsedParameterFile(parFile)
@@ -243,14 +239,14 @@ class FoamFiles():
             error_str = "File {} does not exist"
             raise ValueError(error_str.format(parFile))
         try:
-            a=2 #control.writeFile()            
+            control.writeFile()            
         except IOError:
             error_str = "Can't write file with content: {}"
             raise ValueError(error_str.format(control))
 
         pressureBCs = BC[CUBA.PRESSURE]
 
-# parse startTime/p -file in case directory
+        # parse startTime/p -file in case directory
         pname = 'p'
         if solver == "interFoam":
             pname = 'p_rgh'

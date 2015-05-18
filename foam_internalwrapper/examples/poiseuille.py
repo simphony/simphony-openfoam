@@ -53,6 +53,7 @@ for cell in mesh_inside_wrapper.iter_cells():
 
 # run returns the latest time
 lastTime = wrapper.run()
+print "lastTime: " + str(lastTime)
 
 print "post-processing"
 XYZUVW = mesh_inside_wrapper.getXYZUVW()
