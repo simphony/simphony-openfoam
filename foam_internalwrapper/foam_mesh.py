@@ -9,11 +9,12 @@ from simphony.cuds.abstractmesh import ABCMesh
 from simphony.core.cuba import CUBA
 from simphony.cuds.mesh import Point, Face, Cell
 import simphony.core.data_container as dc
-from foam_files import FoamFiles
 import simphonyfoaminterfaceII as foamface
 import tempfile
 import os
 import numpy
+from foam_dicts import dictionaryMaps, parse_map
+
 
 class FoamMesh(ABCMesh):
     """ Proxy class to communicate with OpenFoam engines mesh data.
@@ -53,7 +54,7 @@ class FoamMesh(ABCMesh):
         self._foamFaceLabelToUuid = {}
         self._foamEdgeLabelToUuid = {}
         self._foamPointLabelToUuid = {}
-        self._time = 0.0;
+        self._time = 0.0
 
         if path:
             self.path = path
@@ -141,7 +142,7 @@ class FoamMesh(ABCMesh):
                 error_str = 'Could not initialize with mesh  {}. '
                 error_str += 'Mesh has not boundary face definitions.'
                 raise ValueError(error_str.format(mesh.name))
-                
+
             patchTypes = []
             print "We choose patch types between empty or patch"
             if CUBA.PRESSURE in BC.keys():
@@ -160,15 +161,18 @@ class FoamMesh(ABCMesh):
                 error_str += 'Mesh has not boundary face definitions.'
                 raise ValueError(error_str.format(mesh.name))
 
-            fileContent = FoamFiles().create_file_content('pimpleFoam')
+            mapContent = dictionaryMaps['pimpleFoam']
+            controlDict = parse_map(mapContent['controlDict'])
 
             # init objectRegistry and map to mesh name
-            foamface.init(name, os.path.abspath(os.path.join(self.path, os.pardir)),fileContent['system/controlDict'])
+            foamface.init(name, os.path.abspath(os.path.join(self.path,
+                          os.pardir)), controlDict)
 
             # add mesh to objectRegisty
-            foamface.addMesh(name, pointCoordinates, cellPoints, facePoints,patchNames, patchFaces, patchTypes)
+            foamface.addMesh(name, pointCoordinates, cellPoints,
+                             facePoints, patchNames, patchFaces, patchTypes)
 
-            foamface.createDefaultFields(name, 'pimpleFoam');
+            foamface.createDefaultFields(name, 'pimpleFoam')
 
     def get_point(self, uuid):
         """ Returns a point with a given uuid.
@@ -762,41 +766,6 @@ class FoamMesh(ABCMesh):
         numberCells = foamface.getCellCount(self.name)
         return numberCells > 0
 
-    def write(self):
-        """ Writes mesh from OpenFOAM's objectRegistry to disk
-
-        """
-
-        foamface.writeMesh(self.name)
-
-    def write_data(self):
-        """ Writes mesh related data from OpenFOAM's objectRegistry to disk
-
-        """
-
-        # currently only cell data is written
-        dataNames = foamface.getCellDataNames(self.name)
-        for dataName in dataNames:
-            if dataName != '':
-                foamface.writeCellData(self.name, dataName)
-        dataNames = foamface.getCellVectorDataNames(self.name)
-        for dataName in dataNames:
-            if dataName != '':
-                foamface.writeCellVectorData(self.name, dataName)
-
-    def update_data(self):
-        """ Updates mesh related data from disk to OpenFOAM's objectRegistry
-
-        """
-
-        # currently only cell data is updated
-        dataNames = foamface.getCellDataNames(self.name)
-        for dataName in dataNames:
-            foamface.updateCellData(self.name, dataName)
-        dataNames = foamface.getCellVectorDataNames(self.name)
-        for dataName in dataNames:
-            foamface.updateCellVectorData(self.name, dataName)
-
     def generate_uuidmapping(self, nPoints, nEdges, nFaces, nCells):
         '''generate uuid mapping assuming continuous ordering of mesh objects
 
@@ -830,107 +799,23 @@ class FoamMesh(ABCMesh):
 
         return uuid.uuid4()
 
-    def modifyNumerics(self, SP):
-        """ Modifies the numerical parameters of the simulation
-        """
-        fileContent = FoamFiles().create_file_content('pimpleFoam')
-        mapContent = FoamFiles().create_map_content('pimpleFoam')
-        
-        fvSchemesDict = fileContent['system/fvSchemes']
-        fvSolutionDict = fileContent['system/fvSolution']
-        
-        nOfTimeSteps = SP[CUBA.NUMBER_OF_TIME_STEPS]
-        deltaT = SP[CUBA.TIME_STEP]
-        endTime = nOfTimeSteps*deltaT + self._time
-        
-        mapContent['controlDict']['startTime'] = str(self._time)
-        mapContent['controlDict']['deltaT'] = str(deltaT) 
-        mapContent['controlDict']['endTime'] = str(endTime)
-        
-        controlDict = FoamFiles().parse_map(mapContent['controlDict'])
-    
-        foamface.modifyNumerics(self.name, fvSchemesDict, fvSolutionDict, controlDict)
-
-
-    def modifyFields(self, BC):
-        """ Modifies the internal fields and boundary conditions
-        """
-        dimensionset = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-        nCells = foamface.getCellCount(self.name)
-        p_values = [0.0 for item in range(nCells)]
-        U_values = [(0.0, 0.0, 0.0) for item in range(nCells)]                                                
-
-        for cell in self.iter_cells():
-            p_values[self._uuidToFoamLabel[cell.uid]] = cell.data[CUBA.PRESSURE]
-            U_values[self._uuidToFoamLabel[cell.uid]] = cell.data[CUBA.VELOCITY]
-            
-        foamface.setAllCellData(self.name, "p", dimensionset, p_values)
-        foamface.setAllCellVectorData(self.name, "U", dimensionset, U_values)
-
-        #Refresh boundary conditions
-        velocityBCs = BC[CUBA.VELOCITY]
-        myDict = ""
-        for boundary in velocityBCs:
-            myDict = myDict + str(boundary) + "\n{\n"               
-            if velocityBCs[boundary] == "zeroGradient":
-                myDict = myDict + "\t type \t zeroGradient;\n"
-                myDict = myDict + "\t value \t uniform (0 0 0);\n"
-            elif velocityBCs[boundary] == "empty":
-                myDict = myDict + "\t type \t empty;\n"
-            else:
-                myDict = myDict + "\t type \t fixedValue;\n"
-                myDict = myDict + "\t value \t uniform (" \
-                              + str(velocityBCs[boundary][0]) + " " \
-                              + str(velocityBCs[boundary][1]) + " " \
-                              + str(velocityBCs[boundary][2]) + ");\n"
-            myDict = myDict + "}\n"
-
-        foamface.setBC(self.name, "U", myDict)
-
-        pressureBCs = BC[CUBA.PRESSURE]
-        myDict = ""
-        for boundary in pressureBCs:
-            myDict = myDict + str(boundary) + "\n{\n"
-            if pressureBCs[boundary] == "zeroGradient":
-                myDict = myDict + "\t type \t zeroGradient;\n"
-                myDict = myDict + "\t value \t uniform 0;\n"
-            elif pressureBCs[boundary] == "fixedFluxPressure":
-                myDict = myDict + "\t type \t fixedFluxPressure;\n"
-                myDict = myDict + "\t value \t uniform 0;"
-            elif pressureBCs[boundary] == "empty":
-                myDict = myDict + "\t type \t empty;\n"
-            else:
-                myDict = myDict + "\t type \t fixedValue;\n"
-                myDict = myDict + "\t value \t uniform " + str(pressureBCs[boundary]) + ";\n"
-            myDict = myDict + "}\n"
-        
-        foamface.setBC(self.name, "p", myDict)
-
-
-    def run(self,nproc):
-        """ Run the required case
-        """
-        self._time = foamface.run(self.name,nproc)
-        return self._time
-
-
     def getXYZUVW(self):
 
         nCells = foamface.getCellCount(self.name)
-        XYZUVW = numpy.zeros((nCells,6))
+        XYZUVW = numpy.zeros((nCells, 6))
 
-        ii=0
+        ii = 0
         for cell in self.iter_cells():
-            pointLabels = foamface.getCellPoints(self.name, self._uuidToFoamLabel[cell.uid])
+            label = self._uuidToFoamLabel[cell.uid]
+            pointLabels = foamface.getCellPoints(self.name, label)
 
             for pid in pointLabels:
-                coords = foamface.getPointCoordinates(self.name,pid)
+                coords = foamface.getPointCoordinates(self.name, pid)
                 XYZUVW[ii][0:3] = XYZUVW[ii][0:3] + coords
 
             XYZUVW[ii][0:3] = XYZUVW[ii][0:3]/len(pointLabels)
             XYZUVW[ii][3:6] = cell.data[CUBA.VELOCITY]
 
-            ii=ii+1
+            ii = ii + 1
 
         return XYZUVW
-

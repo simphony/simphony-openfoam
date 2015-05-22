@@ -6,13 +6,10 @@ Wrapper module for OpenFOAM
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
-from PyFoam.Execution.ConvergenceRunner import ConvergenceRunner
-from PyFoam.LogAnalysis.BoundingLogAnalyzer import BoundingLogAnalyzer
-from foam_files import FoamFiles
 from cuba_extension import CUBAExt
 from foam_mesh import FoamMesh
 import simphonyfoaminterfaceII as foamface
-import os
+from foam_dicts import modifyNumerics, modifyFields
 
 
 class FoamInternalWrapper(ABCModelingEngine):
@@ -61,34 +58,22 @@ class FoamInternalWrapper(ABCModelingEngine):
             raise ValueError(error_str.format(name))
 
         mesh = self._meshes[name]
-        case = mesh.path
 
-        GE = self.CM_extensions[CUBAExt.GE]
-        solver = "pimpleFoam"
-        if CUBAExt.LAMINAR_MODEL in GE:
-            if CUBAExt.VOF in GE:
-                solver = "interFoam"
-            else:
-                solver = "pimpleFoam"
-        else:
-            error_str = "GE does not define supported solver: GE = {}"
-            raise NotImplementedError(error_str.format(GE))
+#       a) Modify fvSchemes and fvSolution
+        modifyNumerics(mesh, self.SP)
 
-    	#a) Modify fvSchemes and fvSolution
-    	mesh.modifyNumerics(self.SP)
+#       b) Set boundary condition and Fields
+        modifyFields(mesh, self.BC)
 
-    	#b) Set boundary condition and Fields
-    	mesh.modifyFields(self.BC)
-
-    	#c) Call solver
+#       c) Call solver
         if CUBAExt.NUMBER_OF_CORES in self.CM_extensions:
                 ncores = self.CM_extensions[CUBAExt.NUMBER_OF_CORES]
         else:
                 ncores = 1
 
-        time = mesh.run(ncores)
-    
-        return time
+        mesh._time = foamface.run(mesh.name, ncores)
+
+        return mesh._time
 
     def add_mesh(self, mesh):
         """Add a mesh to the OpenFoam modeling engine.
@@ -196,36 +181,6 @@ class FoamInternalWrapper(ABCModelingEngine):
                     raise ValueError(
                         'Mesh \'{}\` does not exist'.format(
                             name))
-
-    def read_foammesh(self, name, path):
-        """Read mesh from OpenFoam case files.
-
-        Parameters
-        ----------
-        name : str
-            name to give to mesh
-        path : str
-            case directory
-
-        Raises
-        ------
-        Exception if some mesh fron mesh names list not found
-
-        """
-
-        foamface.init(name, path)
-        foamface.readMesh(name)
-        nPoints = foamface.getPointCount(name)
-        nCells = foamface.getCellCount(name)
-        nFaces = foamface.getFaceCount(name)
-        nEdges = 0
-
-        foamMesh = FoamMesh(name)
-        foamMesh.generate_uuidmapping(nPoints, nEdges, nFaces, nCells)
-        return foamMesh
-
-    def write_foamcelldata(self, name, dataname):
-        foamface.writeCellData(name, dataname)
 
     def add_particles(self, particle_container):
         message = 'FoamWrapper does not handle particle container'

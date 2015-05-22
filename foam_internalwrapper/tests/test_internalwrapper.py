@@ -7,7 +7,6 @@ foam_controlwrapper module functionalities
 
 import unittest
 import os
-import re
 import shutil
 
 from simphony.cuds.mesh import Mesh, Face, Point, Cell
@@ -17,7 +16,6 @@ from simphony.io.h5_cuds import H5CUDS
 
 from foam_internalwrapper.foam_internalwrapper import FoamInternalWrapper
 from foam_internalwrapper.cuba_extension import CUBAExt
-from foam_internalwrapper import foam_files
 
 
 class FoamInternalWrapperTestCase(unittest.TestCase):
@@ -110,8 +108,6 @@ class FoamInternalWrapperTestCase(unittest.TestCase):
         for face in self.mesh.iter_faces():
             face_w = mesh_inside_wrapper.get_face(face.uid)
             self.assertEqual(face.uid, face_w.uid)
-            #self.assertEqual(face.points, face_w.points)
-            #self.assertEqual(face.data, face_w.data)
 
         for cell in self.mesh.iter_cells():
             cell_w = mesh_inside_wrapper.get_cell(cell.uid)
@@ -270,6 +266,6 @@ class FoamInternalWrapperTestCase(unittest.TestCase):
             shutil.rmtree(mesh_inside_wrapper.path)
 
         mesh_file.close()
-    
+
 if __name__ == '__main__':
     unittest.main()

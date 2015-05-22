@@ -19,7 +19,7 @@ wrapper.CM[CUBA.NAME] = name
 
 wrapper.CM_extensions[CUBAExt.GE] = (CUBAExt.INCOMPRESSIBLE,
                                      CUBAExt.LAMINAR_MODEL)
-                                     
+
 wrapper.CM_extensions[CUBAExt.NUMBER_OF_CORES] = 1
 
 wrapper.SP[CUBA.TIME_STEP] = 1
@@ -57,8 +57,7 @@ print "lastTime: " + str(lastTime)
 
 print "post-processing"
 XYZUVW = mesh_inside_wrapper.getXYZUVW()
-plt.quiver(XYZUVW[:,0],XYZUVW[:,1],XYZUVW[:,3],XYZUVW[:,4])
+plt.quiver(XYZUVW[:, 0], XYZUVW[:, 1], XYZUVW[:, 3], XYZUVW[:, 4])
 plt.axis('equal')
 plt.savefig("result.png")
 plt.show()
-
