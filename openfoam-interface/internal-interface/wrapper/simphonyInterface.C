@@ -1030,9 +1030,6 @@ int foam_getCellCount(std::string name)
 void foam_createDefaultFields(std::string name, std::string solver)
 {
     const fvMesh & mesh = runTimes[name]->db().parent().lookupObject<fvMesh>(Foam::fvMesh::defaultRegion);
-    if(solver=="simpleFoam"){
-        #include "createFieldsSimpleFoam.H"
-    }
     if(solver=="pimpleFoam"){
         #include "createFieldsPimpleFoam.H"
     }
@@ -1103,34 +1100,11 @@ double foam_run(std::string name, int nproc){
 	if(nproc<2){
 		Time& runTime = *(runTimes[name]);
 		fvMesh & mesh = const_cast<fvMesh&>(runTime.db().parent().lookupObject<fvMesh>(Foam::fvMesh::defaultRegion));
-    	//#include "simpleFoam.H"
     	#include "pimpleFoam.H"
     	return runTime.timeOutputValue();
     }else{
     
-        //FatalErrorIn("simphonyInterface:run") << "Parallel OpenFOAM Internal Interface not implemented yet" <<exit(FatalError);        
-
-        int argc=0;
-        char **argv=0;
-        
-        int world_size, universe_size, *universe_sizep, flag; 
-        MPI_Comm everyone;           /* intercommunicator */ 
-        MPI_Comm_size(MPI_COMM_WORLD, &world_size); 
-        if (world_size != 1)    error("Top heavy with management"); 
-
-        MPI_Comm_spawn("worker", MPI_ARGV_NULL, nproc,  
-                 MPI_INFO_NULL, 0, MPI_COMM_SELF, &everyone,  
-                 MPI_ERRCODES_IGNORE);
-                 
-        //decompose()
-        
-        //send()
-        
-        //Espera que los workers terminen
-        
-        //receive()
-        
-        //reconstruct()
+        FatalErrorIn("simphonyInterface:run") << "Parallel OpenFOAM Internal Interface not implemented yet" <<exit(FatalError);        
 
         return 0.0;         
     }
