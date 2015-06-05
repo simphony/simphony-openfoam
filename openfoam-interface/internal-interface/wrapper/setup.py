@@ -15,7 +15,8 @@ module = Extension('simphonyfoaminterfaceII',
                                  openfoam_src_dir +
                                  '/transportModels',
                                  openfoam_src_dir +
-                                 '/transportModels/incompressible/singlePhaseTransportModel',
+                                 '/transportModels/incompressible \
+                                 /singlePhaseTransportModel',
                                  openfoam_src_dir +
                                  '/turbulenceModels',
                                  openfoam_user_src_dir +
@@ -26,8 +27,8 @@ module = Extension('simphonyfoaminterfaceII',
                                  ],
                    libraries=['foaminterfaceII',
                               'finiteVolume',
-							                'incompressibleTurbulenceModelSimphony',
-							                'incompressibleRASModelsSimphony',
+                              'incompressibleTurbulenceModelSimphony',
+                              'incompressibleRASModelsSimphony',
                               'incompressibleTransportModels',
                               'genericPatchFields'],
                    library_dirs=[openfoam_user_libbin, openfoam_libbin],
@@ -36,7 +37,8 @@ module = Extension('simphonyfoaminterfaceII',
 setup(name='FoamInterfaceII',
       version='0.0.1',
       description='Foam interface to Python',
-      author='Juan Marcelo Gimenez and Santiago Marquez Damian and Norberto Nigro',
+      author='Juan Marcelo Gimenez and \
+      Santiago Marquez Damian and Norberto Nigro',
       author_email='jmarcelogimenez@gmail.com',
       url='http://www.cimec.org.ar',
       ext_modules=[module])

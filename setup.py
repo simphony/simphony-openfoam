@@ -8,18 +8,23 @@ with open('README.rst', 'r') as readme:
 
 VERSION = '0.1.2.dev0'
 
+
 class CleanCommand(Command):
-    description = "custom clean command that forcefully removes dist/build directories"
+    description = "custom clean command \
+    that forcefully removes dist/build directories"
     user_options = []
+
     def initialize_options(self):
         self.cwd = None
+
     def finalize_options(self):
         self.cwd = os.getcwd()
+
     def run(self):
-        assert os.getcwd() == self.cwd, 'Must be in package root: %s' % self.cwd
+        assert os.getcwd() == self.cwd, 'Must be in root: %s' % self.cwd
         os.system('./Allwclean')
-        
-        
+
+
 class InstallCommand(install):
     """Customized setuptools install command - prints a friendly greeting."""
     def run(self):
@@ -41,9 +46,11 @@ version = '%s'
     finally:
         fh.close()
 
-write_version_py(os.path.join(os.path.dirname(__file__), 'foam_controlwrapper', 'version.py'))
-write_version_py(os.path.join(os.path.dirname(__file__), 'foam_internalwrapper', 'version.py'))
-    
+write_version_py(os.path.join(os.path.dirname(__file__),
+                              'foam_controlwrapper', 'version.py'))
+write_version_py(os.path.join(os.path.dirname(__file__),
+                              'foam_internalwrapper', 'version.py'))
+
 setup(
     name='foam_wrappers',
     version=VERSION,
@@ -52,8 +59,9 @@ setup(
     long_description=README_TEXT,
     packages=find_packages(),
     install_requires=['simphony'],
-    entry_points={ 'simphony.engine': ['openfoam_file_io = foam_controlwrapper',
-                                      'openfoam_internal = foam_internalwrapper']},
+    entry_points={'simphony.engine':
+                  ['openfoam_file_io = foam_controlwrapper',
+                   'openfoam_internal = foam_internalwrapper']},
     cmdclass={
         'clean': CleanCommand,
         'install': InstallCommand}
