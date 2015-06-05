@@ -19,8 +19,8 @@ popd
 
 export PATH=$PATH:$PWD/openfoam-interface/internal-interface/bin
 
-pushd .
-cd openfoam-interface/internal-interface
-mpicc worker.c -o bin/worker
-popd
+#pushd .
+#cd openfoam-interface/internal-interface
+#mpicc worker.c -o bin/worker
+#popd
 
