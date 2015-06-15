@@ -58,7 +58,7 @@ setup(
     description='Implementation of OpenFoam wrappers',
     long_description=README_TEXT,
     packages=find_packages(),
-    install_requires=['simphony'],
+    install_requires=['simphony == 0.1.3'],
     entry_points={'simphony.engine':
                   ['openfoam_file_io = foam_controlwrapper',
                    'openfoam_internal = foam_internalwrapper']},
