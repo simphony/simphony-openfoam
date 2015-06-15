@@ -11,6 +11,13 @@ Repository
 
 Simphony-openfoam is hosted on github: https://github.com/simphony/simphony-openfoam
 
+Requirements
+------------
+
+- `simphony-common`_ == 0.1.3
+
+.. _simphony-common: https://github.com/simphony/simphony-common
+
 Installation
 ------------
 
