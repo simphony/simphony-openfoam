@@ -223,19 +223,16 @@ class FoamControlWrapperTestCase(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             wrapper.iter_lattices()
 
-    def test_run_time(self):
-        """Test that field variable value is changed after
-        consecutive calls of run method
 
-        """
-
+class FoamControlWrapperRunTestCase(unittest.TestCase):
+    def setUp(self):
         wrapper = FoamControlWrapper()
         name = 'simplemesh'
         wrapper.CM[CUBA.NAME] = name
         wrapper.CM_extensions[CUBAExt.GE] = (CUBAExt.INCOMPRESSIBLE,
                                              CUBAExt.LAMINAR_MODEL)
         wrapper.SP[CUBA.TIME_STEP] = 1
-        wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 1
+        wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 3
         wrapper.SP[CUBA.DENSITY] = 1.0
         wrapper.SP[CUBA.DYNAMIC_VISCOSITY] = 1.0
         wrapper.BC[CUBA.VELOCITY] = {'boundary0': (0.1, 0, 0),
@@ -246,76 +243,57 @@ class FoamControlWrapperTestCase(unittest.TestCase):
                                      'boundary1': 0,
                                      'boundary2': 'zeroGradient',
                                      'boundary3': 'empty'}
+        self.wrapper = wrapper
         mesh_file = H5CUDS.open(os.path.join('foam_controlwrapper',
                                              'tests',
                                              'simplemesh.cuds'))
         mesh_from_file = mesh_file.get_mesh(name)
 
-        mesh_inside_wrapper = wrapper.add_mesh(mesh_from_file)
+        self.mesh_inside_wrapper = self.wrapper.add_mesh(mesh_from_file)
 
-        wrapper.run()
+        mesh_file.close()
 
-        for cell in mesh_inside_wrapper.iter_cells():
+    def tearDown(self):
+        if os.path.exists(self.mesh_inside_wrapper.path):
+            shutil.rmtree(self.mesh_inside_wrapper.path)
+
+    def test_run_time(self):
+        """Test that field variable value is changed after
+        consecutive calls of run method
+
+        """
+        self.wrapper.SP[CUBA.TIME_STEP] = 1
+
+        self.wrapper.run()
+
+        for cell in self.mesh_inside_wrapper.iter_cells():
             old_vel = cell.data[CUBA.VELOCITY]
             old_pres = cell.data[CUBA.PRESSURE]
             cell_uid = cell.uid
 
-        wrapper.run()
+        self.wrapper.run()
 
-        cell = mesh_inside_wrapper.get_cell(cell_uid)
+        cell = self.mesh_inside_wrapper.get_cell(cell_uid)
         new_vel = cell.data[CUBA.VELOCITY]
         new_pres = cell.data[CUBA.PRESSURE]
 
         self.assertNotEqual(old_vel, new_vel)
         self.assertNotEqual(old_pres, new_pres)
 
-        if os.path.exists(mesh_inside_wrapper.path):
-            shutil.rmtree(mesh_inside_wrapper.path)
-
-        mesh_file.close()
-
     def test_parallel_run(self):
         """Test parallel running of OpenFoam
 
         """
+        self.wrapper.SP[CUBA.TIME_STEP] = 3
+        self.wrapper.CM_extensions[CUBAExt.NUMBER_OF_CORES] = 2
 
-        wrapper = FoamControlWrapper()
-        name = 'simplemesh'
-        wrapper.CM[CUBA.NAME] = name
-        wrapper.CM_extensions[CUBAExt.GE] = (CUBAExt.INCOMPRESSIBLE,
-                                             CUBAExt.LAMINAR_MODEL)
-        wrapper.CM_extensions[CUBAExt.NUMBER_OF_CORES] = 2
-        wrapper.SP[CUBA.TIME_STEP] = 1
-        wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 1
-        wrapper.SP[CUBA.DENSITY] = 1.0
-        wrapper.SP[CUBA.DYNAMIC_VISCOSITY] = 1.0
-        wrapper.BC[CUBA.VELOCITY] = {'boundary0': (0.1, 0, 0),
-                                     'boundary1': 'zeroGradient',
-                                     'boundary2': (0, 0, 0),
-                                     'boundary3': 'empty'}
-        wrapper.BC[CUBA.PRESSURE] = {'boundary0': 'zeroGradient',
-                                     'boundary1': 0,
-                                     'boundary2': 'zeroGradient',
-                                     'boundary3': 'empty'}
-        mesh_file = H5CUDS.open(os.path.join('foam_controlwrapper',
-                                             'tests',
-                                             'simplemesh.cuds'))
-        mesh_from_file = mesh_file.get_mesh(name)
+        self.wrapper.run()
 
-        mesh_inside_wrapper = wrapper.add_mesh(mesh_from_file)
-
-        wrapper.run()
-
-        os.listdir(mesh_inside_wrapper.path)
-        self.assertEqual(wrapper.CM_extensions[CUBAExt.NUMBER_OF_CORES],
+        os.listdir(self.mesh_inside_wrapper.path)
+        self.assertEqual(self.wrapper.CM_extensions[CUBAExt.NUMBER_OF_CORES],
                          len([d for d in
-                              os.listdir(mesh_inside_wrapper.path)
+                              os.listdir(self.mesh_inside_wrapper.path)
                               if re.match(r'processor*', d)]))
-
-        if os.path.exists(mesh_inside_wrapper.path):
-            shutil.rmtree(mesh_inside_wrapper.path)
-
-        mesh_file.close()
 
 
 if __name__ == '__main__':
