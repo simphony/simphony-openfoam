@@ -1057,18 +1057,14 @@ void foam_modifyNumerics(std::string name, std::string fvSch, std::string fvSol,
         fvSchIS()
     );
     fvSchemes* fvSc = &mesh;
-    fvSc->readOpt() = IOobject::READ_IF_PRESENT;
     fvSc->read();
-    fvSc->readOpt() = IOobject::NO_READ;
 
     fvSolutionDict.read
     (
         fvSolIS()
     );
     fvSolution* fvSo = &mesh;
-    fvSo->readOpt() = IOobject::READ_IF_PRESENT;
     fvSo->read();
-    fvSo->readOpt() = IOobject::NO_READ;
 
     controlDict.read
     (
