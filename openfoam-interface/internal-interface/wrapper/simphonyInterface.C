@@ -43,6 +43,7 @@ License
 #include "dictionaryEntry.H"
 #include "UList.H"
 #include "mpi.h"
+#include "fvSchemes/fvSchemes.H"
 
 #include <map>
 
@@ -1057,14 +1058,14 @@ void foam_modifyNumerics(std::string name, std::string fvSch, std::string fvSol,
         fvSchIS()
     );
     fvSchemes* fvSc = &mesh;
-    fvSc->read();
+    fvSc->read(true);
 
     fvSolutionDict.read
     (
         fvSolIS()
     );
     fvSolution* fvSo = &mesh;
-    fvSo->read();
+    fvSo->read(true);
 
     controlDict.read
     (

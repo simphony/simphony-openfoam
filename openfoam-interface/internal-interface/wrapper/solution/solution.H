@@ -142,6 +142,8 @@ public:
 
             //- Read the solution dictionary
             bool read();
+            
+            bool read(bool);
 };
 
 

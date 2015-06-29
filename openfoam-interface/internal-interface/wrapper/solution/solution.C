@@ -391,8 +391,7 @@ const Foam::dictionary& Foam::solution::solver(const word& name) const
 
 bool Foam::solution::read()
 {
-    //if (regIOobject::read())
-    if (1)
+    if (regIOobject::read())
     {
         read(solutionDict());
 
@@ -403,6 +402,22 @@ bool Foam::solution::read()
         return false;
     }
 }
+
+
+bool Foam::solution::read(bool b)
+{
+    if (b)
+    {
+        read(solutionDict());
+
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 
 
 // ************************************************************************* //

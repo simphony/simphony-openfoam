@@ -28,6 +28,8 @@ License
 #ifndef simphonyInterface_H
 #define simphonyInterface_H
 
+#include "fvSchemes/fvSchemes.H"
+#include "solution/solution.H"
 #include "fvCFD.H"
 #include "simpleControl.H"
 #include "pimpleControl.H"

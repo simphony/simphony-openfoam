@@ -395,8 +395,24 @@ Foam::fvSchemes::fvSchemes(const objectRegistry& obr)
 
 bool Foam::fvSchemes::read()
 {
-    //if (regIOobject::read()) //it requires reading a file
-	if (1)
+    if (regIOobject::read()) //it requires reading a file
+	{
+        // persistent settings across reads is incorrect
+        clear();
+
+        read(schemesDict());
+
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool Foam::fvSchemes::read(bool b)
+{
+	if (b)
     {
         // persistent settings across reads is incorrect
         clear();

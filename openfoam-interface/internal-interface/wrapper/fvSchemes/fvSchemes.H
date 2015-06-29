@@ -151,6 +151,8 @@ public:
 
             //- Read the fvSchemes
             bool read();
+            
+            bool read(bool);
 };
 
 
