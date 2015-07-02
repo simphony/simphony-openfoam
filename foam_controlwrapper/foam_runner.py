@@ -27,24 +27,25 @@ class FoamRunner():
             raise ValueError('Number of cores must be greater than zero')
         elif self.ncores == 1:
             cmd = self.solver + " -case "+self.case + " > " +\
-                os.path.join(self.case, 'log') + ' 2>&1'
-            subprocess.call(cmd, shell=True)
+                os.path.join(self.case, 'log')
+            subprocess.check_call(cmd, shell=True)
         else:
             # write and modify decomposeParDict file
 
             # decompose
             cmd = "decomposePar -force -case " + self.case + " > " +\
-                  os.path.join(self.case, 'log.decompose') + ' 2>&1'
-            subprocess.call(cmd, shell=True)
+                  os.path.join(self.case, 'log.decompose')
+
+            subprocess.check_call(cmd, shell=True)
             cmd = "mpirun -np " + str(self.ncores) + " " + self.solver +\
                   " -parallel -case " + self.case + " > " +\
-                  os.path.join(self.case, 'log') +\
-                  ' 2>&1'
-            subprocess.call(cmd, shell=True)
+                  os.path.join(self.case, 'log')
+            subprocess.check_call(cmd, shell=True)
+
             # reconstruct
             cmd = "reconstructPar  -case " + self.case + " > " +\
-                  os.path.join(self.case, 'log.reconstruct') + ' 2>&1'
-            subprocess.call(cmd, shell=True)
+                  os.path.join(self.case, 'log.reconstruct')
+            subprocess.check_call(cmd, shell=True)
 
     def get_last_time(self):
         """Return last time step in OpenFoam case directory
