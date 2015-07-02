@@ -54,7 +54,7 @@ endTime 1000;
 
 deltaT 1;
 
-writeControl timeStep;
+writeControl runTime;
 
 writeInterval 1000;
 
