@@ -3,12 +3,12 @@
 """
 
 from simphony.core.cuba import CUBA
-from simphony.engine import openfoam
+from simphony.engine import openfoam_file_io
 from simphony.io.h5_cuds import H5CUDS
 import os
 
-wrapper = openfoam.FoamControlWrapper()
-CUBAExt = openfoam.CUBAExt
+wrapper = openfoam_file_io.FoamControlWrapper()
+CUBAExt = openfoam_file_io.CUBAExt
 
 name = 'poiseuille_vof'
 

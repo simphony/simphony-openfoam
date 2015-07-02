@@ -1,0 +1,25 @@
+#!/bin/bash
+
+export FOAM_MPI_INCLUDE=$WM_THIRD_PARTY_DIR/platforms/$WM_ARCH$WM_COMPILER/$FOAM_MPI/include
+rm -rf dist build foam_wrappers.egg-info
+pushd .
+cd openfoam-interface
+wclean
+rm -rf build
+popd
+pushd .
+rm -f openfoam-interface/internal-interface/bin/*
+cd openfoam-interface/internal-interface/libs
+wclean incompressibleTurbulenceModel/turbulenceModel
+wclean incompressibleTurbulenceModel/RAS
+rm -rf incompressibleTurbulenceModel
+popd
+pushd .
+cd openfoam-interface/internal-interface/wrapper
+python setup.py clean
+wclean
+rm -rf build
+popd
+find . -iname "*~" | xargs rm -f
+find . -iname "log" | xargs rm -f
+find . -iname "*pyc" | xargs rm -f
