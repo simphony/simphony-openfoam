@@ -16,3 +16,8 @@ Release 0.1.2
 
 * Internal Interfaces wrapper added (#23)
 
+Release 0.1.3
+-------------
+
+* Fix bug in foam template creation and example file (#27)
+
