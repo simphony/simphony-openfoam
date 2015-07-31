@@ -73,7 +73,7 @@ class FoamInternalWrapper(ABCModelingEngine):
 
         mesh._time = foamface.run(mesh.name, ncores)
 
-        return mesh._time
+#       return mesh._time
 
     def add_mesh(self, mesh):
         """Add a mesh to the OpenFoam modeling engine.

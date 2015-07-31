@@ -691,6 +691,7 @@ void foam_addMesh(std::string name,std::vector<double> points,  std::vector<int>
         iface += 1;
         find += 1;
     }
+    
 
     // find out number of cells
     int nOfCells = 0;
@@ -1024,6 +1025,7 @@ int foam_getPointCount(std::string name)
 
 int foam_getCellCount(std::string name)
 {
+
   const fvMesh & mesh = runTimes[name]->db().parent().lookupObject<fvMesh>(Foam::fvMesh::defaultRegion);
   return mesh.cells().size();
 }

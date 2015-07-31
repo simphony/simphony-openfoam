@@ -227,7 +227,7 @@ class FoamControlWrapperTestCase(unittest.TestCase):
 class FoamControlWrapperRunTestCase(unittest.TestCase):
     def setUp(self):
         wrapper = FoamControlWrapper()
-        name = 'simplemesh'
+        name = "simplemesh"
         wrapper.CM[CUBA.NAME] = name
         wrapper.CM_extensions[CUBAExt.GE] = (CUBAExt.INCOMPRESSIBLE,
                                              CUBAExt.LAMINAR_MODEL)
@@ -244,11 +244,13 @@ class FoamControlWrapperRunTestCase(unittest.TestCase):
                                      'boundary2': 'zeroGradient',
                                      'boundary3': 'empty'}
         self.wrapper = wrapper
-        mesh_file = H5CUDS.open(os.path.join('foam_controlwrapper',
+
+        basename = os.path.dirname(os.__file__) + '/site-packages'
+        mesh_file = H5CUDS.open(os.path.join(basename,
+                                             'foam_controlwrapper',
                                              'tests',
                                              'simplemesh.cuds'))
         mesh_from_file = mesh_file.get_mesh(name)
-
         self.mesh_inside_wrapper = self.wrapper.add_mesh(mesh_from_file)
 
         mesh_file.close()

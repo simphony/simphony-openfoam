@@ -1219,7 +1219,6 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
 	vals[i] = PyFloat_AsDouble(strObj);
       }
 
- 
       foam_setCellVectorData(std::string(name), label, std::string(dataname), vals);
       return Py_BuildValue("");
 	    	 
