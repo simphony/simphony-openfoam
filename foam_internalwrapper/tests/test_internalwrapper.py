@@ -239,9 +239,7 @@ class FoamInternalWrapperTestCase(unittest.TestCase):
                                      'boundary1': 0,
                                      'boundary2': 'zeroGradient',
                                      'boundary3': 'empty'}
-        basename = os.path.dirname(os.__file__) + '/site-packages'
-        mesh_file = H5CUDS.open(os.path.join(basename,
-                                             'foam_controlwrapper',
+        mesh_file = H5CUDS.open(os.path.join('foam_controlwrapper',
                                              'tests',
                                              'simplemesh.cuds'))
         mesh_from_file = mesh_file.get_mesh(name)

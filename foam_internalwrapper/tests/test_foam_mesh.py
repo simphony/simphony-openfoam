@@ -70,6 +70,15 @@ class FoamMeshTestCase(unittest.TestCase):
 
         [self.mesh.add_cell(cell) for cell in self.cells]
 
+    def test_get_edge(self):
+        """Test get_edge method
+
+        """
+
+        foam_mesh = FoamMesh('test_mesh', self.mesh)
+        with self.assertRaises(NotImplementedError):
+            foam_mesh.get_edge(self.edge.uid)
+
     def test_get_face(self):
         """Test get_face method
 
@@ -91,6 +100,69 @@ class FoamMeshTestCase(unittest.TestCase):
         self.assertEqual(set(cell.points), set(cell_f.points))
         self.assertEqual(cell.data[CUBA.PRESSURE], cell_f.data[CUBA.PRESSURE])
         self.assertEqual(cell.data[CUBA.VELOCITY], cell_f.data[CUBA.VELOCITY])
+
+    def test_add_point(self):
+        """Test add_point method
+
+        """
+
+        foam_mesh = FoamMesh('test_mesh', self.mesh)
+        with self.assertRaises(NotImplementedError):
+            foam_mesh.add_point(self.points[4])
+
+    def test_add_edge(self):
+        """Test add_edge method
+
+        """
+
+        foam_mesh = FoamMesh('test_mesh', self.mesh)
+        with self.assertRaises(NotImplementedError):
+            foam_mesh.add_edge(self.edge)
+
+    def test_add_face(self):
+        """Test add_face method
+
+        """
+
+        foam_mesh = FoamMesh('test_mesh', self.mesh)
+        with self.assertRaises(NotImplementedError):
+            foam_mesh.add_face(self.faces[4])
+
+    def test_add_cell(self):
+        """Test add_cell method
+
+        """
+
+        foam_mesh = FoamMesh('test_mesh', self.mesh)
+        with self.assertRaises(NotImplementedError):
+            foam_mesh.add_cell(self.cells[0])
+
+    def test_update_point(self):
+        """Test update_point method
+
+        """
+
+        foam_mesh = FoamMesh('test_mesh', self.mesh)
+        with self.assertRaises(NotImplementedError):
+            foam_mesh.update_point(self.points[4])
+
+    def test_update_edge(self):
+        """Test update_edge method
+
+        """
+
+        foam_mesh = FoamMesh('test_mesh', self.mesh)
+        with self.assertRaises(NotImplementedError):
+            foam_mesh.update_edge(self.edge)
+
+    def test_update_face(self):
+        """Test update_face method
+
+        """
+
+        foam_mesh = FoamMesh('test_mesh', self.mesh)
+        with self.assertRaises(NotImplementedError):
+            foam_mesh.update_face(self.faces[4])
 
     def test_update_cell(self):
         """Test update_cell method
