@@ -54,5 +54,5 @@ class FoamRunner():
 
         time_dirs = [f for f in os.listdir(self.case) if
                      re.match(r'[0-9]+.*', f)]
-        time_dirs.sort()
+        time_dirs.sort(key=lambda time_dirs: int(time_dirs.split()[0]))
         return time_dirs.pop()
