@@ -1,11 +1,10 @@
 #!/bin/bash
 set -e
 # install pyFoam
-# fetch pyFoam
-svn co https://svn.code.sf.net/p/openfoam-extend/svn/trunk/Breeder/other/scripting/PyFoam/
-# move to installation directory
-cd PyFoam
-python setup.py install
-cd ..
+mkdir -p pyfoam_install
+wget https://openfoamwiki.net/images/3/3b/PyFoam-0.6.4.tar.gz -O pyfoam_install/pyfoam.tgz --no-check-certificate
+tar -xzf pyfoam_install/pyfoam.tgz -C pyfoam_install
+pip install --upgrade pyfoam_install/PyFoam-0.6.4
+rm -fr pyfoam_install
 source /opt/openfoam222/etc/bashrc
 python check_PyFoam.py
