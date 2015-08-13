@@ -1,10 +1,10 @@
 #!/bin/bash
 set -e
 # install pyFoam
-mkdir -p src/simphony-openfoam/pyfoam
-wget https://openfoamwiki.net/images/3/3b/PyFoam-0.6.4.tar.gz -O src/simphony-openfoam/pyfoam/pyfoam.tgz --no-check-certificate
-tar -xzf src/simphony-openfoam/pyfoam/pyfoam.tgz -C src/simphony-openfoam/pyfoam
-pip install --upgrade src/simphony-openfoam/pyfoam/PyFoam-0.6.4
-rm -Rf src/simphony-openfoam/pyfoam
+mkdir -p pyfoam_install
+wget https://openfoamwiki.net/images/3/3b/PyFoam-0.6.4.tar.gz -O pyfoam_install/pyfoam.tgz --no-check-certificate
+tar -xzf pyfoam_install/pyfoam.tgz -C pyfoam_install
+pip install --upgrade pyfoam_install/PyFoam-0.6.4
+rm -fr pyfoam_install
 source /opt/openfoam222/etc/bashrc
 python check_PyFoam.py
