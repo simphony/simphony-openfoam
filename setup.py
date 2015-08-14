@@ -59,7 +59,8 @@ setup(
     long_description=README_TEXT,
     packages=find_packages(),
     package_data={'': ['simplemesh.cuds']},
-    install_requires=['simphony == 0.1.3'],
+    install_requires=['simphony == 0.1.3',
+                      'PyFoam == 0.6.4'],
     entry_points={'simphony.engine':
                   ['openfoam_file_io = foam_controlwrapper',
                    'openfoam_internal = foam_internalwrapper']},
