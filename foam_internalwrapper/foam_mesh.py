@@ -5,6 +5,7 @@ and modify a mesh and related data
 
 """
 import uuid
+from collections import OrderedDict
 from simphony.cuds.abstractmesh import ABCMesh
 from simphony.core.cuba import CUBA
 from simphony.cuds.mesh import Point, Face, Cell
@@ -47,6 +48,7 @@ class FoamMesh(ABCMesh):
     """
 
     def __init__(self, name, BC, mesh=None, path=None):
+        super(FoamMesh, self).__init__()
         self.name = name
         self.data = dc.DataContainer()
         self._uuidToFoamLabel = {}
@@ -91,7 +93,7 @@ class FoamMesh(ABCMesh):
                 label += 1
 
             # find out boundary patches
-            patchNameFacesMap = {}
+            patchNameFacesMap = OrderedDict()
             facePoints = []
             for face in mesh.iter_faces():
                 if CUBA.LABEL in face.data:
@@ -147,11 +149,12 @@ class FoamMesh(ABCMesh):
             print "We choose patch types between empty or patch"
             if CUBA.PRESSURE in BC.keys():
                 pressureBCs = BC[CUBA.PRESSURE]
-                for boundary in pressureBCs:
+                for boundary in patchNameFacesMap:
                     if pressureBCs[boundary] == "empty":
                         patchTypes.append("empty")
                     else:
                         patchTypes.append("patch")
+
             else:
                 for i in range(len(patchNames)):
                     patchTypes.append("patch")
@@ -173,6 +176,10 @@ class FoamMesh(ABCMesh):
                              facePoints, patchNames, patchFaces, patchTypes)
 
             foamface.createDefaultFields(name, 'pimpleFoam')
+
+            # write possible cell data to time directory
+            for cell in mesh.iter_cells():
+                self.update_cell(cell)
 
     def get_point(self, uuid):
         """ Returns a point with a given uuid.
@@ -285,26 +292,31 @@ class FoamMesh(ABCMesh):
             pointLabels = foamface.getFacePoints(self.name,
                                                  self._uuidToFoamLabel[uuid])
             puids = [self._foamPointLabelToUuid[lbl] for lbl in pointLabels]
+
+            # create patch data
+            patchNames = foamface.getBoundaryPatchNames(self.name)
+            patchFaces = foamface.getBoundaryPatchFaces(self.name)
+            i = 0
+            k = 0
+            facePatchMap = {}
+            while i < len(patchFaces):
+                start = i+1
+                end = start+patchFaces[i]
+                i += 1
+                for j in range(start, end):
+                    # here we assume that the boundaries are named
+                    # as boundary0,...
+                    # this to overcome limitation in tableextensio.pyx
+                    # at a moment
+                    facePatchMap[patchFaces[j]] = \
+                        int(patchNames[k].replace('boundary', ''))
+                    i += 1
+                k += 1
+
             face = Face(puids, uuid)
-
-            dataNames = foamface.getFaceDataNames(self.name)
-            for dataName in dataNames:
-                if dataName == "p":
-                    face.data[CUBA.PRESSURE] = \
-                        foamface.getFaceData(self.name,
-                                             self._uuidToFoamLabel[uuid],
-                                             dataName)
-                elif dataName == "U":
-                    face.data[CUBA.VELOCITY] = \
-                        foamface.getFaceData(self.name,
-                                             self._uuidToFoamLabel[uuid],
-                                             dataName)
-                elif dataName == "":
-                    pass
-                else:
-                    error_str = "Data named "+dataName+" not supported"
-                    raise NotImplementedError(error_str)
-
+            if self._uuidToFoamLabel[uuid] in facePatchMap:
+                face.data[CUBA.LABEL] =\
+                    facePatchMap[self._uuidToFoamLabel[uuid]]
             return face
         except KeyError:
             error_str = "Trying to get an non-existing edge with uuid: {}"
@@ -340,6 +352,7 @@ class FoamMesh(ABCMesh):
                                                  self._uuidToFoamLabel[uuid])
             puids = [self._foamPointLabelToUuid[lbl] for lbl in pointLabels]
             cell = Cell(puids, uuid)
+            label = self._uuidToFoamLabel[uuid]
 
             dataNames = foamface.getCellDataNames(self.name)
             dataNames += foamface.getCellVectorDataNames(self.name)
@@ -347,17 +360,17 @@ class FoamMesh(ABCMesh):
                 if dataName == "p":
                     cell.data[CUBA.PRESSURE] = \
                         foamface.getCellData(self.name,
-                                             self._uuidToFoamLabel[uuid],
+                                             label,
                                              dataName)
                 elif dataName == "U":
                     cell.data[CUBA.VELOCITY] = \
-                        foamface.getCellVectorData(self.name,
-                                                   self._uuidToFoamLabel[uuid],
-                                                   dataName)
+                        tuple(foamface.getCellVectorData(self.name,
+                                                         label,
+                                                         dataName))
                 elif dataName == "alpha1":
                     cell.data[CUBA.VOLUME_FRACTION] = \
                         foamface.getCellData(self.name,
-                                             self._uuidToFoamLabel[uuid],
+                                             label,
                                              dataName)
                 else:
                     pass
@@ -385,126 +398,16 @@ class FoamMesh(ABCMesh):
         raise NotImplementedError(message)
 
     def update_point(self, point):
-        """ Updates the information of a point.
-
-        Gets the mesh point identified by the same
-        id as the provided point and updates its information
-        with the one provided with the new point.
-
-        Parameters
-        ----------
-        point : Point
-            Point to be updated
-
-        Raises
-        ------
-        KeyError
-            If the point was not found in the mesh
-
-        TypeError
-            If the object provided is not a point
-
-        """
-
-        if point.uid not in self._uuidToFoamLabel:
-            error_str = "Trying to update a non-existing point with uuid: "\
-                + str(point.uid)
-            raise KeyError(error_str)
-
-        if not isinstance(point, Point):
-            error_str = "Trying to update an object with the wrong type. "\
-                + "Point expected."
-            raise TypeError(error_str)
-
-        foamface.setPointCoordinates(self.name,
-                                     self._uuidToFoamLabel[point.uid],
-                                     point.coordinates)
-
-        for data in point.data:
-            if data == CUBA.PRESSURE:
-                dataName = "p"
-                foamface.setPointData(self.name,
-                                      self._uuidToFoamLabel[point.uid],
-                                      dataName,
-                                      point.data[data])
-            elif data == CUBA.VOLUME_FRACTION:
-                dataName = "alpha1"
-                foamface.setPointData(self.name,
-                                      self._uuidToFoamLabel[point.uid],
-                                      dataName,
-                                      point.data[data])
-            elif data == CUBA.VELOCITY:
-                dataName = "U"
-                foamface.setPointVectorData(self.name,
-                                            self._uuidToFoamLabel[point.uid],
-                                            dataName,
-                                            point.data[data])
-            else:
-                error_str = "Data named "+data+" not supported"
-                raise NotImplementedError(error_str)
+        message = 'Point update not supported yet'
+        raise NotImplementedError(message)
 
     def update_edge(self, edge):
         message = 'Edge update not supported yet'
         raise NotImplementedError(message)
 
     def update_face(self, face):
-        """ Updates the information of a face.
-
-        Gets the mesh face identified by the same
-        uuid as the provided face and updates its information
-        with the one provided with the new face.
-
-        Parameters
-        ----------
-        face : Face
-            Face to be updated
-
-        Raises
-        ------
-        KeyError
-            If the face was not found in the mesh
-
-        TypeError
-            If the object provided is not a face
-
-        """
-
-        if face.uid not in self._uuidToFoamLabel:
-            error_str = "Trying to update a non-existing face with uuid: "\
-                + str(face.uid)
-            raise KeyError(error_str)
-
-        if not isinstance(face, Face):
-            error_str = "Trying to update an object with the wrong type. "\
-                + "Face expected."
-            raise TypeError(error_str)
-
-        foamface.setFacePoints(self.name,
-                               self._uuidToFoamLabel[face.uid],
-                               face.points)
-
-        for data in face.data:
-            if data == CUBA.PRESSURE:
-                dataName = "p"
-                foamface.setFaceData(self.name,
-                                     self._uuidToFoamLabel[face.uid],
-                                     dataName,
-                                     face.data[data])
-            elif data == CUBA.VOLUME_FRACTION:
-                dataName = "alpha1"
-                foamface.setFaceData(self.name,
-                                     self._uuidToFoamLabel[face.uid],
-                                     dataName,
-                                     face.data[data])
-            elif data == CUBA.VELOCITY:
-                dataName = "U"
-                foamface.setFaceVectorData(self.name,
-                                           self._uuidToFoamLabel[face.uid],
-                                           dataName,
-                                           face.data[data])
-            else:
-                error_str = "Data named "+data+" not supported"
-                raise NotImplementedError(error_str)
+        message = 'Face update not supported yet'
+        raise NotImplementedError(message)
 
     def create_dummy_celldata(self, data_name, dimensionset):
         """Created dummy cell data to OpenFoams objectRegistry
@@ -576,6 +479,20 @@ class FoamMesh(ABCMesh):
                 + "Cell expected."
             raise TypeError(error_str)
 
+        # if points are changed raise warning
+        pointLabels = foamface.getCellPoints(self.name,
+                                             self._uuidToFoamLabel[cell.uid])
+        puids = [self._foamPointLabelToUuid[lbl] for lbl in pointLabels]
+        cell_puids = []
+        for puid in cell.points:
+            if type(puid) is not numpy.string_:
+                cell_puids.append(puid)
+            else:
+                cell_puids.append(uuid.UUID(puid, version=4))
+
+        if set(puids) != set(cell_puids):
+            raise Warning("Cell points can't be updated")
+
         dataNames = foamface.getCellDataNames(self.name)
         dataNames += foamface.getCellVectorDataNames(self.name)
         for data in cell.data:
@@ -600,10 +517,11 @@ class FoamMesh(ABCMesh):
                 if dataName not in dataNames:
                     self.create_dummy_cellvectordata(dataName,
                                                      [0, 1, -1, 0, 0, 0, 0])
+
                 foamface.setCellVectorData(self.name,
                                            self._uuidToFoamLabel[cell.uid],
                                            dataName,
-                                           cell.data[data])
+                                           list(cell.data[data]))
             elif data == "":
                 pass
             else:
@@ -726,12 +644,11 @@ class FoamMesh(ABCMesh):
         if cell_uuids is None:
             cellCount = foamface.getCellCount(self.name)
             for label in range(cellCount):
-                cell = self.get_cell(self._foamCellLabelToUuid[label])
-                yield Cell.from_cell(cell)
+                yield self.get_cell(self._foamCellLabelToUuid[label])
         else:
             for uid in cell_uuids:
                 cell = self.get_cell(uid)
-                yield Cell.from_cell(cell)
+                yield cell
 
     def has_edges(self):
         """ Return false while edges are not supported yet

@@ -41,5 +41,6 @@ mesh_inside_wrapper = wrapper.add_mesh(mesh_from_file)
 print "Case directory ", mesh_inside_wrapper.path
 
 # run returns the latest time
-lastTime = wrapper.run()
-print "Timesteps taken ", lastTime
+# lastTime = wrapper.run()
+# print "Simulation run up to time: ", lastTime
+wrapper.run()

@@ -103,7 +103,7 @@ class FoamControlWrapper(ABCModelingEngine):
 
         # save timestep to mesh
         mesh._time = runner.get_last_time()
-        return mesh._time
+#       return mesh._time
 
     def add_mesh(self, mesh):
         """Add a mesh to the OpenFoam modeling engine.
