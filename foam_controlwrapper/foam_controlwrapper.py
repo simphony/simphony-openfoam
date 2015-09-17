@@ -129,7 +129,10 @@ class FoamControlWrapper(ABCModelingEngine):
         if mesh.name in self._meshes:
             raise ValueError('Mesh \'{}\` already exists'.format(mesh.name))
         else:
-            self._meshes[mesh.name] = FoamMesh(mesh.name, mesh)
+            if self.BC:
+                self._meshes[mesh.name] = FoamMesh(mesh.name, self.BC, mesh)
+            else:
+                self._meshes[mesh.name] = FoamMesh(mesh.name, {}, mesh)
             return self._meshes[mesh.name]
 
     def delete_mesh(self, name):
@@ -261,7 +264,7 @@ def read_foammesh(name, path):
 
     """
 
-    simphonyfoaminterface.init(name, path)
+    simphonyfoaminterface.init_IO(name, path)
     simphonyfoaminterface.readMesh(name)
     nPoints = simphonyfoaminterface.getPointCount(name)
     nCells = simphonyfoaminterface.getCellCount(name)

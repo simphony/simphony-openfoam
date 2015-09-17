@@ -6,7 +6,7 @@ openfoam_libbin = os.environ['FOAM_LIBBIN']
 openfoam_user_libbin = os.environ['FOAM_USER_LIBBIN']
 openfoam_mpi_include = os.environ['FOAM_MPI_INCLUDE']
 openfoam_user_src_dir = '../libs'
-module = Extension('simphonyfoaminterfaceII',
+module = Extension('simphonyfoaminterface',
                    include_dirs=[openfoam_src_dir +
                                  '/finiteVolume/lnInclude',
                                  'lnInclude',
@@ -25,7 +25,7 @@ module = Extension('simphonyfoaminterfaceII',
                                  '/OSspecific/POSIX/lnInclude',
                                  openfoam_mpi_include
                                  ],
-                   libraries=['foaminterfaceII',
+                   libraries=['foaminterface',
                               'finiteVolume',
                               'incompressibleTurbulenceModelSimphony',
                               'incompressibleRASModelsSimphony',
@@ -34,7 +34,7 @@ module = Extension('simphonyfoaminterfaceII',
                    library_dirs=[openfoam_user_libbin, openfoam_libbin],
                    extra_compile_args=['-Dlinux64 -DWM_DP -DNoRepository'],
                    sources=['libpythonfoam.cpp'])
-setup(name='FoamInterfaceII',
+setup(name='FoamInterface',
       version='0.0.1',
       description='Foam interface to Python',
       author='Juan Marcelo Gimenez and \

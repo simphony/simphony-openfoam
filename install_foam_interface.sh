@@ -1,11 +1,6 @@
 #!/bin/bash
 set -e
 
-pushd openfoam-interface
-wmake libso
-python setup.py install
-popd
-
 export FOAM_MPI_INCLUDE=$WM_THIRD_PARTY_DIR/platforms/$WM_ARCH$WM_COMPILER/$FOAM_MPI/include
 
 pushd .

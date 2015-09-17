@@ -10,7 +10,7 @@ from simphony.cuds.abstractmesh import ABCMesh
 from simphony.core.cuba import CUBA
 from simphony.cuds.mesh import Point, Face, Cell
 import simphony.core.data_container as dc
-import simphonyfoaminterfaceII as foamface
+import simphonyfoaminterface as foamface
 import tempfile
 import os
 import numpy
@@ -23,7 +23,10 @@ class FoamMesh(ABCMesh):
     Parameters
     ----------
     name : str
-        name of mesh
+       name of mesh
+
+    BC : dictionary
+       boundary conditions
 
     mesh : ABCMesh
        mesh to store
@@ -168,8 +171,7 @@ class FoamMesh(ABCMesh):
             controlDict = parse_map(mapContent['controlDict'])
 
             # init objectRegistry and map to mesh name
-            foamface.init(name, os.path.abspath(os.path.join(self.path,
-                          os.pardir)), controlDict)
+            foamface.init(name, controlDict)
 
             # add mesh to objectRegisty
             foamface.addMesh(name, pointCoordinates, cellPoints,
@@ -209,30 +211,6 @@ class FoamMesh(ABCMesh):
             coords = foamface.getPointCoordinates(self.name,
                                                   self._uuidToFoamLabel[uuid])
             point = Point(coords, uuid)
-
-            dataNames = foamface.getPointDataNames(self.name)
-            for dataName in dataNames:
-                if dataName == "p":
-                    point.data[CUBA.PRESSURE] = \
-                        foamface.getPointData(self.name,
-                                              self._uuidToFoamLabel[uuid],
-                                              dataName)
-                elif dataName == "U":
-                    point.data[CUBA.VELOCITY] = \
-                        foamface.getPointData(self.name,
-                                              self._uuidToFoamLabel[uuid],
-                                              dataName)
-                elif dataName == "alpha1":
-                    point.data[CUBA.VOLUME_FRACTION] = \
-                        foamface.getPointData(self.name,
-                                              self._uuidToFoamLabel[uuid],
-                                              dataName)
-                elif dataName == "":
-                    pass
-                else:
-                    error_str = "Data named "+dataName+" not supported"
-                    raise NotImplementedError(error_str)
-
             return point
         except KeyError:
             error_str = "Trying to get an non-existing point with uuid: {}"
