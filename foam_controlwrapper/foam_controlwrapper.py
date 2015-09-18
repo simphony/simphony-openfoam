@@ -35,11 +35,6 @@ class FoamControlWrapper(ABCModelingEngine):
     def run(self):
         """Run OpenFoam based on CM, BC and SP data
 
-        Returns
-        -------
-        lastTime : lastTime
-            Last time step taken.
-
         Raises
         ------
         Exception when solver not supported.
@@ -103,7 +98,6 @@ class FoamControlWrapper(ABCModelingEngine):
 
         # save timestep to mesh
         mesh._time = runner.get_last_time()
-#       return mesh._time
 
     def add_mesh(self, mesh):
         """Add a mesh to the OpenFoam modeling engine.

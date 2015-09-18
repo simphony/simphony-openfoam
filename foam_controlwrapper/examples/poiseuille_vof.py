@@ -66,7 +66,4 @@ for cell in mesh_inside_wrapper.iter_cells():
 
     mesh_inside_wrapper.update_cell(cell)
 
-# run returns the latest time
-# lastTime = wrapper.run()
-# print "Simulation run up to time: ", lastTime
 wrapper.run()
