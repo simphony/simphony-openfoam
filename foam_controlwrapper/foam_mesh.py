@@ -30,6 +30,9 @@ class FoamMesh(ABCMesh):
     name : str
         name of mesh
 
+    BC : dictionary
+       boundary conditions
+
     mesh : ABCMesh
        mesh to store
 
@@ -54,7 +57,7 @@ class FoamMesh(ABCMesh):
 
     """
 
-    def __init__(self, name, mesh=None, path=None):
+    def __init__(self, name, BC=None, mesh=None, path=None):
         super(FoamMesh, self).__init__()
         self.name = name
         self.data = dc.DataContainer()
@@ -152,15 +155,28 @@ class FoamMesh(ABCMesh):
                 error_str += 'Mesh has not boundary face definitions.'
                 raise ValueError(error_str.format(mesh.name))
 
+            patchTypes = []
+            if CUBA.PRESSURE in BC.keys():
+                pressureBCs = BC[CUBA.PRESSURE]
+                for boundary in patchNameFacesMap:
+                    if pressureBCs[boundary] == "empty":
+                        patchTypes.append("empty")
+                    else:
+                        patchTypes.append("patch")
+
+            else:
+                for i in range(len(patchNames)):
+                    patchTypes.append("patch")
+
             # this to have controlDict file for mesh definition
             write_default_files(self.path, 'simpleFoam',
                                 self._time, False)
             # init objectRegistry and map to mesh name
-            foamface.init(name, os.path.abspath(os.path.join(self.path,
-                                                             os.pardir)))
+            foamface.init_IO(name, os.path.abspath(os.path.join(self.path,
+                                                                os.pardir)))
             # add mesh to objectRegisty
             foamface.addMesh(name, pointCoordinates, cellPoints, facePoints,
-                             patchNames, patchFaces)
+                             patchNames, patchFaces, patchTypes)
             # write mesh to disk
             foamface.writeMesh(name)
 

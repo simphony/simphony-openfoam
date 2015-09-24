@@ -4,7 +4,7 @@ Managment of OpenFOAM dicts and Fields
 
 """
 
-import simphonyfoaminterfaceII as foamface
+import simphonyfoaminterface as foamface
 from simphony.core.cuba import CUBA
 
 dictionaryMaps = \

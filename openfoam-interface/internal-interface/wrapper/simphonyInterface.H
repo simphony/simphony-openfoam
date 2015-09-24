@@ -41,8 +41,10 @@ License
 
 using namespace Foam;
 
-// init Foam mesh name (case name)  and rootPath
-void foam_init(std::string name, std::string rootPath, std::string cD);
+// init dictionary for II wrapper
+void foam_init(std::string name, std::string cD);
+// init Foam mesh name (case name)  and rootPath for IO wrapper
+void foam_init_IO(std::string name, std::string rootPath);
 // read Foam mesh from case named name to wrapper
 void foam_readMesh(std::string name);
 // get mesh single point coordinates 
@@ -57,8 +59,7 @@ std::vector<double> foam_getPointData(std::string name,int label, std::string da
 std::vector<int> foam_getFacePoints(std::string name, int label);
 // get mesh faces points
 std::vector<int> foam_getFacePoints(std::string name);
-// get data names associated (interpolated) to mesh faces
-std::vector<std::string> foam_getFaceDataNames(std::string name);
+
 // get mesh single face data named dataname
 std::vector<double> foam_getFaceData(std::string name,int label, std::string dataname);
 // get mesh single cell points
@@ -91,28 +92,6 @@ void foam_addMesh(std::string name,std::vector<double> points,  std::vector<int>
 void foam_writeMesh(std::string name);
 // deletes mesh from wrapper registry
 void foam_deleteMesh(std::string name);
-// set mesh single point coordinates
-void foam_setPointCoordinates(std::string name, int label, std::vector<double> coordinates);
-// set single points data
-void foam_setPointData(std::string name, int label, std::string dataname, double value);
-// set single points data
-void foam_setPointVectorData(std::string name, int label, std::string dataname, std::vector<double> values);
-// set mesh point  data
-void foam_setPointData(std::string name, std::string dataname, std::vector<int> dimensionset, std::vector<double> values);
-// set mesh point vector data
-void foam_setPointVectorData(std::string name, std::string dataname, std::vector<int> dimensionset, std::vector<double> values);
-// set mesh single face points
-void foam_setFacePoints(std::string name, int label,std::vector<int> points);
-// set mesh single face data
-void foam_setFaceData(std::string name, int label,std::string dataname, double value);
-// set mesh single face vector data (data must exists in registry)
-void foam_setFaceVectorData(std::string name, int label,std::string dataname,std::vector<double> values);
-// set mesh face  data
-void foam_setFaceData(std::string name, std::string dataname, std::vector<int> dimensionset, std::vector<double> values);
-// set mesh face vector data
-void foam_setFaceVectorData(std::string name, std::string dataname, std::vector<int> dimensionset, std::vector<double> values);
-// set mesh single cell points
-void foam_setCellPoints(std::string name, int label,std::vector<int> points);
 // set mesh single cell data (data must exists in registry)
 void foam_setCellData(std::string name, int label,std::string dataname,double value);
 // set mesh single cell vector data (data must exists in registry)

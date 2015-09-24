@@ -11,15 +11,14 @@ extern "C" {
   static PyObject* init(PyObject *self, PyObject *args)
   {   
      char *name;
-     char *path;
      char *cD;
 
-     if (!PyArg_ParseTuple(args,"sss",&name,&path,&cD)) {
+     if (!PyArg_ParseTuple(args,"ss",&name,&cD)) {
       PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
       return NULL;
     }
     try {
-      foam_init(std::string(name),std::string(path),std::string(cD));
+      foam_init(std::string(name), std::string(cD));
       return Py_BuildValue("");
     }
     catch (Foam::error& fErr)
@@ -36,6 +35,36 @@ extern "C" {
       return NULL;
     }
   } 
+
+  static PyObject* init_IO(PyObject *self, PyObject *args)
+  {   
+     char *name;
+     char *path;
+
+     if (!PyArg_ParseTuple(args,"ss",&name,&path)) {
+      PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
+      return NULL;
+    }
+    try {
+      foam_init_IO(std::string(name),std::string(path));
+      return Py_BuildValue("");
+    }
+    catch (Foam::error& fErr)
+    {
+      PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
+      return NULL;
+    }
+    catch (std::exception& e) {
+      PyErr_SetString(PyExc_RuntimeError,e.what());
+      return NULL;
+    }
+    catch (...) {
+      PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
+      return NULL;
+    }
+  } 
+
+
 
   static PyObject* readMesh(PyObject *self, PyObject *args)
   {
@@ -135,78 +164,6 @@ extern "C" {
   }
 
 
-  static PyObject* getPointDataNames(PyObject *self, PyObject *args)
-  {
-    char *name;
-    
-    if (!PyArg_ParseTuple(args,"s",&name)) {
-      PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
-      return NULL;
-    }
-    try {
-      std::vector<std::string> values = foam_getPointDataNames(std::string(name));
-      PyObject *pylist = PyList_New(values.size());
-      if (pylist != NULL) {
-	for (std::vector<std::string>::size_type i=0;i<values.size();i++) {
-	  PyObject *item = Py_BuildValue("s",values[i].c_str());
-	  PyList_SetItem(pylist, i, item);
-	}
-	return pylist;
-      }else
-	return NULL;	
-    }
-    catch (Foam::error& fErr)
-    {
-      PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
-      return NULL;
-    }
-    catch (std::exception& e) {
-      PyErr_SetString(PyExc_RuntimeError,e.what());
-      return NULL;
-    }
-    catch (...) {
-      PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
-      return NULL;
-    }
-  }
-
-  static PyObject* getPointData(PyObject *self, PyObject *args)
-  {
-    char *name;
-    int label;
-    char *dataname;
-
-    if (!PyArg_ParseTuple(args,"sis",&name,&label,&dataname)) {
-      PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
-      return NULL;
-    }
-    try {
-      std::vector<double> values = foam_getPointData(std::string(name), label, std::string(dataname));
-      PyObject *pylist = PyList_New(values.size());
-      if (pylist != NULL) {
-	for (std::vector<double>::size_type i=0;i<values.size();i++) {
-	  PyObject *item = Py_BuildValue("d",values[i]);
-	  PyList_SetItem(pylist, i, item);
-	}
-	return pylist;
-      }else
-	return NULL;	
-	
-    }
-    catch (Foam::error& fErr)
-    {
-      PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
-      return NULL;
-    }
-    catch (std::exception& e) {
-      PyErr_SetString(PyExc_RuntimeError,e.what());
-      return NULL;
-    }
-    catch (...) {
-      PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
-      return NULL;
-    }
-  }
 
   static PyObject* getFacePoints(PyObject *self, PyObject *args)
   {
@@ -279,78 +236,6 @@ extern "C" {
     }
   }
 
-
-  static PyObject* getFaceDataNames(PyObject *self, PyObject *args)
-  {
-    char *name;
-    
-    if (!PyArg_ParseTuple(args,"s",&name)) {
-      PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
-      return NULL;
-    }
-    try {
-      std::vector<std::string> values = foam_getFaceDataNames(std::string(name));
-      PyObject *pylist = PyList_New(values.size());
-      if (pylist != NULL) {
-	for (std::vector<std::string>::size_type i=0;i<values.size();i++) {
-	  PyObject *item = Py_BuildValue("s",values[i].c_str());
-	  PyList_SetItem(pylist, i, item);
-	}
-	return pylist;
-      }else
-	return NULL;	
-    }
-    catch (Foam::error& fErr)
-    {
-      PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
-      return NULL;
-    }
-    catch (std::exception& e) {
-      PyErr_SetString(PyExc_RuntimeError,e.what());
-      return NULL;
-    }
-    catch (...) {
-      PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
-      return NULL;
-    }
-  }
-
-
-  static PyObject* getFaceData(PyObject *self, PyObject *args)
-  {
-    char *name;
-    int label;
-    char *dataname;
-    if (!PyArg_ParseTuple(args,"sis",&name,&label,&dataname)) {
-      PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
-      return NULL;
-    }
-    try {
-      std::vector<double> values = foam_getFaceData(std::string(name), label, std::string(dataname));
-      PyObject *pylist = PyList_New(values.size());
-      if (pylist != NULL) {
-	for (std::vector<double>::size_type i=0;i<values.size();i++) {
-	  PyObject *item = Py_BuildValue("d",values[i]);
-	  PyList_SetItem(pylist, i, item);
-	}
-	return pylist;
-      }else
-	return NULL;	
-    }
-    catch (Foam::error& fErr)
-    {
-      PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
-      return NULL;
-    }
-    catch (std::exception& e) {
-      PyErr_SetString(PyExc_RuntimeError,e.what());
-      return NULL;
-    }
-    catch (...) {
-      PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
-      return NULL;
-    }
-  }
 
 
   static PyObject* getCellPoints(PyObject *self, PyObject *args)
@@ -824,7 +709,7 @@ extern "C" {
 	 pname = PyString_AsString(strObj);
 	 foampatchnames[j] = std::string(pname);
        }
-     
+
      char *ptype;
      for (int j=0;j<lenpatchtypes;j++)
        {
@@ -832,6 +717,7 @@ extern "C" {
 	 ptype = PyString_AsString(strObj);
 	 foampatchtypes[j] = std::string(ptype);
        }
+     
          
      foam_addMesh(std::string(name),foampoints, foamcells, foamfaces, foampatchnames, foampatchfaces, foampatchtypes);
       return Py_BuildValue("");
@@ -904,123 +790,6 @@ extern "C" {
   } 
 
 
- static PyObject* setPointCoordinates(PyObject *self, PyObject *args)
-  {
-    char *name;
-    int label;
-    PyObject *coordinates;
-    if (!PyArg_ParseTuple(args,"siO!",&name,&label,&PyList_Type,&coordinates)) {
-      PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
-      return NULL;
-    }
-    try {
-      PyObject * strObj;
-      int valuessize = PyList_Size(coordinates);
-
-      std::vector<double> vals(valuessize);
-      for (int i=0;i<valuessize;i++) {
-	strObj = PyList_GetItem(coordinates, i);
-	vals[i] = PyFloat_AsDouble(strObj);
-      }
-
- 
-      foam_setPointCoordinates(std::string(name), label, vals);
-      return Py_BuildValue("");
-	    	 
-    }
-    catch (Foam::error& fErr)
-      {
-	PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
-	return NULL;
-      }
-    catch (std::exception& e) {
-      PyErr_SetString(PyExc_RuntimeError,e.what());
-      return NULL;
-    }
-    catch (...) {
-      PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
-      return NULL;
-    }
-  }
-
-
- static PyObject* setFacePoints(PyObject *self, PyObject *args)
-  {
-    char *name;
-    int label;
-    PyObject *points;
-
-    if (!PyArg_ParseTuple(args,"siO!",&name,&label,&PyList_Type,&points)) {
-      PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
-      return NULL;
-    }
-    try {
-      PyObject * strObj;
-      int pointssize = PyList_Size(points);
-      std::vector<int> pts(pointssize);
-
-      for (int i=0;i<pointssize;i++) {
-	strObj = PyList_GetItem(points, i);
-	pts[i] = PyInt_AsLong(strObj);
-      }
-      foam_setFacePoints(std::string(name), label, pts);
-      return Py_BuildValue("");
-	    	 
-    }
-    catch (Foam::error& fErr)
-      {
-	PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
-	return NULL;
-      }
-    catch (std::exception& e) {
-      PyErr_SetString(PyExc_RuntimeError,e.what());
-      return NULL;
-    }
-    catch (...) {
-      PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
-      return NULL;
-    }
-  }
-
-
-
- static PyObject* setCellPoints(PyObject *self, PyObject *args)
-  {
-    char *name;
-    int label;
-    PyObject *points;
-
-    if (!PyArg_ParseTuple(args,"siO!",&name,&label,&PyList_Type,&points)) {
-      PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
-      return NULL;
-    }
-    try {
-      PyObject * strObj;
-      int pointssize = PyList_Size(points);
-      std::vector<int> pts(pointssize);
-
-      for (int i=0;i<pointssize;i++) {
-	strObj = PyList_GetItem(points, i);
-	pts[i] = PyInt_AsLong(strObj);
-      }
-      foam_setCellPoints(std::string(name), label, pts);
-      return Py_BuildValue("");
-	    	 
-    }
-    catch (Foam::error& fErr)
-      {
-	PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
-	return NULL;
-      }
-    catch (std::exception& e) {
-      PyErr_SetString(PyExc_RuntimeError,e.what());
-      return NULL;
-    }
-    catch (...) {
-      PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
-      return NULL;
-    }
-  }
 
  static PyObject* setCellData(PyObject *self, PyObject *args)
   {
@@ -1101,55 +870,6 @@ extern "C" {
   }
 
 
- /*static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
-  {
-    char *name;
-    char *dataname;
-    PyObject *dimensionset;
-    PyObject *values;
-    if (!PyArg_ParseTuple(args,"ssO!O!",&name,&dataname,&PyList_Type,&dimensionset,&PyList_Type,&values)) {
-      PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
-      return NULL;
-    }
-    try {
-      PyObject * strObj;
-      int valuessize = PyList_Size(values);
-
-      std::vector<double> vals(valuessize);
-      for (int i=0;i<valuessize;i++) {
-	strObj = PyList_GetItem(values, i);
-	vals[i] = PyFloat_AsDouble(strObj);
-      }
-      
-      int setsize = PyList_Size(dimensionset);
-
-      std::vector<int> dims(setsize);
-      for (int i=0;i<setsize;i++) {
-	strObj = PyList_GetItem(dimensionset, i);
-	dims[i] = PyInt_AsLong(strObj);
-      }
-
-
-      foam_setCellVectorData(std::string(name), std::string(dataname),dims,vals);
-      return Py_BuildValue("");
-	    	 
-    }
-    catch (Foam::error& fErr)
-      {
-	PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
-	return NULL;
-      }
-    catch (std::exception& e) {
-      PyErr_SetString(PyExc_RuntimeError,e.what());
-      return NULL;
-    }
-    catch (...) {
-      PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
-      return NULL;
-    }
-  }
-*/
-
 static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
   {
     char *name;
@@ -1219,6 +939,7 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
 	vals[i] = PyFloat_AsDouble(strObj);
       }
 
+ 
       foam_setCellVectorData(std::string(name), label, std::string(dataname), vals);
       return Py_BuildValue("");
 	    	 
@@ -1236,345 +957,8 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
       PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
       return NULL;
     }
-  }
-
-
- static PyObject* setPointData(PyObject *self, PyObject *args)
-  {
-    char *name;
-    int label;
-    char *dataname;
-    double value;
-    if (!PyArg_ParseTuple(args,"sisd",&name,&label,&dataname,&value)) {
-      PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
-      return NULL;
-    }
-    try {
-
-      foam_setPointData(std::string(name), label, std::string(dataname), value);
-      return Py_BuildValue("");
-	    	 
-    }
-    catch (Foam::error& fErr)
-      {
-	PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
-	return NULL;
-      }
-    catch (std::exception& e) {
-      PyErr_SetString(PyExc_RuntimeError,e.what());
-      return NULL;
-    }
-    catch (...) {
-      PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
-      return NULL;
-    }
-  }
-
- static PyObject* setAllPointData(PyObject *self, PyObject *args)
-  {
-    char *name;
-    char *dataname;
-    PyObject *dimensionset;
-    PyObject *values;
-    if (!PyArg_ParseTuple(args,"ssO!O!",&name,&dataname,&PyList_Type,&dimensionset,&PyList_Type,&values)) {
-      PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
-      return NULL;
-    }
-    try {
-      PyObject * strObj;
-      int valuessize = PyList_Size(values);
-
-      std::vector<double> vals(valuessize);
-      for (int i=0;i<valuessize;i++) {
-	strObj = PyList_GetItem(values, i);
-	vals[i] = PyFloat_AsDouble(strObj);
-      }
-      
-      int setsize = PyList_Size(dimensionset);
-
-      std::vector<int> dims(setsize);
-      for (int i=0;i<setsize;i++) {
-	strObj = PyList_GetItem(dimensionset, i);
-	dims[i] = PyInt_AsLong(strObj);
-      }
   
-      foam_setPointData(std::string(name), std::string(dataname), dims, vals);
-      return Py_BuildValue("");
-	    	 
-    }
-    catch (Foam::error& fErr)
-      {
-	PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
-	return NULL;
-      }
-    catch (std::exception& e) {
-      PyErr_SetString(PyExc_RuntimeError,e.what());
-      return NULL;
-    }
-    catch (...) {
-      PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
-      return NULL;
-    }
   }
-
-
- static PyObject* setAllPointVectorData(PyObject *self, PyObject *args)
-  {
-    char *name;
-    char *dataname;
-    PyObject *dimensionset;
-    PyObject *values;
-    if (!PyArg_ParseTuple(args,"ssO!O!",&name,&dataname,&PyList_Type,&dimensionset,&PyList_Type,&values)) {
-      PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
-      return NULL;
-    }
-    try {
-      PyObject * strObj;
-      int valuessize = PyList_Size(values);
-
-      std::vector<double> vals(valuessize);
-      for (int i=0;i<valuessize;i++) {
-	strObj = PyList_GetItem(values, i);
-	vals[i] = PyFloat_AsDouble(strObj);
-      }
-      
-      int setsize = PyList_Size(dimensionset);
-
-      std::vector<int> dims(setsize);
-      for (int i=0;i<setsize;i++) {
-	strObj = PyList_GetItem(dimensionset, i);
-	dims[i] = PyInt_AsLong(strObj);
-      }
-
-
-      foam_setPointVectorData(std::string(name), std::string(dataname),dims,vals);
-      return Py_BuildValue("");
-	    	 
-    }
-    catch (Foam::error& fErr)
-      {
-	PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
-	return NULL;
-      }
-    catch (std::exception& e) {
-      PyErr_SetString(PyExc_RuntimeError,e.what());
-      return NULL;
-    }
-    catch (...) {
-      PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
-      return NULL;
-    }
-  }
-
- static PyObject* setPointVectorData(PyObject *self, PyObject *args)
-  {
-    char *name;
-    int label;
-    char *dataname;
-    PyObject *values;
-    if (!PyArg_ParseTuple(args,"sisO!",&name,&label,&dataname,&values,&PyList_Type)) {
-      PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
-      return NULL;
-    }
-    try {
-      PyObject * strObj;
-      int valuessize = PyList_Size(values);
-
-      std::vector<double> vals(valuessize);
-      for (int i=0;i<valuessize;i++) {
-	strObj = PyList_GetItem(values, i);
-	vals[i] = PyFloat_AsDouble(strObj);
-      }
-
- 
-      foam_setPointVectorData(std::string(name), label, std::string(dataname), vals);
-      return Py_BuildValue("");
-	    	 
-    }
-    catch (Foam::error& fErr)
-      {
-	PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
-	return NULL;
-      }
-    catch (std::exception& e) {
-      PyErr_SetString(PyExc_RuntimeError,e.what());
-      return NULL;
-    }
-    catch (...) {
-      PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
-      return NULL;
-    }
-  }
-
-
- static PyObject* setFaceData(PyObject *self, PyObject *args)
-  {
-    char *name;
-    int label;
-    char *dataname;
-    double value;
-    if (!PyArg_ParseTuple(args,"sisd",&name,&label,&dataname,&value)) {
-      PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
-      return NULL;
-    }
-    try {
-
-      foam_setFaceData(std::string(name), label, std::string(dataname), value);
-      return Py_BuildValue("");
-	    	 
-    }
-    catch (Foam::error& fErr)
-      {
-	PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
-	return NULL;
-      }
-    catch (std::exception& e) {
-      PyErr_SetString(PyExc_RuntimeError,e.what());
-      return NULL;
-    }
-    catch (...) {
-      PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
-      return NULL;
-    }
-  }
-
- static PyObject* setAllFaceData(PyObject *self, PyObject *args)
-  {
-    char *name;
-    char *dataname;
-    PyObject *dimensionset;
-    PyObject *values;
-    if (!PyArg_ParseTuple(args,"ssO!O!",&name,&dataname,&PyList_Type,&dimensionset,&PyList_Type,&values)) {
-      PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
-      return NULL;
-    }
-    try {
-      PyObject * strObj;
-      int valuessize = PyList_Size(values);
-
-      std::vector<double> vals(valuessize);
-      for (int i=0;i<valuessize;i++) {
-	strObj = PyList_GetItem(values, i);
-	vals[i] = PyFloat_AsDouble(strObj);
-      }
-      
-      int setsize = PyList_Size(dimensionset);
-
-      std::vector<int> dims(setsize);
-      for (int i=0;i<setsize;i++) {
-	strObj = PyList_GetItem(dimensionset, i);
-	dims[i] = PyInt_AsLong(strObj);
-      }
-  
-      foam_setFaceData(std::string(name), std::string(dataname), dims, vals);
-      return Py_BuildValue("");
-	    	 
-    }
-    catch (Foam::error& fErr)
-      {
-	PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
-	return NULL;
-      }
-    catch (std::exception& e) {
-      PyErr_SetString(PyExc_RuntimeError,e.what());
-      return NULL;
-    }
-    catch (...) {
-      PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
-      return NULL;
-    }
-  }
-
-
- static PyObject* setAllFaceVectorData(PyObject *self, PyObject *args)
-  {
-    char *name;
-    char *dataname;
-    PyObject *dimensionset;
-    PyObject *values;
-    if (!PyArg_ParseTuple(args,"ssO!O!",&name,&dataname,&PyList_Type,&dimensionset,&PyList_Type,&values)) {
-      PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
-      return NULL;
-    }
-    try {
-      PyObject * strObj;
-      int valuessize = PyList_Size(values);
-
-      std::vector<double> vals(valuessize);
-      for (int i=0;i<valuessize;i++) {
-	strObj = PyList_GetItem(values, i);
-	vals[i] = PyFloat_AsDouble(strObj);
-      }
-      
-      int setsize = PyList_Size(dimensionset);
-
-      std::vector<int> dims(setsize);
-      for (int i=0;i<setsize;i++) {
-	strObj = PyList_GetItem(dimensionset, i);
-	dims[i] = PyInt_AsLong(strObj);
-      }
-
-
-      foam_setFaceVectorData(std::string(name), std::string(dataname),dims,vals);
-      return Py_BuildValue("");
-	    	 
-    }
-    catch (Foam::error& fErr)
-      {
-	PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
-	return NULL;
-      }
-    catch (std::exception& e) {
-      PyErr_SetString(PyExc_RuntimeError,e.what());
-      return NULL;
-    }
-    catch (...) {
-      PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
-      return NULL;
-    }
-  }
-
- static PyObject* setFaceVectorData(PyObject *self, PyObject *args)
-  {
-    char *name;
-    int label;
-    char *dataname;
-    PyObject *values;
-    if (!PyArg_ParseTuple(args,"sisO!",&name,&label,&dataname,&values,&PyList_Type)) {
-      PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
-      return NULL;
-    }
-    try {
-      PyObject * strObj;
-      int valuessize = PyList_Size(values);
-
-      std::vector<double> vals(valuessize);
-      for (int i=0;i<valuessize;i++) {
-	strObj = PyList_GetItem(values, i);
-	vals[i] = PyFloat_AsDouble(strObj);
-      }
-
- 
-      foam_setFaceVectorData(std::string(name), label, std::string(dataname), vals);
-      return Py_BuildValue("");
-	    	 
-    }
-    catch (Foam::error& fErr)
-      {
-	PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
-	return NULL;
-      }
-    catch (std::exception& e) {
-      PyErr_SetString(PyExc_RuntimeError,e.what());
-      return NULL;
-    }
-    catch (...) {
-      PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
-      return NULL;
-    }
-  }
-
-
 
    static PyObject* writeCellData(PyObject *self, PyObject *args)
   {
@@ -1841,15 +1225,12 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
 
   static PyMethodDef FoamMethods[] = {
     {"init",init,METH_VARARGS,"Init wrapper"},
+    {"init_IO",init_IO,METH_VARARGS,"Init IO wrapper"},
     {"readMesh",readMesh,METH_VARARGS,"Read foam mesh"},
     {"getPointCoordinates",getPointCoordinates,METH_VARARGS,"Get points coordinates"},
     {"getAllPointCoordinates",getAllPointCoordinates,METH_VARARGS,"Get every points coordinates"},
-    {"getPointDataNames",getPointDataNames,METH_VARARGS,"Get names of data associated to point"},
-    {"getPointData",getPointData,METH_VARARGS,"Get data associated to point"},
     {"getFacePoints",getFacePoints,METH_VARARGS,"Get face points"},
     {"getAllFacePoints",getAllFacePoints,METH_VARARGS,"Get every face points"},
-    {"getFaceDataNames",getFaceDataNames,METH_VARARGS,"Get names of data associated to face"},
-    {"getFaceData",getFaceData,METH_VARARGS,"Get data associated to face"},
     {"getCellPoints",getCellPoints,METH_VARARGS,"Get cell points"},
     {"getAllCellPoints",getAllCellPoints,METH_VARARGS,"Get every cell points"},
     {"getCellDataNames",getCellDataNames,METH_VARARGS,"Get names of data associated to cell"},
@@ -1865,21 +1246,11 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
     {"addMesh",addMesh,METH_VARARGS,"Ads mesh to wrapper"},
     {"deleteMesh",deleteMesh,METH_VARARGS,"Deletes mesh"},
     {"writeMesh",writeMesh,METH_VARARGS,"Writes mesh to disk"},
-    {"setPointCoordinates",setPointCoordinates,METH_VARARGS,"Sets points coordinates"},
-    {"setFacePoints",setFacePoints,METH_VARARGS,"Set face points"},
-    {"setCellPoints",setCellPoints,METH_VARARGS,"Sets cell points"},
+
     {"setCellData",setCellData,METH_VARARGS,"Sets data associated to cell"},
     {"setAllCellData",setAllCellData,METH_VARARGS,"Sets data associated to all cells"},
     {"setCellVectorData",setCellVectorData,METH_VARARGS,"Sets vector data associated to cell"},
     {"setAllCellVectorData",setAllCellVectorData,METH_VARARGS,"Sets vector data associated to cell"},
-    {"setPointData",setPointData,METH_VARARGS,"Sets data associated to point"},
-    {"setAllPointData",setAllPointData,METH_VARARGS,"Sets data associated to all points"},
-    {"setPointVectorData",setPointVectorData,METH_VARARGS,"Sets vector data associated to point"},
-    {"setAllPointVectorData",setAllPointVectorData,METH_VARARGS,"Sets vector data associated to point"},
-    {"setFaceData",setFaceData,METH_VARARGS,"Sets data associated to face"},
-    {"setAllFaceData",setAllFaceData,METH_VARARGS,"Sets data associated to all faces"},
-    {"setFaceVectorData",setFaceVectorData,METH_VARARGS,"Sets vector data associated to face"},
-    {"setAllFaceVectorData",setAllFaceVectorData,METH_VARARGS,"Sets vector data associated to face"},
     {"writeCellData",writeCellData,METH_VARARGS,"Writes cell data to disk"},
     {"writeCellVectorData",writeCellVectorData,METH_VARARGS,"Writes cell vector data to disk"},
     {"getFaceCount",getFaceCount,METH_VARARGS,"Get mesh faces count"},
@@ -1896,8 +1267,8 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
   };
   
   
-  PyMODINIT_FUNC initsimphonyfoaminterfaceII(void) {
-    Py_InitModule("simphonyfoaminterfaceII",FoamMethods);
+  PyMODINIT_FUNC initsimphonyfoaminterface(void) {
+    Py_InitModule("simphonyfoaminterface",FoamMethods);
   }
   
 }

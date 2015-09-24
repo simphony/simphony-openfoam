@@ -4,4 +4,4 @@ transportModel/transportModel.C
 fvSchemes/fvSchemes.C
 solution/solution.C
 
-LIB = $(FOAM_USER_LIBBIN)/libfoaminterfaceII
+LIB = $(FOAM_USER_LIBBIN)/libfoaminterface

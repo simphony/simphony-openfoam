@@ -80,7 +80,7 @@ class FoamMeshTestCase(unittest.TestCase):
 
         """
 
-        foam_mesh = FoamMesh('test_mesh', self.mesh)
+        foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
         point = self.points[4]
         point_f = foam_mesh.get_point(point.uid)
         self.assertEqual(point.coordinates, point_f.coordinates)
@@ -90,7 +90,7 @@ class FoamMeshTestCase(unittest.TestCase):
 
         """
 
-        foam_mesh = FoamMesh('test_mesh', self.mesh)
+        foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
         with self.assertRaises(NotImplementedError):
             foam_mesh.get_edge(self.edge.uid)
 
@@ -99,7 +99,7 @@ class FoamMeshTestCase(unittest.TestCase):
 
         """
 
-        foam_mesh = FoamMesh('test_mesh', self.mesh)
+        foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
         face = self.faces[4]
         face_f = foam_mesh.get_face(face.uid)
         self.assertEqual(face.points, face_f.points)
@@ -109,7 +109,7 @@ class FoamMeshTestCase(unittest.TestCase):
 
         """
 
-        foam_mesh = FoamMesh('test_mesh', self.mesh)
+        foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
         cell = self.cells[0]
         cell_f = foam_mesh.get_cell(cell.uid)
         self.assertEqual(set(cell.points), set(cell_f.points))
@@ -121,7 +121,7 @@ class FoamMeshTestCase(unittest.TestCase):
 
         """
 
-        foam_mesh = FoamMesh('test_mesh', self.mesh)
+        foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
         with self.assertRaises(NotImplementedError):
             foam_mesh.add_point(self.points[4])
 
@@ -130,7 +130,7 @@ class FoamMeshTestCase(unittest.TestCase):
 
         """
 
-        foam_mesh = FoamMesh('test_mesh', self.mesh)
+        foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
         with self.assertRaises(NotImplementedError):
             foam_mesh.add_edge(self.edge)
 
@@ -139,7 +139,7 @@ class FoamMeshTestCase(unittest.TestCase):
 
         """
 
-        foam_mesh = FoamMesh('test_mesh', self.mesh)
+        foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
         with self.assertRaises(NotImplementedError):
             foam_mesh.add_face(self.faces[4])
 
@@ -148,7 +148,7 @@ class FoamMeshTestCase(unittest.TestCase):
 
         """
 
-        foam_mesh = FoamMesh('test_mesh', self.mesh)
+        foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
         with self.assertRaises(NotImplementedError):
             foam_mesh.add_cell(self.cells[0])
 
@@ -157,7 +157,7 @@ class FoamMeshTestCase(unittest.TestCase):
 
         """
 
-        foam_mesh = FoamMesh('test_mesh', self.mesh)
+        foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
         with self.assertRaises(NotImplementedError):
             foam_mesh.update_point(self.points[4])
 
@@ -166,7 +166,7 @@ class FoamMeshTestCase(unittest.TestCase):
 
         """
 
-        foam_mesh = FoamMesh('test_mesh', self.mesh)
+        foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
         with self.assertRaises(NotImplementedError):
             foam_mesh.update_edge(self.edge)
 
@@ -175,7 +175,7 @@ class FoamMeshTestCase(unittest.TestCase):
 
         """
 
-        foam_mesh = FoamMesh('test_mesh', self.mesh)
+        foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
         with self.assertRaises(NotImplementedError):
             foam_mesh.update_face(self.faces[4])
 
@@ -184,7 +184,7 @@ class FoamMeshTestCase(unittest.TestCase):
 
         """
 
-        foam_mesh = FoamMesh('test_mesh', self.mesh)
+        foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
         cell = self.cells[0]
         cell.data[CUBA.VELOCITY] = (2, 1, 3)
         foam_mesh.update_cell(cell)
@@ -202,7 +202,7 @@ class FoamMeshTestCase(unittest.TestCase):
 
         """
 
-        foam_mesh = FoamMesh('test_mesh', self.mesh)
+        foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
         puids_f = [point.uid for point in foam_mesh.iter_points()]
         self.assertEqual(set(self.puids), set(puids_f))
 
@@ -211,7 +211,7 @@ class FoamMeshTestCase(unittest.TestCase):
 
         """
 
-        foam_mesh = FoamMesh('test_mesh', self.mesh)
+        foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
         self.assertEqual(foam_mesh.iter_edges(), [])
 
     def test_iter_faces(self):
@@ -219,7 +219,7 @@ class FoamMeshTestCase(unittest.TestCase):
 
         """
 
-        foam_mesh = FoamMesh('test_mesh', self.mesh)
+        foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
         for face_f in foam_mesh.iter_faces():
             face = self.mesh.get_face(face_f.uid)
             self.assertEqual(face.data[CUBA.LABEL],
@@ -230,7 +230,7 @@ class FoamMeshTestCase(unittest.TestCase):
 
         """
 
-        foam_mesh = FoamMesh('test_mesh', self.mesh)
+        foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
         for cell_f in foam_mesh.iter_cells():
             cell = self.mesh.get_cell(cell_f.uid)
             self.assertEqual(cell.data[CUBA.VELOCITY],
@@ -241,7 +241,7 @@ class FoamMeshTestCase(unittest.TestCase):
 
         """
 
-        foam_mesh = FoamMesh('test_mesh', self.mesh)
+        foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
         self.assertTrue(foam_mesh.has_faces())
 
     def test_has_cells(self):
@@ -249,7 +249,7 @@ class FoamMeshTestCase(unittest.TestCase):
 
         """
 
-        foam_mesh = FoamMesh('test_mesh', self.mesh)
+        foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
         self.assertTrue(foam_mesh.has_cells())
 
     def test_write(self):
@@ -257,7 +257,7 @@ class FoamMeshTestCase(unittest.TestCase):
 
         """
 
-        foam_mesh = FoamMesh('test_mesh', self.mesh)
+        foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
         foam_mesh.write()
         meshpath = os.path.join(foam_mesh.path, 'constant', 'polyMesh')
         self.assertTrue(os.path.exists(os.path.join(meshpath, 'points')))
@@ -271,7 +271,7 @@ class FoamMeshTestCase(unittest.TestCase):
 
         """
 
-        foam_mesh = FoamMesh('test_mesh', self.mesh)
+        foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
         foam_mesh.generate_uuidmapping(8, 0, 6, 1)
 
 if __name__ == '__main__':

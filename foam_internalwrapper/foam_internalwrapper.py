@@ -8,7 +8,7 @@ from simphony.core.data_container import DataContainer
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
 from cuba_extension import CUBAExt
 from foam_mesh import FoamMesh
-import simphonyfoaminterfaceII as foamface
+import simphonyfoaminterface as foamface
 from foam_dicts import modifyNumerics, modifyFields
 
 

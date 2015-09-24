@@ -35,11 +35,6 @@ class FoamControlWrapper(ABCModelingEngine):
     def run(self):
         """Run OpenFoam based on CM, BC and SP data
 
-        Returns
-        -------
-        lastTime : lastTime
-            Last time step taken.
-
         Raises
         ------
         Exception when solver not supported.
@@ -103,7 +98,6 @@ class FoamControlWrapper(ABCModelingEngine):
 
         # save timestep to mesh
         mesh._time = runner.get_last_time()
-#       return mesh._time
 
     def add_mesh(self, mesh):
         """Add a mesh to the OpenFoam modeling engine.
@@ -129,7 +123,10 @@ class FoamControlWrapper(ABCModelingEngine):
         if mesh.name in self._meshes:
             raise ValueError('Mesh \'{}\` already exists'.format(mesh.name))
         else:
-            self._meshes[mesh.name] = FoamMesh(mesh.name, mesh)
+            if self.BC:
+                self._meshes[mesh.name] = FoamMesh(mesh.name, self.BC, mesh)
+            else:
+                self._meshes[mesh.name] = FoamMesh(mesh.name, {}, mesh)
             return self._meshes[mesh.name]
 
     def delete_mesh(self, name):
@@ -261,7 +258,7 @@ def read_foammesh(name, path):
 
     """
 
-    simphonyfoaminterface.init(name, path)
+    simphonyfoaminterface.init_IO(name, path)
     simphonyfoaminterface.readMesh(name)
     nPoints = simphonyfoaminterface.getPointCount(name)
     nCells = simphonyfoaminterface.getCellCount(name)
