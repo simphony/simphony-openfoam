@@ -90,9 +90,9 @@ class FoamFilesTestCase(unittest.TestCase):
         mesh_file = H5CUDS.open(os.path.join('foam_controlwrapper',
                                              'tests',
                                              'simplemesh.cuds'))
-        mesh_from_file = mesh_file.get_mesh(name)
+        mesh_from_file = mesh_file.get_dataset(name)
 
-        mesh_inside_wrapper = wrapper.add_mesh(mesh_from_file)
+        mesh_inside_wrapper = wrapper.add_dataset(mesh_from_file)
 
         foam_files.write_default_files(mesh_inside_wrapper.path,
                                        self.solver,

@@ -99,7 +99,7 @@ class FoamControlWrapper(ABCModelingEngine):
         # save timestep to mesh
         mesh._time = runner.get_last_time()
 
-    def add_mesh(self, mesh):
+    def add_dataset(self, mesh):
         """Add a mesh to the OpenFoam modeling engine.
 
         Parameters
@@ -129,7 +129,7 @@ class FoamControlWrapper(ABCModelingEngine):
                 self._meshes[mesh.name] = FoamMesh(mesh.name, {}, mesh)
             return self._meshes[mesh.name]
 
-    def delete_mesh(self, name):
+    def remove_dataset(self, name):
         """Delete mesh from the OpenFoam modeling engine.
 
         Parameters
@@ -150,7 +150,7 @@ class FoamControlWrapper(ABCModelingEngine):
             simphonyfoaminterface.deleteMesh(name)
             del self._meshes[name]
 
-    def get_mesh(self, name):
+    def get_dataset(self, name):
         """Get a mesh.
 
         The returned mesh can be used to query and update the state of the
@@ -177,7 +177,7 @@ class FoamControlWrapper(ABCModelingEngine):
             raise ValueError(
                 'Mesh \'{}\` does not exist'.format(name))
 
-    def iter_meshes(self, names=None):
+    def iter_datasets(self, names=None):
         """Returns an iterator over a subset or all of the meshes.
 
         Parameters
@@ -209,37 +209,12 @@ class FoamControlWrapper(ABCModelingEngine):
                         'Mesh \'{}\` does not exist'.format(
                             name))
 
-    def add_particles(self, particle_container):
-        message = 'FoamWrapper does not handle particle container'
-        raise NotImplementedError(message)
+    def get_dataset_names(self):
+        """ Returns the names of the meshes.
 
-    def get_particles(self, name):
-        message = 'FoamWrapper does not handle particle container'
-        raise NotImplementedError(message)
+        """
 
-    def delete_particles(self, name):
-        message = 'FoamWrapper does not handle particle container'
-        raise NotImplementedError(message)
-
-    def iter_particles(self, names=None):
-        message = 'FoamWrapper does not handle particle container'
-        raise NotImplementedError(message)
-
-    def add_lattice(self, lattice):
-        message = 'FoamWrapper does not handle lattice'
-        raise NotImplementedError(message)
-
-    def get_lattice(self, name):
-        message = 'FoamWrapper does not handle lattice'
-        raise NotImplementedError(message)
-
-    def delete_lattice(self, name):
-        message = 'FoamWrapper does not handle lattice'
-        raise NotImplementedError(message)
-
-    def iter_lattices(self, names=None):
-        message = 'FoamWrapper does not handle lattice'
-        raise NotImplementedError(message)
+        return self._meshes.keys()
 
 
 def read_foammesh(name, path):

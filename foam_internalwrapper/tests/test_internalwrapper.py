@@ -42,7 +42,7 @@ class FoamInternalWrapperTestCase(unittest.TestCase):
                 (0.0, 1.0, 1.0))
         ]
 
-        puids = [self.mesh.add_point(point) for point in self.points]
+        puids = self.mesh.add_points(self.points)
 
         self.faces = [
             Face([puids[0], puids[3], puids[7], puids[4]],
@@ -60,7 +60,7 @@ class FoamInternalWrapperTestCase(unittest.TestCase):
 
         ]
 
-        [self.mesh.add_face(face) for face in self.faces]
+        self.mesh.add_faces(self.faces)
 
         self.cells = [
             Cell(puids)
@@ -68,36 +68,36 @@ class FoamInternalWrapperTestCase(unittest.TestCase):
 
         self.puids = puids
 
-        [self.mesh.add_cell(cell) for cell in self.cells]
+        self.mesh.add_cells(self.cells)
 
-    def test_add_mesh(self):
-        """Test add_mesh method
-
-        """
-
-        wrapper = FoamInternalWrapper()
-        wrapper.add_mesh(self.mesh)
-        self.assertEqual(sum(1 for _ in wrapper.iter_meshes()), 1)
-
-    def test_delete_mesh(self):
-        """Test delete_mesh method
+    def test_add_dataset(self):
+        """Test add_dataset method
 
         """
 
         wrapper = FoamInternalWrapper()
-        wrapper.add_mesh(self.mesh)
-        wrapper.delete_mesh(self.mesh.name)
+        wrapper.add_dataset(self.mesh)
+        self.assertEqual(sum(1 for _ in wrapper.iter_datasets()), 1)
+
+    def test_remove_dataset(self):
+        """Test remove_dataset method
+
+        """
+
+        wrapper = FoamInternalWrapper()
+        wrapper.add_dataset(self.mesh)
+        wrapper.remove_dataset(self.mesh.name)
         with self.assertRaises(ValueError):
-            wrapper.get_mesh(self.mesh.name)
+            wrapper.get_dataset(self.mesh.name)
 
-    def test_get_mesh(self):
-        """Test get_mesh method
+    def test_get_dataset(self):
+        """Test get_dataset method
 
         """
 
         wrapper = FoamInternalWrapper()
-        wrapper.add_mesh(self.mesh)
-        mesh_inside_wrapper = wrapper.get_mesh(self.mesh.name)
+        wrapper.add_dataset(self.mesh)
+        mesh_inside_wrapper = wrapper.get_dataset(self.mesh.name)
         self.assertEqual(self.mesh.name, mesh_inside_wrapper.name)
 
         for point in self.mesh.iter_points():
@@ -114,18 +114,18 @@ class FoamInternalWrapperTestCase(unittest.TestCase):
             self.assertEqual(cell.uid, cell_w.uid)
             self.assertEqual(set(cell.points), set(cell_w.points))
 
-    def test_iter_meshes(self):
-        """Test iter_meshes method
+    def test_iter_datasets(self):
+        """Test iter_datasets method
 
         """
 
         wrapper = FoamInternalWrapper()
-        wrapper.add_mesh(self.mesh)
+        wrapper.add_dataset(self.mesh)
         mesh2 = self.mesh
         mesh2.name = "mesh2"
-        wrapper.add_mesh(mesh2)
+        wrapper.add_dataset(mesh2)
 
-        self.assertEqual(sum(1 for _ in wrapper.iter_meshes()), 2)
+        self.assertEqual(sum(1 for _ in wrapper.iter_datasets()), 2)
 
     def test_multiple_meshes(self):
         """Test multiple meshes inside wrapper
@@ -133,88 +133,17 @@ class FoamInternalWrapperTestCase(unittest.TestCase):
         """
 
         wrapper = FoamInternalWrapper()
-        wrapper.add_mesh(self.mesh)
+        wrapper.add_dataset(self.mesh)
         mesh2 = self.mesh
         mesh2.name = "mesh2"
-        wrapper.add_mesh(mesh2)
-        mesh_inside_wrapper1 = wrapper.get_mesh(self.mesh.name)
-        mesh_inside_wrapper2 = wrapper.get_mesh(mesh2.name)
+        wrapper.add_dataset(mesh2)
+        mesh_inside_wrapper1 = wrapper.get_dataset(self.mesh.name)
+        mesh_inside_wrapper2 = wrapper.get_dataset(mesh2.name)
 
         self.assertEqual(
             sum(1 for _ in mesh_inside_wrapper1.iter_points()),
             sum(1 for _ in mesh_inside_wrapper2.iter_points()))
 
-    def test_add_particles(self):
-        """Test add_particles method
-
-        """
-
-        wrapper = FoamInternalWrapper()
-        with self.assertRaises(NotImplementedError):
-            wrapper.add_particles(DataContainer())
-
-    def test_get_particles(self):
-        """Test get_particles method
-
-        """
-
-        wrapper = FoamInternalWrapper()
-        with self.assertRaises(NotImplementedError):
-            wrapper.get_particles('')
-
-    def test_delete_particles(self):
-        """Test delete_particles method
-
-        """
-
-        wrapper = FoamInternalWrapper()
-        with self.assertRaises(NotImplementedError):
-            wrapper.delete_particles('')
-
-    def test_iter_particles(self):
-        """Test iter_particles method
-
-        """
-
-        wrapper = FoamInternalWrapper()
-        with self.assertRaises(NotImplementedError):
-            wrapper.iter_particles()
-
-    def test_add_lattice(self):
-        """Test add_lattice method
-
-        """
-
-        wrapper = FoamInternalWrapper()
-        with self.assertRaises(NotImplementedError):
-            wrapper.add_lattice('')
-
-    def test_get_lattice(self):
-        """Test get_lattice method
-
-        """
-
-        wrapper = FoamInternalWrapper()
-        with self.assertRaises(NotImplementedError):
-            wrapper.get_lattice('')
-
-    def test_delete_lattice(self):
-        """Test delete_lattice method
-
-        """
-
-        wrapper = FoamInternalWrapper()
-        with self.assertRaises(NotImplementedError):
-            wrapper.delete_lattice('')
-
-    def test_iter_lattices(self):
-        """Test iter_lattices method
-
-        """
-
-        wrapper = FoamInternalWrapper()
-        with self.assertRaises(NotImplementedError):
-            wrapper.iter_lattices()
 
     def test_run_time(self):
         """Test that field variable value is changed after
@@ -242,9 +171,9 @@ class FoamInternalWrapperTestCase(unittest.TestCase):
         mesh_file = H5CUDS.open(os.path.join('foam_controlwrapper',
                                              'tests',
                                              'simplemesh.cuds'))
-        mesh_from_file = mesh_file.get_mesh(name)
+        mesh_from_file = mesh_file.get_dataset(name)
 
-        mesh_inside_wrapper = wrapper.add_mesh(mesh_from_file)
+        mesh_inside_wrapper = wrapper.add_dataset(mesh_from_file)
 
         wrapper.run()
 

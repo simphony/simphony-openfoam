@@ -41,17 +41,18 @@ wrapper.BC[CUBA.VOLUME_FRACTION] = {'boundary0': 'zeroGradient',
                                     'boundary3': 'empty'}
 
 mesh_file = H5CUDS.open(os.path.join(name, 'poiseuille_vof.cuds'))
-mesh_from_file = mesh_file.get_mesh(name)
+mesh_from_file = mesh_file.get_dataset(name)
 
 print "Mesh name ", mesh_from_file.name
 
-mesh_inside_wrapper = wrapper.add_mesh(mesh_from_file)
+mesh_inside_wrapper = wrapper.add_dataset(mesh_from_file)
 
 
 # initial state. In VOF only one velocity and pressure field
 
 print "Case directory ", mesh_inside_wrapper.path
 
+updated_cells = []
 for cell in mesh_inside_wrapper.iter_cells():
     xmid = sum(mesh_inside_wrapper.get_point(puid).coordinates[0]
                for puid in cell.points)
@@ -64,6 +65,8 @@ for cell in mesh_inside_wrapper.iter_cells():
     cell.data[CUBA.PRESSURE] = 0.0
     cell.data[CUBA.VELOCITY] = [0.0, 0.0, 0.0]
 
-    mesh_inside_wrapper.update_cell(cell)
+    updated_cells.append(cell)
+
+mesh_inside_wrapper.update_cells(updated_cells)
 
 wrapper.run()

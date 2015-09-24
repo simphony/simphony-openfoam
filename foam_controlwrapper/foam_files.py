@@ -4,8 +4,9 @@ Module for writing and modifying OpenFOAM files
 
 """
 import os
-from foam_templates import head, dictionaryTemplates
-from foam_templates import scalarTemplates, vectorTemplates
+from .foam_templates import (head, dictionaryTemplates)
+from .foam_templates import dataTemplates
+from .foam_templates import (dataKeyMap, dataTypeMap, foamTypeMap)
 from simphony.core.cuba import CUBA
 from cuba_extension import CUBAExt
 from PyFoam.RunDictionary.ParsedParameterFile import ParsedParameterFile
@@ -40,9 +41,9 @@ def create_file_content(path, solver, time, writeFields):
             dictionaryTemplates[solver][foamFile]
 
     if writeFields:
-        for foamFile in scalarTemplates[solver]:
+        for foamFile in dataTemplates[solver]:
             if not os.path.exists(os.path.join(path, time, foamFile)):
-                foamClass = 'volScalarField'
+                foamClass = foamTypeMap[dataTypeMap[dataKeyMap[foamFile]]]
                 location = '\"' + time + '\"'
                 foamObject = os.path.basename(foamFile)
                 heading = head.format(version=version,
@@ -51,20 +52,7 @@ def create_file_content(path, solver, time, writeFields):
                                       foamobject=foamObject)
                 file_name = os.path.join(time, foamFile)
                 fileContent[file_name] = heading +\
-                    scalarTemplates[solver][foamFile]
-
-        for foamFile in vectorTemplates[solver]:
-            if not os.path.exists(os.path.join(path, time, foamFile)):
-                foamClass = 'volVectorField'
-                location = '\"' + time + '\"'
-                foamObject = os.path.basename(foamFile)
-                heading = head.format(version=version,
-                                      foamclass=foamClass,
-                                      location=location,
-                                      foamobject=foamObject)
-                file_name = os.path.join(time, foamFile)
-                fileContent[file_name] = heading +\
-                    vectorTemplates[solver][foamFile]
+                    dataTemplates[solver][foamFile]
 
     return fileContent
 
@@ -374,6 +362,45 @@ def set_cell_data(path, time_name,
     control['internalField'] = field_str
 
     control.writeFile()
+
+
+def set_cells_data(path, time_name, cells, uuidToFoamLabel, dataNameKeyMap):
+    """Set data to specific cells
+
+   Parameters
+    ----------
+    path : str
+        path to case directory
+    time_name : str
+        name of time directory
+    cells : iterator Cell
+        set of Cells
+    """
+
+    dir_name = os.path.join(path, time_name)
+
+    for dataName in dataNameKeyMap:
+        dataKey = dataNameKeyMap[dataName]
+        control = ParsedParameterFile(os.path.join(dir_name, dataName))
+        values = control['internalField']
+        if dataTypeMap[dataKey] == "vector":
+            for cell in cells:
+                if dataKey in cell.data:
+                    values[uuidToFoamLabel[cell.uid]] = \
+                        tuple(cell.data[dataKey])
+        else:
+            for cell in cells:
+                if dataKey in cell.data:
+                    values[uuidToFoamLabel[cell.uid]] = \
+                        cell.data[dataKey]
+
+        field_str = 'nonuniform List<' + dataTypeMap[dataKey] + '>\n'
+        field_str += str(len(values.val)) + '\n' + '(' + '\n'
+        for value in values:
+            field_str += str(value).replace(',', '') + '\n'
+        field_str += ')'
+        control['internalField'] = field_str
+        control.writeFile()
 
 
 def get_all_cell_data(path, time_name, data_name):

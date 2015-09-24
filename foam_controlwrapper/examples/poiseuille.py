@@ -32,11 +32,11 @@ wrapper.BC[CUBA.PRESSURE] = {'boundary0': 'zeroGradient',
                              'boundary3': 'empty'}
 
 mesh_file = H5CUDS.open(os.path.join(name, 'poiseuille.cuds'))
-mesh_from_file = mesh_file.get_mesh(name)
+mesh_from_file = mesh_file.get_dataset(name)
 
 print "Mesh name ", mesh_from_file.name
 
-mesh_inside_wrapper = wrapper.add_mesh(mesh_from_file)
+mesh_inside_wrapper = wrapper.add_dataset(mesh_from_file)
 
 print "Case directory ", mesh_inside_wrapper.path
 
