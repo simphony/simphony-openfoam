@@ -137,7 +137,6 @@ class FoamControlWrapperTestCase(unittest.TestCase):
         self.assertEqual(list(wrapper.get_dataset_names())[0], name1)
         self.assertEqual(list(wrapper.get_dataset_names())[1], name2)
 
-
     def test_iter_datasets(self):
         """Test iter_datasets method
 

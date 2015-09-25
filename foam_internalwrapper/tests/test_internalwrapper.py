@@ -144,7 +144,6 @@ class FoamInternalWrapperTestCase(unittest.TestCase):
             sum(1 for _ in mesh_inside_wrapper1.iter_points()),
             sum(1 for _ in mesh_inside_wrapper2.iter_points()))
 
-
     def test_run_time(self):
         """Test that field variable value is changed after
         consecutive calls of run method

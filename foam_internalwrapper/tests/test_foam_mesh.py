@@ -246,7 +246,7 @@ class FoamMeshTestCase(unittest.TestCase):
         foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
 
         item_type = CUDSItem.POINT
-        self.assertEqual(foam_mesh.count_of(item_type), 
+        self.assertEqual(foam_mesh.count_of(item_type),
                          self.mesh.count_of(item_type))
 
         item_type = CUDSItem.EDGE
@@ -254,13 +254,12 @@ class FoamMeshTestCase(unittest.TestCase):
             foam_mesh.count_of(item_type)
 
         item_type = CUDSItem.FACE
-        self.assertEqual(foam_mesh.count_of(item_type), 
+        self.assertEqual(foam_mesh.count_of(item_type),
                          self.mesh.count_of(item_type))
 
         item_type = CUDSItem.CELL
-        self.assertEqual(foam_mesh.count_of(item_type), 
+        self.assertEqual(foam_mesh.count_of(item_type),
                          self.mesh.count_of(item_type))
-
 
     def test_generate_uuidmapping(self):
         """Test generate_uuidmapping method
