@@ -215,31 +215,3 @@ class FoamControlWrapper(ABCModelingEngine):
         """
 
         return self._meshes.keys()
-
-
-def read_foammesh(name, path):
-    """Read mesh from OpenFoam case files.
-
-    Parameters
-    ----------
-    name : str
-    name to give to mesh
-    path : str
-    case directory
-
-    Raises
-    ------
-    Exception if some mesh from mesh names list not found
-
-    """
-
-    simphonyfoaminterface.init_IO(name, path)
-    simphonyfoaminterface.readMesh(name)
-    nPoints = simphonyfoaminterface.getPointCount(name)
-    nCells = simphonyfoaminterface.getCellCount(name)
-    nFaces = simphonyfoaminterface.getFaceCount(name)
-    nEdges = 0
-
-    foamMesh = FoamMesh(name)
-    foamMesh.generate_uuidmapping(nPoints, nEdges, nFaces, nCells)
-    return foamMesh

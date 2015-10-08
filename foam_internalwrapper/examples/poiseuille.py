@@ -4,11 +4,7 @@
 
 from simphony.core.cuba import CUBA
 from simphony.engine import openfoam_internal
-from simphony.io.h5_cuds import H5CUDS
-import os
-
-# Only for postprocessing purposes
-import matplotlib.pyplot as plt
+from simphony.engine import openfoam_file_io
 
 wrapper = openfoam_internal.FoamInternalWrapper()
 CUBAExt = openfoam_internal.CUBAExt
@@ -37,26 +33,20 @@ wrapper.BC[CUBA.PRESSURE] = {'boundary0': 'zeroGradient',
                              'boundary1': 'zeroGradient',
                              'boundary3': 'empty'}
 
-mesh_file = H5CUDS.open(os.path.join(name, 'poiseuille.cuds'))
-mesh_from_file = mesh_file.get_mesh(name)
+corner_points = [(0.0, 0.0, 0.0), (20.0e-3, 0.0, 0.0),
+                 (20.0e-3, 1.0e-3, 0.0), (0.0, 1.0e-3, 0.0),
+                 (0.0, 0.0, 0.1), (20.0e-3, 0.0, 0.1),
+                 (20.0e-3, 1.0e-3, 0.1), (0.0, 1.0e-3, 0.1)]
 
-print "Mesh name ", mesh_from_file.name
+# elements in x -direction
+nex = 500
+# elements in y -direction
+ney = 20
+openfoam_file_io.create_quad_mesh(name, wrapper, corner_points,
+                                  nex, ney, 1)
 
-mesh_inside_wrapper = wrapper.add_mesh(mesh_from_file)
+mesh_inside_wrapper = wrapper.get_dataset(name)
 
-print "Case directory ", mesh_inside_wrapper.path
-
-for cell in mesh_inside_wrapper.iter_cells():
-    cell.data[CUBA.PRESSURE] = 1.0
-    cell.data[CUBA.VELOCITY] = [0.0, 0.0, 0.0]
-    mesh_inside_wrapper.update_cell(cell)
 
 # run returns the latest time
 wrapper.run()
-
-print "post-processing"
-XYZUVW = mesh_inside_wrapper.getXYZUVW()
-plt.quiver(XYZUVW[:, 0], XYZUVW[:, 1], XYZUVW[:, 3], XYZUVW[:, 4])
-plt.axis('equal')
-plt.savefig("result.png")
-plt.show()

@@ -4,8 +4,6 @@
 
 from simphony.core.cuba import CUBA
 from simphony.engine import openfoam_file_io
-from simphony.io.h5_cuds import H5CUDS
-import os
 
 wrapper = openfoam_file_io.FoamControlWrapper()
 CUBAExt = openfoam_file_io.CUBAExt
@@ -28,7 +26,7 @@ wrapper.SP_extensions[CUBAExt.SURFACE_TENSION] = {('water', 'air'): 72.86e-3}
 
 # this is just an example. It is not enough for general setting of BC's
 wrapper.BC[CUBA.VELOCITY] = {'boundary0': (0, 0, 0),
-                             'boundary1': (0.01, 0, 0),
+                             'boundary1': (0.01e-3, 0, 0),
                              'boundary2': 'zeroGradient',
                              'boundary3': 'empty'}
 wrapper.BC[CUBA.PRESSURE] = {'boundary0': 'zeroGradient',
@@ -40,13 +38,19 @@ wrapper.BC[CUBA.VOLUME_FRACTION] = {'boundary0': 'zeroGradient',
                                     'boundary2': 'zeroGradient',
                                     'boundary3': 'empty'}
 
-mesh_file = H5CUDS.open(os.path.join(name, 'poiseuille_vof.cuds'))
-mesh_from_file = mesh_file.get_dataset(name)
+corner_points = [(0.0, 0.0, 0.0), (20.0e-3, 0.0, 0.0),
+                 (20.0e-3, 1.0e-3, 0.0), (0.0, 1.0e-3, 0.0),
+                 (0.0, 0.0, 0.1e-3), (20.0e-3, 0.0, 0.1e-3),
+                 (20.0e-3, 1.0e-3, 0.1e-3), (0.0, 1.0e-3, 0.1e-3)]
 
-print "Mesh name ", mesh_from_file.name
+# elements in x -direction
+nex = 500
+# elements in y -direction
+ney = 20
+openfoam_file_io.create_quad_mesh(name, wrapper, corner_points,
+                                  nex, ney, 1)
 
-mesh_inside_wrapper = wrapper.add_dataset(mesh_from_file)
-
+mesh_inside_wrapper = wrapper.get_dataset(name)
 
 # initial state. In VOF only one velocity and pressure field
 

@@ -6,16 +6,15 @@ foam_controlwrapper module functionalities
 """
 
 import unittest
-import os
-import shutil
 
 from simphony.cuds.mesh import Mesh, Face, Point, Cell
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
-from simphony.io.h5_cuds import H5CUDS
 
 from foam_internalwrapper.foam_internalwrapper import FoamInternalWrapper
 from foam_internalwrapper.cuba_extension import CUBAExt
+
+from foam_controlwrapper.blockmesh_utils import create_quad_mesh
 
 
 class FoamInternalWrapperTestCase(unittest.TestCase):
@@ -144,19 +143,16 @@ class FoamInternalWrapperTestCase(unittest.TestCase):
             sum(1 for _ in mesh_inside_wrapper1.iter_points()),
             sum(1 for _ in mesh_inside_wrapper2.iter_points()))
 
-    def test_run_time(self):
-        """Test that field variable value is changed after
-        consecutive calls of run method
 
-        """
-
+class FoamInternalWrapperRunTestCase(unittest.TestCase):
+    def setUp(self):
         wrapper = FoamInternalWrapper()
-        name = 'simplemesh'
+        name = "simplemesh"
         wrapper.CM[CUBA.NAME] = name
         wrapper.CM_extensions[CUBAExt.GE] = (CUBAExt.INCOMPRESSIBLE,
                                              CUBAExt.LAMINAR_MODEL)
         wrapper.SP[CUBA.TIME_STEP] = 1
-        wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 1
+        wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 3
         wrapper.SP[CUBA.DENSITY] = 1.0
         wrapper.SP[CUBA.DYNAMIC_VISCOSITY] = 1.0
         wrapper.BC[CUBA.VELOCITY] = {'boundary0': (0.1, 0, 0),
@@ -167,33 +163,38 @@ class FoamInternalWrapperTestCase(unittest.TestCase):
                                      'boundary1': 0,
                                      'boundary2': 'zeroGradient',
                                      'boundary3': 'empty'}
-        mesh_file = H5CUDS.open(os.path.join('foam_controlwrapper',
-                                             'tests',
-                                             'simplemesh.cuds'))
-        mesh_from_file = mesh_file.get_dataset(name)
+        self.wrapper = wrapper
 
-        mesh_inside_wrapper = wrapper.add_dataset(mesh_from_file)
+        corner_points = [(0.0, 0.0, 0.0), (5.0, 0.0, 0.0),
+                         (5.0, 5.0, 0.0), (0.0, 5.0, 0.0),
+                         (0.0, 0.0, 1.0), (5.0, 0.0, 1.0),
+                         (5.0, 5.0, 1.0), (0.0, 5.0, 1.0)]
+        create_quad_mesh(name, self.wrapper, corner_points, 5, 5, 5)
+        self.mesh_inside_wrapper = self.wrapper.get_dataset(name)
 
-        wrapper.run()
+    def test_run_time(self):
+        """Test that field variable value is changed after
+        consecutive calls of run method
 
-        for cell in mesh_inside_wrapper.iter_cells():
+        """
+        self.wrapper.SP[CUBA.TIME_STEP] = 1
+
+        self.wrapper.run()
+
+        for cell in self.mesh_inside_wrapper.iter_cells():
             old_vel = cell.data[CUBA.VELOCITY]
             old_pres = cell.data[CUBA.PRESSURE]
             cell_uid = cell.uid
 
-        wrapper.run()
+        self.wrapper.run()
 
-        cell = mesh_inside_wrapper.get_cell(cell_uid)
+        cell = self.mesh_inside_wrapper.get_cell(cell_uid)
         new_vel = cell.data[CUBA.VELOCITY]
         new_pres = cell.data[CUBA.PRESSURE]
 
         self.assertNotEqual(old_vel, new_vel)
         self.assertNotEqual(old_pres, new_pres)
 
-        if os.path.exists(mesh_inside_wrapper.path):
-            shutil.rmtree(mesh_inside_wrapper.path)
-
-        mesh_file.close()
 
 if __name__ == '__main__':
     unittest.main()

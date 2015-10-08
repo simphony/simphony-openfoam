@@ -188,7 +188,6 @@ class FoamMesh(ABCMesh):
             foamface.createDefaultFields(name, 'pimpleFoam')
 
             # write possible cell data to time directory
-            print "set data"
             self.update_cells(list(mesh.iter_cells()))
 
     def get_point(self, uuid):

@@ -13,10 +13,10 @@ import shutil
 from simphony.cuds.mesh import Mesh, Face, Point, Cell
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
-from simphony.io.h5_cuds import H5CUDS
 
 from foam_controlwrapper.foam_controlwrapper import FoamControlWrapper
 from foam_controlwrapper.cuba_extension import CUBAExt
+from foam_controlwrapper.blockmesh_utils import create_quad_mesh
 from foam_controlwrapper import foam_files
 
 
@@ -189,13 +189,12 @@ class FoamControlWrapperRunTestCase(unittest.TestCase):
                                      'boundary3': 'empty'}
         self.wrapper = wrapper
 
-        mesh_file = H5CUDS.open(os.path.join('foam_controlwrapper',
-                                             'tests',
-                                             'simplemesh.cuds'))
-        mesh_from_file = mesh_file.get_dataset(name)
-        self.mesh_inside_wrapper = self.wrapper.add_dataset(mesh_from_file)
-
-        mesh_file.close()
+        corner_points = [(0.0, 0.0, 0.0), (5.0, 0.0, 0.0),
+                         (5.0, 5.0, 0.0), (0.0, 5.0, 0.0),
+                         (0.0, 0.0, 1.0), (5.0, 0.0, 1.0),
+                         (5.0, 5.0, 1.0), (0.0, 5.0, 1.0)]
+        create_quad_mesh(name, self.wrapper, corner_points, 5, 5, 5)
+        self.mesh_inside_wrapper = self.wrapper.get_dataset(name)
 
     def tearDown(self):
         if os.path.exists(self.mesh_inside_wrapper.path):

@@ -3,7 +3,7 @@
 """
 
 from foam_controlwrapper.foam_controlwrapper import FoamControlWrapper
-from foam_controlwrapper.foam_controlwrapper import read_foammesh
+from foam_controlwrapper.mesh_utils import read_foammesh
 from simphony.io.h5_cuds import H5CUDS
 
 foam_controlwrapper = FoamControlWrapper()

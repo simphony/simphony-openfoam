@@ -4,8 +4,6 @@
 
 from simphony.core.cuba import CUBA
 from simphony.engine import openfoam_file_io
-from simphony.io.h5_cuds import H5CUDS
-import os
 
 wrapper = openfoam_file_io.FoamControlWrapper()
 CUBAExt = openfoam_file_io.CUBAExt
@@ -31,12 +29,18 @@ wrapper.BC[CUBA.PRESSURE] = {'boundary0': 'zeroGradient',
                              'boundary2': 'zeroGradient',
                              'boundary3': 'empty'}
 
-mesh_file = H5CUDS.open(os.path.join(name, 'poiseuille.cuds'))
-mesh_from_file = mesh_file.get_dataset(name)
+corner_points = [(0.0, 0.0, 0.0), (20.0e-3, 0.0, 0.0),
+                 (20.0e-3, 1.0e-3, 0.0), (0.0, 1.0e-3, 0.0),
+                 (0.0, 0.0, 0.1), (20.0e-3, 0.0, 0.1),
+                 (20.0e-3, 1.0e-3, 0.1), (0.0, 1.0e-3, 0.1)]
+# elements in x -direction
+nex = 500
+# elements in y -direction
+ney = 20
+openfoam_file_io.create_quad_mesh(name, wrapper, corner_points,
+                                  nex, ney, 1)
 
-print "Mesh name ", mesh_from_file.name
-
-mesh_inside_wrapper = wrapper.add_dataset(mesh_from_file)
+mesh_inside_wrapper = wrapper.get_dataset(name)
 
 print "Case directory ", mesh_inside_wrapper.path
 
