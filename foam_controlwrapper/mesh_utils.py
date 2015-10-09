@@ -10,6 +10,7 @@ from .foam_templates import head
 from .foam_templates import dataTemplates
 from .foam_templates import (dataKeyMap, dataTypeMap, foamTypeMap)
 
+
 def create_dummy_celldata(path, name, time, data_name, dimensionset):
     """Created dummy cell vector data
 
