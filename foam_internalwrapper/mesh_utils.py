@@ -34,7 +34,8 @@ def create_dummy_celldata(name, data_name):
         foamface.setAllCellData(name,
                                 data_name,
                                 list(values))
-        
+
+
 def set_cells_data(name, cells, uuidToFoamLabel, dataNameKeyMap):
     """Set data to specific cells
 

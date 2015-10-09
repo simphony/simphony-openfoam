@@ -21,7 +21,7 @@ import simphony.core.data_container as dc
 import simphonyfoaminterface as foamface
 
 from .foam_dicts import (dictionaryMaps, parse_map)
-from .foam_dicts import (dataNameMap, dataDimensionMap)
+from .foam_dicts import (dataNameMap)
 from .mesh_utils import (create_dummy_celldata, set_cells_data)
 
 
