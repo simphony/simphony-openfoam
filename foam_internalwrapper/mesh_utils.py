@@ -6,7 +6,7 @@ import simphonyfoaminterface as foamface
 from .foam_dicts import (dataTypeMap, dataKeyMap)
 
 
-def create_dummy_celldata(name, data_name, dimensionset):
+def create_dummy_celldata(name, data_name):
     """Created dummy cell data to OpenFoams objectRegistry
 
     Parameters
@@ -21,32 +21,20 @@ def create_dummy_celldata(name, data_name, dimensionset):
     """
 
     nCells = foamface.getCellCount(name)
-
     if dataTypeMap[dataKeyMap[data_name]] == 'vector':
 
         # this seems to break when setAllCellVectorData call is made (bug)
-        #                values = [(0.0, 0.0, 0.0) for item in range(nCells)]
-        #                foamface.setAllCellVectorData(name,
-        #                                              data_name,
-        #                                              list(dimensionset),
-        #                                              list(values))
-        for item in range(nCells):
-            foamface.setCellVectorData(name,
-                                       item,
-                                       data_name, list((0.0, 0.0, 0.0)))
+        values = [[0.0, 0.0, 0.0] for itemVector in range(nCells)]
+        foamface.setAllCellVectorData(name,
+                                      data_name,
+                                      list(values))
     else:
-        # this seems to break when setAllCellVectorData call is made (bug)
-        #                values = [0.0 for item in range(nCells)]
-        #                foamface.setAllCellData(name,
-        #                                        data_name,
-        #                                        list(dimensionset),
-        #                                        list(values))
-        for item in range(nCells):
-            foamface.setCellData(name,
-                                 item,
-                                 data_name, 0.0)
-
-
+        # this seems to break when setAllCellData call is made (bug)
+        values = [0.0 for itemScalar in range(nCells)]
+        foamface.setAllCellData(name,
+                                data_name,
+                                list(values))
+        
 def set_cells_data(name, cells, uuidToFoamLabel, dataNameKeyMap):
     """Set data to specific cells
 

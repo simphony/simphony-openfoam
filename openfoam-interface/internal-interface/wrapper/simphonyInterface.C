@@ -836,11 +836,10 @@ void foam_setCellVectorData(std::string name, int label,std::string dataname,std
 
 }
 
-void foam_setCellData(std::string name, std::string dataname, std::vector<int> dimensionset, std::vector<double> values) 
+void foam_setCellData(std::string name, std::string dataname, std::vector<double> values) 
   {
 
     volScalarField& field = find_scalarData(name,dataname);
-
     field.internalField() = Field<scalar>(UList<scalar>(&(values[0]),values.size()));
 
   }
@@ -848,7 +847,7 @@ void foam_setCellData(std::string name, std::string dataname, std::vector<int> d
 
 
 
-void foam_setCellVectorData(std::string name, std::string dataname, std::vector<int> dimensionset, std::vector<double> values) 
+void foam_setCellVectorData(std::string name, std::string dataname, std::vector<double> values) 
   {
 
     volVectorField& field = find_vectorData(name,dataname);

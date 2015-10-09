@@ -432,8 +432,7 @@ class FoamMesh(ABCMesh):
                 if dataName not in dataNames or dataName not in newDataNames:
                     newDataNames.append(dataName)
         for dataName in newDataNames:
-            create_dummy_celldata(self.name, dataName,
-                                  dataDimensionMap[dataNameKeyMap[dataName]])
+            create_dummy_celldata(self.name, dataName)
 
         for cell in cells:
             if cell.uid not in self._uuidToFoamLabel:
