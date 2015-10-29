@@ -147,6 +147,7 @@ class FoamInternalWrapperTestCase(unittest.TestCase):
 class FoamInternalWrapperRunTestCase(unittest.TestCase):
     def setUp(self):
         wrapper = FoamInternalWrapper()
+        path = "test_path"
         name = "simplemesh"
         wrapper.CM[CUBA.NAME] = name
         wrapper.CM_extensions[CUBAExt.GE] = (CUBAExt.INCOMPRESSIBLE,
@@ -169,7 +170,7 @@ class FoamInternalWrapperRunTestCase(unittest.TestCase):
                          (5.0, 5.0, 0.0), (0.0, 5.0, 0.0),
                          (0.0, 0.0, 1.0), (5.0, 0.0, 1.0),
                          (5.0, 5.0, 1.0), (0.0, 5.0, 1.0)]
-        create_quad_mesh(name, self.wrapper, corner_points, 5, 5, 5)
+        create_quad_mesh(path, name, self.wrapper, corner_points, 5, 5, 5)
         self.mesh_inside_wrapper = self.wrapper.get_dataset(name)
 
     def test_run_time(self):

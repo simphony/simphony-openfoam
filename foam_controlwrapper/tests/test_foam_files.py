@@ -12,10 +12,11 @@ import shutil
 
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
-from simphony.io.h5_cuds import H5CUDS
+
 
 from foam_controlwrapper import foam_files
 from foam_controlwrapper.foam_controlwrapper import FoamControlWrapper
+from foam_controlwrapper.blockmesh_utils import create_quad_mesh
 
 
 class FoamFilesTestCase(unittest.TestCase):
@@ -86,13 +87,15 @@ class FoamFilesTestCase(unittest.TestCase):
         """
 
         wrapper = FoamControlWrapper()
-        name = 'simplemesh'
-        mesh_file = H5CUDS.open(os.path.join('foam_controlwrapper',
-                                             'tests',
-                                             'simplemesh.cuds'))
-        mesh_from_file = mesh_file.get_dataset(name)
+        path = "test_path"
+        name = "test_mesh"
+        corner_points = [(0.0, 0.0, 0.0), (5.0, 0.0, 0.0),
+                         (5.0, 5.0, 0.0), (0.0, 5.0, 0.0),
+                         (0.0, 0.0, 1.0), (5.0, 0.0, 1.0),
+                         (5.0, 5.0, 1.0), (0.0, 5.0, 1.0)]
+        create_quad_mesh(path, name, wrapper, corner_points, 5, 5, 5)
 
-        mesh_inside_wrapper = wrapper.add_dataset(mesh_from_file)
+        mesh_inside_wrapper = wrapper.get_dataset(name)
 
         foam_files.write_default_files(mesh_inside_wrapper.path,
                                        self.solver,
@@ -109,8 +112,6 @@ class FoamFilesTestCase(unittest.TestCase):
             moddata = ufile.read()
 
         self.assertNotEqual(data, moddata)
-
-        mesh_file.close()
 
 
 if __name__ == '__main__':

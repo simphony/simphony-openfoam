@@ -14,7 +14,7 @@ Simphony-openfoam is hosted on github: https://github.com/simphony/simphony-open
 Requirements
 ------------
 
-- `simphony-common`_ == 0.1.3
+- `simphony-common`_ == 0.2.0
 
 .. _simphony-common: https://github.com/simphony/simphony-common
 
@@ -27,6 +27,11 @@ Installation is based on setuptools::
 
     # build and install
     python setup.py install
+
+After installation setup OpenFoam executing
+
+    source /opt/openfoam222/etc/bashrc
+
 
 Testing
 -------

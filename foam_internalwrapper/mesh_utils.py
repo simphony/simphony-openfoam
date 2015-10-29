@@ -3,7 +3,7 @@
 """
 import simphonyfoaminterface as foamface
 
-from .foam_dicts import (dataTypeMap, dataKeyMap)
+from foam_controlwrapper.foam_variables import (dataTypeMap, dataKeyMap)
 
 
 def create_dummy_celldata(name, data_name):

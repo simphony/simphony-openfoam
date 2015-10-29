@@ -8,6 +8,7 @@ from simphony.engine import openfoam_file_io
 wrapper = openfoam_file_io.FoamControlWrapper()
 CUBAExt = openfoam_file_io.CUBAExt
 
+path = '.'
 name = 'poiseuille_vof'
 
 wrapper.CM[CUBA.NAME] = name
@@ -47,7 +48,7 @@ corner_points = [(0.0, 0.0, 0.0), (20.0e-3, 0.0, 0.0),
 nex = 500
 # elements in y -direction
 ney = 20
-openfoam_file_io.create_quad_mesh(name, wrapper, corner_points,
+openfoam_file_io.create_quad_mesh(path, name, wrapper, corner_points,
                                   nex, ney, 1)
 
 mesh_inside_wrapper = wrapper.get_dataset(name)

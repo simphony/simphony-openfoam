@@ -171,6 +171,7 @@ class FoamControlWrapperTestCase(unittest.TestCase):
 class FoamControlWrapperRunTestCase(unittest.TestCase):
     def setUp(self):
         wrapper = FoamControlWrapper()
+        path = "test_path"
         name = "simplemesh"
         wrapper.CM[CUBA.NAME] = name
         wrapper.CM_extensions[CUBAExt.GE] = (CUBAExt.INCOMPRESSIBLE,
@@ -193,7 +194,7 @@ class FoamControlWrapperRunTestCase(unittest.TestCase):
                          (5.0, 5.0, 0.0), (0.0, 5.0, 0.0),
                          (0.0, 0.0, 1.0), (5.0, 0.0, 1.0),
                          (5.0, 5.0, 1.0), (0.0, 5.0, 1.0)]
-        create_quad_mesh(name, self.wrapper, corner_points, 5, 5, 5)
+        create_quad_mesh(path, name, self.wrapper, corner_points, 5, 5, 5)
         self.mesh_inside_wrapper = self.wrapper.get_dataset(name)
 
     def tearDown(self):

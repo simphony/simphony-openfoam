@@ -8,7 +8,7 @@ import simphonyfoaminterface as foamface
 from .foam_files import set_all_cell_data
 from .foam_templates import head
 from .foam_templates import dataTemplates
-from .foam_templates import (dataKeyMap, dataTypeMap, foamTypeMap)
+from .foam_variables import (dataKeyMap, dataTypeMap, foamTypeMap)
 
 
 def create_dummy_celldata(path, name, time, data_name, dimensionset):

@@ -3,7 +3,7 @@
 """
 
 import os
-import tempfile
+
 
 from PyFoam.RunDictionary.ParsedParameterFile import ParsedParameterFile
 
@@ -13,12 +13,14 @@ from .foam_runner import FoamRunner
 from .io_utils import read_foammesh
 
 
-def create_quad_mesh(name, mesh_engine, corner_points,
+def create_quad_mesh(path, name, mesh_engine, corner_points,
                      nex, ney, nez):
-    """ create and add mesh to engine to wrapper
+    """ create and add mesh to engine
 
     Parameters
     ----------
+    path : str
+        path to mesh parent directory 
     name : str
         name of mesh
     mesh_engine : ABCModelingEngine
@@ -34,7 +36,6 @@ def create_quad_mesh(name, mesh_engine, corner_points,
 
     """
     file_name = 'blockMeshDict'
-    path = os.path.join(tempfile.mkdtemp())
     case = os.path.join(path, name)
     templateName = 'simpleFoam'
     write_default_files(case, templateName, '0', True)

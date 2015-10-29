@@ -8,6 +8,7 @@ import os
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
+from simphony.cuds.abc_mesh import ABCMesh
 
 from .cuba_extension import CUBAExt
 from .foam_mesh import FoamMesh
@@ -117,9 +118,14 @@ class FoamControlWrapper(ABCModelingEngine):
         Raises
         ------
         Exception if mesh already exists
+        Exception if mesh not instance of ABCMesh
 
         """
+        
 
+        if not isinstance(mesh, ABCMesh):
+            raise TypeError('Mesh not instance of ABCMesh')
+            
         if mesh.name in self._meshes:
             raise ValueError('Mesh \'{}\` already exists'.format(mesh.name))
         else:

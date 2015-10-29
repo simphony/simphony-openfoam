@@ -58,9 +58,9 @@ setup(
     description='Implementation of OpenFoam wrappers',
     long_description=README_TEXT,
     packages=find_packages(),
-    package_data={'': ['simplemesh.cuds']},
-    install_requires=['simphony == 0.2',
-                      'PyFoam == 0.6.4'],
+    install_requires=['simphony >= 0.2.0',
+                      'PyFoam == 0.6.4',
+                      'simphony[H5IO, CUBAGen]'],
     entry_points={'simphony.engine':
                   ['openfoam_file_io = foam_controlwrapper',
                    'openfoam_internal = foam_internalwrapper']},

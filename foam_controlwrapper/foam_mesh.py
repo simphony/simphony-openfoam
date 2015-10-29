@@ -7,7 +7,6 @@ and modify a mesh and related data
 import uuid
 import tempfile
 import os
-import numpy
 
 from collections import OrderedDict
 
@@ -22,7 +21,7 @@ import simphonyfoaminterface as foamface
 from .foam_files import (
     set_cells_data, write_default_files, get_cell_data_names, get_cell_data)
 from .mesh_utils import create_dummy_celldata
-from .foam_templates import (dataNameMap, dataKeyMap, dataDimensionMap)
+from .foam_variables import (dataNameMap, dataKeyMap, dataDimensionMap)
 
 
 class FoamMesh(ABCMesh):
@@ -119,12 +118,7 @@ class FoamMesh(ABCMesh):
                 # make compressed list of faces points
                 facePoints.append(len(face.points))
                 for puid in face.points:
-                    if type(puid) is not numpy.string_:
-                        facePoints.append(self._uuidToFoamLabel[puid])
-                    else:
-                        facePoints.append(
-                            self._uuidToFoamLabel[uuid.UUID(puid,
-                                                            version=4)])
+                    facePoints.append(self._uuidToFoamLabel[puid])
 
             # make points coordinate list
             pointCoordinates = []
@@ -137,12 +131,7 @@ class FoamMesh(ABCMesh):
             for cell in mesh.iter_cells():
                 cellPoints.append(len(cell.points))
                 for puid in cell.points:
-                    if type(puid) is not numpy.string_:
-                        cellPoints.append(self._uuidToFoamLabel[puid])
-                    else:
-                        cellPoints.append(
-                            self._uuidToFoamLabel[uuid.UUID(puid,
-                                                            version=4)])
+                    cellPoints.append(self._uuidToFoamLabel[puid])
 
             # make patch information
             patchNames = []
@@ -184,7 +173,7 @@ class FoamMesh(ABCMesh):
             foamface.writeMesh(name)
 
             # write possible cell data to time directory
-            self.update_cells(list(mesh.iter_cells()))
+            self.update_cells(mesh.iter_cells())
 
     def get_point(self, uuid):
         """Returns a point with a given uuid.
@@ -406,7 +395,8 @@ class FoamMesh(ABCMesh):
         # if cell data does not exists in the mesh at all, initialize it
         newDataNames = []
         dataNameKeyMap = {}
-        for cell in cells:
+        cellList = list(cells)
+        for cell in cellList:
             for data in cell.data:
                 if data not in dataNameMap:
                     error_str = "Data named "+data+" not supported"
@@ -421,7 +411,7 @@ class FoamMesh(ABCMesh):
                                   self._time, dataName,
                                   dataDimensionMap[dataNameKeyMap[dataName]])
 
-        for cell in cells:
+        for cell in cellList:
             if cell.uid not in self._uuidToFoamLabel:
                 error_str = "Trying to update a non-existing cell with uuid: "\
                     + str(cell.uid)
@@ -435,7 +425,7 @@ class FoamMesh(ABCMesh):
             if set(puids) != set(cell.points):
                 raise Warning("Cell points can't be updated")
 
-        set_cells_data(self.path, self._time, cells, self._uuidToFoamLabel,
+        set_cells_data(self.path, self._time, cellList, self._uuidToFoamLabel,
                        dataNameKeyMap)
 
     def iter_points(self, point_uuids=None):

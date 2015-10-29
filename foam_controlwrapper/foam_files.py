@@ -6,7 +6,7 @@ Module for writing and modifying OpenFOAM files
 import os
 from .foam_templates import (head, dictionaryTemplates)
 from .foam_templates import dataTemplates
-from .foam_templates import (dataKeyMap, dataTypeMap, foamTypeMap)
+from .foam_variables import (dataKeyMap, dataTypeMap, foamTypeMap)
 from simphony.core.cuba import CUBA
 from cuba_extension import CUBAExt
 from PyFoam.RunDictionary.ParsedParameterFile import ParsedParameterFile
@@ -393,7 +393,6 @@ def set_cells_data(path, time_name, cells, uuidToFoamLabel, dataNameKeyMap):
                 if dataKey in cell.data:
                     values[uuidToFoamLabel[cell.uid]] = \
                         cell.data[dataKey]
-
         field_str = 'nonuniform List<' + dataTypeMap[dataKey] + '>\n'
         field_str += str(len(values.val)) + '\n' + '(' + '\n'
         for value in values:

@@ -1,0 +1,19 @@
+
+
+FoamFile
+{
+    version     2.2;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      RASProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+    
+RASModel            laminar;
+
+turbulence          off;
+
+printCoeffs         on;
+                        
