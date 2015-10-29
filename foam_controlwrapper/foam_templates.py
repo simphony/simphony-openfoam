@@ -5,7 +5,6 @@ Templates for OpenFOAM -files
 """
 import os
 
-from simphony.core.cuba import CUBA
 
 head = \
     """

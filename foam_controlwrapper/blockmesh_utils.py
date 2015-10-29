@@ -20,7 +20,7 @@ def create_quad_mesh(path, name, mesh_engine, corner_points,
     Parameters
     ----------
     path : str
-        path to mesh parent directory 
+        path to mesh parent directory
     name : str
         name of mesh
     mesh_engine : ABCModelingEngine
