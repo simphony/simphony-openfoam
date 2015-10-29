@@ -188,7 +188,7 @@ class FoamMesh(ABCMesh):
             foamface.createDefaultFields(name, 'pimpleFoam')
 
             # write possible cell data to time directory
-            self.update_cells(list(mesh.iter_cells()))
+            self.update_cells(mesh.iter_cells())
 
     def get_point(self, uuid):
         """ Returns a point with a given uuid.
@@ -421,7 +421,8 @@ class FoamMesh(ABCMesh):
         # if cell data does not exists in the mesh at all, initialize it
         newDataNames = []
         dataNameKeyMap = {}
-        for cell in cells:
+        cellList = list(cells)
+        for cell in cellList:
             for data in cell.data:
                 if data not in dataNameMap:
                     error_str = "Data named "+data+" not supported"
@@ -434,7 +435,7 @@ class FoamMesh(ABCMesh):
         for dataName in newDataNames:
             create_dummy_celldata(self.name, dataName)
 
-        for cell in cells:
+        for cell in cellList:
             if cell.uid not in self._uuidToFoamLabel:
                 error_str = "Trying to update a non-existing cell with uuid: "\
                     + str(cell.uid)
@@ -448,7 +449,7 @@ class FoamMesh(ABCMesh):
             if set(puids) != set(cell.points):
                 raise Warning("Cell points can't be updated")
 
-        set_cells_data(self.name, cells, self._uuidToFoamLabel,
+        set_cells_data(self.name, cellList, self._uuidToFoamLabel,
                        dataNameKeyMap)
 
     def iter_points(self, point_uuids=None):
