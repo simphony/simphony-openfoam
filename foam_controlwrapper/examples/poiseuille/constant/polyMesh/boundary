@@ -20,27 +20,27 @@ FoamFile
     boundary2
     {
         type            patch;
-        nFaces          1000;
-        startFace       19480;
+        nFaces          20;
+        startFace       66;
     }
     boundary0
     {
         type            patch;
-        nFaces          20;
-        startFace       20480;
+        nFaces          4;
+        startFace       86;
     }
     boundary1
     {
         type            patch;
-        nFaces          20;
-        startFace       20500;
+        nFaces          4;
+        startFace       90;
     }
     boundary3
     {
         type            empty;
         inGroups        1(empty);
-        nFaces          20000;
-        startFace       20520;
+        nFaces          80;
+        startFace       94;
     }
 )
 

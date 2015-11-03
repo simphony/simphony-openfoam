@@ -6,10 +6,10 @@ Wrapper module for OpenFOAM
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
-from cuba_extension import CUBAExt
-from foam_mesh import FoamMesh
+from .cuba_extension import CUBAExt
+from .foam_mesh import FoamMesh
+from .foam_dicts import (modifyNumerics, modifyFields)
 import simphonyfoaminterface as foamface
-from foam_dicts import modifyNumerics, modifyFields
 
 
 class FoamInternalWrapper(ABCModelingEngine):
@@ -67,15 +67,13 @@ class FoamInternalWrapper(ABCModelingEngine):
 
 #       c) Call solver
         if CUBAExt.NUMBER_OF_CORES in self.CM_extensions:
-                ncores = self.CM_extensions[CUBAExt.NUMBER_OF_CORES]
+            ncores = self.CM_extensions[CUBAExt.NUMBER_OF_CORES]
         else:
-                ncores = 1
+            ncores = 1
 
         mesh._time = foamface.run(mesh.name, ncores)
 
-#       return mesh._time
-
-    def add_mesh(self, mesh):
+    def add_dataset(self, mesh):
         """Add a mesh to the OpenFoam modeling engine.
 
         Parameters
@@ -102,7 +100,7 @@ class FoamInternalWrapper(ABCModelingEngine):
             self._meshes[mesh.name] = FoamMesh(mesh.name, self.BC, mesh)
             return self._meshes[mesh.name]
 
-    def delete_mesh(self, name):
+    def remove_dataset(self, name):
         """Delete mesh from the OpenFoam modeling engine.
 
         Parameters
@@ -123,7 +121,7 @@ class FoamInternalWrapper(ABCModelingEngine):
             foamface.deleteMesh(name)
             del self._meshes[name]
 
-    def get_mesh(self, name):
+    def get_dataset(self, name):
         """Get a mesh.
 
         The returned mesh can be used to query and update the state of the
@@ -150,7 +148,7 @@ class FoamInternalWrapper(ABCModelingEngine):
             raise ValueError(
                 'Mesh \'{}\` does not exist'.format(name))
 
-    def iter_meshes(self, names=None):
+    def iter_datasets(self, names=None):
         """Returns an iterator over a subset or all of the meshes.
 
         Parameters
@@ -181,6 +179,13 @@ class FoamInternalWrapper(ABCModelingEngine):
                     raise ValueError(
                         'Mesh \'{}\` does not exist'.format(
                             name))
+
+    def get_dataset_names(self):
+        """ Returns the names of the meshes.
+
+        """
+
+        return self._meshes.keys()
 
     def add_particles(self, particle_container):
         message = 'FoamWrapper does not handle particle container'

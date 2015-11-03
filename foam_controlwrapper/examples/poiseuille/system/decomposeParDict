@@ -5,15 +5,14 @@ FoamFile
     version     2.2;
     format      ascii;
     class       dictionary;
-    location    "constant";
-    object      RASProperties;
+    location    "system";
+    object      decomposeParDict;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
     
-RASModel            laminar;
+numberOfSubdomains 4;
 
-turbulence          off;
+method          scotch;
 
-printCoeffs         on;
                         

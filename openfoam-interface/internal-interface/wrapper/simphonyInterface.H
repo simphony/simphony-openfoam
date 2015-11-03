@@ -97,9 +97,9 @@ void foam_setCellData(std::string name, int label,std::string dataname,double va
 // set mesh single cell vector data (data must exists in registry)
 void foam_setCellVectorData(std::string name, int label,std::string dataname,std::vector<double> values);
 // set mesh cell data
-void foam_setCellData(std::string name, std::string dataname, std::vector<int> dimensionset, std::vector<double> values);
+void foam_setCellData(std::string name, std::string dataname, std::vector<double> values);
 // set mesh cell vector data
-void foam_setCellVectorData(std::string name, std::string dataname, std::vector<int> dimensionset, std::vector<double> values);
+void foam_setCellVectorData(std::string name, std::string dataname, std::vector<double> values);
 // write cell data 
 void foam_writeCellData(std::string name,std::string dataname);
 // write cell vector data

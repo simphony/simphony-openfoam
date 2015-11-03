@@ -1,67 +1,63 @@
 """ Utility functions fo FoamMesh class
 
 """
-import os
 import simphonyfoaminterface as foamface
 
-from .foam_files import set_all_cell_data
-from .foam_templates import head
-from .foam_templates import scalarTemplates, vectorTemplates
+from foam_controlwrapper.foam_variables import (dataTypeMap, dataKeyMap)
 
 
-def create_dummy_cellvectordata(path, name, time, data_name, dimensionset):
-    """Created dummy cell vector data
+def create_dummy_celldata(name, data_name):
+    """Created dummy cell data to OpenFoams objectRegistry
 
     Parameters
     ----------
+    name : str
+        Name of mesh
     data_name : str
-    Name of data to be created
-    dimensionset : tuple
-    Data dimensionset
+        Name of data to be created
+    dimensionset : list
+        Data dimensionset
 
     """
 
-    version = '2.2'
     nCells = foamface.getCellCount(name)
-    values = [(0.0, 0.0, 0.0) for item in range(nCells)]
-    solver = 'interFoam'
-    foamFile = os.path.join(time, data_name)
-    foamClass = 'volVectorField'
-    location = '\"' + os.path.dirname(foamFile) + '\"'
-    foamObject = os.path.basename(foamFile)
-    heading = head.format(version=version, foamclass=foamClass,
-                          location=location, foamobject=foamObject)
-    fileContent = heading + vectorTemplates[solver][data_name]
-    f = open(os.path.join(path, time, data_name), 'w')
-    f.write(fileContent)
-    f.close()
-    set_all_cell_data(path, time, data_name, values, 'vector')
+    if dataTypeMap[dataKeyMap[data_name]] == 'vector':
+
+        # this seems to break when setAllCellVectorData call is made (bug)
+        values = [[0.0, 0.0, 0.0] for itemVector in range(nCells)]
+        foamface.setAllCellVectorData(name,
+                                      data_name,
+                                      list(values))
+    else:
+        # this seems to break when setAllCellData call is made (bug)
+        values = [0.0 for itemScalar in range(nCells)]
+        foamface.setAllCellData(name,
+                                data_name,
+                                list(values))
 
 
-def create_dummy_celldata(path, name, time, data_name, dimensionset):
-    """Created dummy cell data
+def set_cells_data(name, cells, uuidToFoamLabel, dataNameKeyMap):
+    """Set data to specific cells
 
-    Parameters
+   Parameters
     ----------
-    data_name : str
-    Name of data to be created
-    dimensionset : tuple
-    Data dimensionset
-
+    name : str
+        name of mesh
+    cells : iterator Cell
+        set of Cells
     """
 
-    version = '2.2'
-    nCells = foamface.getCellCount(name)
-    values = [0.0 for item in range(nCells)]
-    solver = 'interFoam'
-    foamFile = os.path.join(time, data_name)
-    foamClass = 'volScalarField'
-    location = '\"' + os.path.dirname(foamFile) + '\"'
-    foamObject = os.path.basename(foamFile)
-    heading = head.format(version=version, foamclass=foamClass,
-                          location=location, foamobject=foamObject)
-    fileContent = heading + scalarTemplates[solver][data_name]
-    f = open(os.path.join(path, time, data_name), 'w')
-    f.write(fileContent)
-    f.close()
-    set_all_cell_data(path, time, data_name, values, 'scalar')
+    for dataName in dataNameKeyMap:
+        dataKey = dataNameKeyMap[dataName]
+
+        if dataTypeMap[dataKey] == "scalar":
+            for cell in cells:
+                foamface.setCellData(name,
+                                     uuidToFoamLabel[cell.uid],
+                                     dataName, cell.data[dataKey])
+        else:
+            for cell in cells:
+                foamface.setCellVectorData(name,
+                                           uuidToFoamLabel[cell.uid],
+                                           dataName,
+                                           list(cell.data[dataKey]))

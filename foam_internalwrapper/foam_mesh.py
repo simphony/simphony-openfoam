@@ -5,16 +5,24 @@ and modify a mesh and related data
 
 """
 import uuid
-from collections import OrderedDict
-from simphony.cuds.abstractmesh import ABCMesh
-from simphony.core.cuba import CUBA
-from simphony.cuds.mesh import Point, Face, Cell
-import simphony.core.data_container as dc
-import simphonyfoaminterface as foamface
 import tempfile
 import os
 import numpy
-from foam_dicts import dictionaryMaps, parse_map
+
+from collections import OrderedDict
+
+from simphony.cuds.abc_mesh import ABCMesh
+from simphony.core.cuba import CUBA
+from simphony.cuds.mesh import Point, Face, Cell
+from simphony.core.cuds_item import CUDSItem
+
+import simphony.core.data_container as dc
+
+import simphonyfoaminterface as foamface
+
+from .foam_dicts import (dictionaryMaps, parse_map)
+from foam_controlwrapper.foam_variables import (dataNameMap)
+from .mesh_utils import (create_dummy_celldata, set_cells_data)
 
 
 class FoamMesh(ABCMesh):
@@ -180,8 +188,7 @@ class FoamMesh(ABCMesh):
             foamface.createDefaultFields(name, 'pimpleFoam')
 
             # write possible cell data to time directory
-            for cell in mesh.iter_cells():
-                self.update_cell(cell)
+            self.update_cells(mesh.iter_cells())
 
     def get_point(self, uuid):
         """ Returns a point with a given uuid.
@@ -359,74 +366,36 @@ class FoamMesh(ABCMesh):
             error_str = "Trying to get an non-existing cell with uuid: {}"
             raise ValueError(error_str.format(uuid))
 
-    def add_point(self, point):
-        message = 'Point addition not supported yet'
+    def add_points(self, points):
+        message = 'Points addition not supported yet'
         raise NotImplementedError(message)
 
-    def add_edge(self, edge):
-        message = 'Edge addition not supported yet'
+    def add_edges(self, edges):
+        message = 'Edges addition not supported yet'
         raise NotImplementedError(message)
 
-    def add_face(self, face):
-        message = 'Face addition not supported yet'
+    def add_faces(self, face):
+        message = 'Faces addition not supported yet'
         raise NotImplementedError(message)
 
-    def add_cell(self, cell):
-        message = 'Cell addition not supported yet'
+    def add_cells(self, cells):
+        message = 'Cells addition not supported yet'
         raise NotImplementedError(message)
 
-    def update_point(self, point):
+    def update_points(self, points):
         message = 'Point update not supported yet'
         raise NotImplementedError(message)
 
-    def update_edge(self, edge):
-        message = 'Edge update not supported yet'
+    def update_edges(self, edges):
+        message = 'Edges update not supported yet'
         raise NotImplementedError(message)
 
-    def update_face(self, face):
-        message = 'Face update not supported yet'
+    def update_faces(self, faces):
+        message = 'Faces update not supported yet'
         raise NotImplementedError(message)
 
-    def create_dummy_celldata(self, data_name, dimensionset):
-        """Created dummy cell data to OpenFoams objectRegistry
-
-        Parameters
-        ----------
-        data_name : str
-            Name of data to be created
-        dimensionset : tuple
-            Data dimensionset
-
-        """
-
-        nCells = foamface.getCellCount(self.name)
-        values = [0.0 for item in range(nCells)]
-        foamface.setAllCellData(self.name,
-                                data_name,
-                                dimensionset,
-                                values)
-
-    def create_dummy_cellvectordata(self, data_name, dimensionset):
-        """Created dummy cell vector data to OpenFoams objectRegistry
-
-        Parameters
-        ----------
-        data_name : str
-            Name of data to be created
-        dimensionset : tuple
-            Data dimensionset
-
-        """
-
-        nCells = foamface.getCellCount(self.name)
-        values = [(0.0, 0.0, 0.0) for item in range(nCells)]
-        foamface.setAllCellVectorData(self.name,
-                                      data_name,
-                                      dimensionset,
-                                      (values))
-
-    def update_cell(self, cell):
-        """ Updates the information of a cell.
+    def update_cells(self, cells):
+        """ Updates the information of a set of cells.
 
         Gets the mesh cell identified by the same
         uuid as the provided cell and updates its information
@@ -434,8 +403,8 @@ class FoamMesh(ABCMesh):
 
         Parameters
         ----------
-        cell : Cell
-            Cell to be updated
+        cells : iterable of Cell
+            Cell set to be updated
 
         Raises
         ------
@@ -447,64 +416,41 @@ class FoamMesh(ABCMesh):
 
         """
 
-        if cell.uid not in self._uuidToFoamLabel:
-            error_str = "Trying to update a non-existing cell with uuid: "\
-                + str(cell.uid)
-            raise KeyError(error_str)
-
-        if not isinstance(cell, Cell):
-            error_str = "Trying to update an object with the wrong type. "\
-                + "Cell expected."
-            raise TypeError(error_str)
-
-        # if points are changed raise warning
-        pointLabels = foamface.getCellPoints(self.name,
-                                             self._uuidToFoamLabel[cell.uid])
-        puids = [self._foamPointLabelToUuid[lbl] for lbl in pointLabels]
-        cell_puids = []
-        for puid in cell.points:
-            if type(puid) is not numpy.string_:
-                cell_puids.append(puid)
-            else:
-                cell_puids.append(uuid.UUID(puid, version=4))
-
-        if set(puids) != set(cell_puids):
-            raise Warning("Cell points can't be updated")
-
         dataNames = foamface.getCellDataNames(self.name)
         dataNames += foamface.getCellVectorDataNames(self.name)
-        for data in cell.data:
-            if data == CUBA.PRESSURE:
-                dataName = "p"
-                if dataName not in dataNames:
-                    self.create_dummy_celldata(dataName,
-                                               [0, 2, -2, 0, 0, 0, 0])
-                foamface.setCellData(self.name,
-                                     self._uuidToFoamLabel[cell.uid],
-                                     dataName, cell.data[data])
-            elif data == CUBA.VOLUME_FRACTION:
-                dataName = "alpha1"
-                if dataName not in dataNames:
-                    self.create_dummy_celldata(dataName,
-                                               [0, 0, 0, 0, 0, 0, 0])
-                foamface.setCellData(self.name,
-                                     self._uuidToFoamLabel[cell.uid],
-                                     dataName, cell.data[data])
-            elif data == CUBA.VELOCITY:
-                dataName = "U"
-                if dataName not in dataNames:
-                    self.create_dummy_cellvectordata(dataName,
-                                                     [0, 1, -1, 0, 0, 0, 0])
+        # if cell data does not exists in the mesh at all, initialize it
+        newDataNames = []
+        dataNameKeyMap = {}
+        cellList = list(cells)
+        for cell in cellList:
+            for data in cell.data:
+                if data not in dataNameMap:
+                    error_str = "Data named "+data+" not supported"
+                    raise NotImplementedError(error_str)
+                dataName = dataNameMap[data]
+                if data not in dataNameKeyMap:
+                    dataNameKeyMap[dataName] = data
+                if dataName not in dataNames or dataName not in newDataNames:
+                    newDataNames.append(dataName)
+        for dataName in newDataNames:
+            create_dummy_celldata(self.name, dataName)
 
-                foamface.setCellVectorData(self.name,
-                                           self._uuidToFoamLabel[cell.uid],
-                                           dataName,
-                                           list(cell.data[data]))
-            elif data == "":
-                pass
-            else:
-                error_str = "Data named "+data+" not supported"
-                raise NotImplementedError(error_str)
+        for cell in cellList:
+            if cell.uid not in self._uuidToFoamLabel:
+                error_str = "Trying to update a non-existing cell with uuid: "\
+                    + str(cell.uid)
+                raise KeyError(error_str)
+
+            # if points are changed raise warning
+            pointLabels = \
+                foamface.getCellPoints(self.name,
+                                       self._uuidToFoamLabel[cell.uid])
+            puids = [self._foamPointLabelToUuid[lbl] for lbl in pointLabels]
+            if set(puids) != set(cell.points):
+                raise Warning("Cell points can't be updated")
+
+        set_cells_data(self.name, cellList, self._uuidToFoamLabel,
+                       dataNameKeyMap)
 
     def iter_points(self, point_uuids=None):
         """ Returns an iterator over the selected points.
@@ -660,6 +606,40 @@ class FoamMesh(ABCMesh):
         """
         numberCells = foamface.getCellCount(self.name)
         return numberCells > 0
+
+    def count_of(self, item_type):
+        """ Return the count of item_type in the container.
+
+        Parameters
+        ----------
+        item_type : CUDSItem
+            The CUDSItem enum of the type of the items to return the count of.
+
+        Returns
+        -------
+        count : int
+            The number of items of item_type in the container.
+
+        Raises
+        ------
+        ValueError :
+            If the type of the item is not supported in the current
+            container.
+
+        """
+
+        if item_type == CUDSItem.POINT:
+            return foamface.getPointCount(self.name)
+        elif item_type == CUDSItem.EDGE:
+            error_str = 'Item type {} not supported'
+            raise ValueError(error_str.format(item_type))
+        elif item_type == CUDSItem.FACE:
+            return foamface.getFaceCount(self.name)
+        elif item_type == CUDSItem.CELL:
+            return foamface.getCellCount(self.name)
+        else:
+            error_str = 'Item type {} not supported'
+            raise ValueError(error_str.format(item_type))
 
     def generate_uuidmapping(self, nPoints, nEdges, nFaces, nCells):
         '''generate uuid mapping assuming continuous ordering of mesh objects

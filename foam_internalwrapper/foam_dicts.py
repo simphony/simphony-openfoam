@@ -195,17 +195,16 @@ def modifyNumerics(mesh, SP):
 def modifyFields(mesh, BC):
     """ Modifies the internal fields and boundary conditions
     """
-    dimensionset = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     nCells = foamface.getCellCount(mesh.name)
     p_values = [0.0 for item in range(nCells)]
-    U_values = [(0.0, 0.0, 0.0) for item in range(nCells)]
+    U_values = [[0.0, 0.0, 0.0] for item in range(nCells)]
     for cell in mesh.iter_cells():
         p_values[mesh._uuidToFoamLabel[cell.uid]] = \
             cell.data[CUBA.PRESSURE]
         U_values[mesh._uuidToFoamLabel[cell.uid]] = \
             cell.data[CUBA.VELOCITY]
-    foamface.setAllCellData(mesh.name, "p", dimensionset, p_values)
-    foamface.setAllCellVectorData(mesh.name, "U", dimensionset, U_values)
+    foamface.setAllCellData(mesh.name, "p", p_values)
+    foamface.setAllCellVectorData(mesh.name, "U", U_values)
 
 #       Refresh boundary conditions
     velocityBCs = BC[CUBA.VELOCITY]

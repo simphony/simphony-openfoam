@@ -826,9 +826,8 @@ extern "C" {
   {
     char *name;
     char *dataname;
-    PyObject *dimensionset;
     PyObject *values;
-    if (!PyArg_ParseTuple(args,"ssO!O!",&name,&dataname,&PyList_Type,&dimensionset,&PyList_Type,&values)) {
+    if (!PyArg_ParseTuple(args,"ssO!",&name,&dataname,&PyList_Type,&values)) {
       PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
       return NULL;
     }
@@ -842,15 +841,7 @@ extern "C" {
 	vals[i] = PyFloat_AsDouble(strObj);
       }
       
-      int setsize = PyList_Size(dimensionset);
-
-      std::vector<int> dims(setsize);
-      for (int i=0;i<setsize;i++) {
-	strObj = PyList_GetItem(dimensionset, i);
-	dims[i] = PyInt_AsLong(strObj);
-      }
-  
-      foam_setCellData(std::string(name), std::string(dataname), dims, vals);
+      foam_setCellData(std::string(name), std::string(dataname), vals);
       return Py_BuildValue("");
 	    	 
     }
@@ -874,9 +865,8 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
   {
     char *name;
     char *dataname;
-    PyObject *dimensionset;
     PyObject *values;
-    if (!PyArg_ParseTuple(args,"ssO!O!",&name,&dataname,&PyList_Type,&dimensionset,&PyList_Type,&values)) {
+    if (!PyArg_ParseTuple(args,"ssO!",&name,&dataname,&PyList_Type,&values)) {
       PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
       return NULL;
     }
@@ -885,23 +875,14 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
       int ncells = PyList_Size(values);
 
       std::vector<double> vals(ncells*3);
+
       for (int i=0;i<ncells;i++) {
 	strObj = PyList_GetItem(values, i);
 	vals[i*3] = PyFloat_AsDouble(PyList_GetItem(strObj, 0));
 	vals[i*3+1] = PyFloat_AsDouble(PyList_GetItem(strObj, 1));
 	vals[i*3+2] = PyFloat_AsDouble(PyList_GetItem(strObj, 2));
       }
-      
-      int setsize = PyList_Size(dimensionset);
-
-      std::vector<int> dims(setsize);
-      for (int i=0;i<setsize;i++) {
-	strObj = PyList_GetItem(dimensionset, i);
-	dims[i] = PyInt_AsLong(strObj);
-      }
-
-
-      foam_setCellVectorData(std::string(name), std::string(dataname),dims,vals);
+      foam_setCellVectorData(std::string(name), std::string(dataname),vals);
       return Py_BuildValue("");
 	    	 
     }

@@ -5,6 +5,7 @@ Templates for OpenFOAM -files
 """
 import os
 
+
 head = \
     """
 
@@ -19,6 +20,93 @@ FoamFile
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
     """
+
+blockMeshDict = """
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.2.1                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+convertToMeters 1;
+
+vertices
+(
+    (0 0 0)
+    (30 0 0)
+    (30 5 0)
+    (0 5 0)
+    (0 0 0.1)
+    (30 0 0.1)
+    (30 5 0.1)
+    (0 5 0.1)
+);
+
+blocks
+(
+    hex (0 1 2 3 4 5 6 7) (500 20 1) simpleGrading (1 1 1)
+);
+
+edges
+(
+);
+
+boundary
+(
+    boundary2
+    {
+        type patch;
+        faces
+        (
+            (3 7 6 2)
+            (1 5 4 0)
+        );
+    }
+    boundary0
+    {
+        type patch;
+        faces
+        (
+            (0 4 7 3)
+        );
+    }
+    boundary1
+    {
+        type patch;
+        faces
+        (
+            (2 6 5 1)
+        );
+    }
+    boundary3
+    {
+        type empty;
+        faces
+        (
+            (0 3 2 1)
+            (4 5 6 7)
+        );
+    }
+);
+
+mergePatchPairs
+(
+);
+
+// ************************************************************************* //
+
+
+"""
 
 dictionaryTemplates = {'simpleFoam':
                        {os.path.join('constant', 'transportProperties'):
@@ -388,9 +476,7 @@ fluxRequired
 
                         """}}
 
-vectorTemplates = {'simpleFoam':
-                   {'U':
-                    """
+dataTemplates = {'simpleFoam': {'U': """
 dimensions [ 0 1 -1 0 0 0 0 ];
 
 internalField uniform (0 0 0);
@@ -399,24 +485,7 @@ boundaryField
 {
 
 }
-                    """},
-                   'interFoam':
-                   {'U':
-                    """
-dimensions [ 0 1 -1 0 0 0 0 ];
-
-internalField uniform (0 0 0);
-
-boundaryField
-{
-
-}
-
-                    """}}
-
-scalarTemplates = {'simpleFoam':
-                   {'p':
-                    """
+                    """, 'p': """
 dimensions [ 0 2 -2 0 0 0 0 ];
 
 internalField uniform 0;
@@ -425,10 +494,17 @@ boundaryField
 {
 
 }
-                    """},
-                   'interFoam':
-                   {'p_rgh':
-                    """
+                    """}, 'interFoam': {'U': """
+dimensions [ 0 1 -1 0 0 0 0 ];
+
+internalField uniform (0 0 0);
+
+boundaryField
+{
+
+}
+
+                    """, 'p_rgh': """
 dimensions [1 -1 -2 0 0 0 0];
 
 internalField uniform 0;
@@ -438,9 +514,7 @@ boundaryField
 
 }
 
-                    """,
-                    'p':
-                    """
+                    """, 'p': """
 dimensions [ 0 2 -2 0 0 0 0 ];
 
 internalField uniform 0;
@@ -450,9 +524,7 @@ boundaryField
 
 }
 
-                    """,
-                    'alpha1':
-                    """
+                    """, 'alpha1': """
 dimensions [ 0 0 0 0 0 0 0 ];
 
 internalField uniform 0;

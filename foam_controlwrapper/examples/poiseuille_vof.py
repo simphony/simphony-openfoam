@@ -4,12 +4,11 @@
 
 from simphony.core.cuba import CUBA
 from simphony.engine import openfoam_file_io
-from simphony.io.h5_cuds import H5CUDS
-import os
 
 wrapper = openfoam_file_io.FoamControlWrapper()
 CUBAExt = openfoam_file_io.CUBAExt
 
+path = '.'
 name = 'poiseuille_vof'
 
 wrapper.CM[CUBA.NAME] = name
@@ -28,7 +27,7 @@ wrapper.SP_extensions[CUBAExt.SURFACE_TENSION] = {('water', 'air'): 72.86e-3}
 
 # this is just an example. It is not enough for general setting of BC's
 wrapper.BC[CUBA.VELOCITY] = {'boundary0': (0, 0, 0),
-                             'boundary1': (0.01, 0, 0),
+                             'boundary1': (0.01e-3, 0, 0),
                              'boundary2': 'zeroGradient',
                              'boundary3': 'empty'}
 wrapper.BC[CUBA.PRESSURE] = {'boundary0': 'zeroGradient',
@@ -40,18 +39,25 @@ wrapper.BC[CUBA.VOLUME_FRACTION] = {'boundary0': 'zeroGradient',
                                     'boundary2': 'zeroGradient',
                                     'boundary3': 'empty'}
 
-mesh_file = H5CUDS.open(os.path.join(name, 'poiseuille_vof.cuds'))
-mesh_from_file = mesh_file.get_mesh(name)
+corner_points = [(0.0, 0.0, 0.0), (20.0e-3, 0.0, 0.0),
+                 (20.0e-3, 1.0e-3, 0.0), (0.0, 1.0e-3, 0.0),
+                 (0.0, 0.0, 0.1e-3), (20.0e-3, 0.0, 0.1e-3),
+                 (20.0e-3, 1.0e-3, 0.1e-3), (0.0, 1.0e-3, 0.1e-3)]
 
-print "Mesh name ", mesh_from_file.name
+# elements in x -direction
+nex = 500
+# elements in y -direction
+ney = 20
+openfoam_file_io.create_quad_mesh(path, name, wrapper, corner_points,
+                                  nex, ney, 1)
 
-mesh_inside_wrapper = wrapper.add_mesh(mesh_from_file)
-
+mesh_inside_wrapper = wrapper.get_dataset(name)
 
 # initial state. In VOF only one velocity and pressure field
 
 print "Case directory ", mesh_inside_wrapper.path
 
+updated_cells = []
 for cell in mesh_inside_wrapper.iter_cells():
     xmid = sum(mesh_inside_wrapper.get_point(puid).coordinates[0]
                for puid in cell.points)
@@ -64,6 +70,8 @@ for cell in mesh_inside_wrapper.iter_cells():
     cell.data[CUBA.PRESSURE] = 0.0
     cell.data[CUBA.VELOCITY] = [0.0, 0.0, 0.0]
 
-    mesh_inside_wrapper.update_cell(cell)
+    updated_cells.append(cell)
+
+mesh_inside_wrapper.update_cells(updated_cells)
 
 wrapper.run()

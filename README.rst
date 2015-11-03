@@ -14,7 +14,7 @@ Simphony-openfoam is hosted on github: https://github.com/simphony/simphony-open
 Requirements
 ------------
 
-- `simphony-common`_ == 0.1.3
+- `simphony-common`_ == 0.2.0
 
 .. _simphony-common: https://github.com/simphony/simphony-common
 
@@ -23,10 +23,15 @@ Installation
 
 Package foam_controlwrapper requires python 2.7.x, OpenFOAM 2.2.2 and pyFoam 0.6.4
  
+
+Before installing or using simphony-openfoam , make sure the OpenFOAM environment variables are set by the following command:
+    source /opt/openfoam222/etc/bashrc 
+
 Installation is based on setuptools::
 
     # build and install
     python setup.py install
+
 
 Testing
 -------

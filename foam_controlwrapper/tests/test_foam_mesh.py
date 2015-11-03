@@ -11,6 +11,7 @@ import os
 from simphony.cuds.mesh import Mesh, Face, Point, Cell, Edge
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
+from simphony.core.cuds_item import CUDSItem
 
 from foam_controlwrapper.foam_mesh import FoamMesh
 from foam_controlwrapper import foam_files
@@ -40,7 +41,7 @@ class FoamMeshTestCase(unittest.TestCase):
                 (0.0, 1.0, 1.0))
         ]
 
-        puids = [self.mesh.add_point(point) for point in self.points]
+        puids = self.mesh.add_points(self.points)
 
         self.faces = [
             Face([puids[0], puids[3], puids[7], puids[4]],
@@ -58,9 +59,9 @@ class FoamMeshTestCase(unittest.TestCase):
 
         ]
 
-        self.edge = Edge([puids[0], puids[3]])
+        self.edges = [Edge([puids[0], puids[3]])]
 
-        [self.mesh.add_face(face) for face in self.faces]
+        self.mesh.add_faces(self.faces)
 
         self.cells = [
             Cell(puids,
@@ -70,7 +71,7 @@ class FoamMeshTestCase(unittest.TestCase):
 
         self.puids = puids
 
-        [self.mesh.add_cell(cell) for cell in self.cells]
+        self.mesh.add_cells(self.cells)
 
     def tearDown(self):
         foam_files.remove_parser_files(os.getcwd())
@@ -92,7 +93,7 @@ class FoamMeshTestCase(unittest.TestCase):
 
         foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
         with self.assertRaises(NotImplementedError):
-            foam_mesh.get_edge(self.edge.uid)
+            foam_mesh.get_edge(self.edges[0].uid)
 
     def test_get_face(self):
         """Test get_face method
@@ -116,78 +117,78 @@ class FoamMeshTestCase(unittest.TestCase):
         self.assertEqual(cell.data[CUBA.PRESSURE], cell_f.data[CUBA.PRESSURE])
         self.assertEqual(cell.data[CUBA.VELOCITY], cell_f.data[CUBA.VELOCITY])
 
-    def test_add_point(self):
-        """Test add_point method
+    def test_add_points(self):
+        """Test add_points method
 
         """
 
         foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
         with self.assertRaises(NotImplementedError):
-            foam_mesh.add_point(self.points[4])
+            foam_mesh.add_points(self.points)
 
-    def test_add_edge(self):
-        """Test add_edge method
-
-        """
-
-        foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
-        with self.assertRaises(NotImplementedError):
-            foam_mesh.add_edge(self.edge)
-
-    def test_add_face(self):
-        """Test add_face method
+    def test_add_edges(self):
+        """Test add_edges method
 
         """
 
         foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
         with self.assertRaises(NotImplementedError):
-            foam_mesh.add_face(self.faces[4])
+            foam_mesh.add_edges(self.edges)
 
-    def test_add_cell(self):
-        """Test add_cell method
-
-        """
-
-        foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
-        with self.assertRaises(NotImplementedError):
-            foam_mesh.add_cell(self.cells[0])
-
-    def test_update_point(self):
-        """Test update_point method
+    def test_add_faces(self):
+        """Test add_faces method
 
         """
 
         foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
         with self.assertRaises(NotImplementedError):
-            foam_mesh.update_point(self.points[4])
+            foam_mesh.add_faces(self.faces)
 
-    def test_update_edge(self):
-        """Test update_edge method
-
-        """
-
-        foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
-        with self.assertRaises(NotImplementedError):
-            foam_mesh.update_edge(self.edge)
-
-    def test_update_face(self):
-        """Test update_face method
+    def test_add_cells(self):
+        """Test add_cells method
 
         """
 
         foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
         with self.assertRaises(NotImplementedError):
-            foam_mesh.update_face(self.faces[4])
+            foam_mesh.add_cells(self.cells)
 
-    def test_update_cell(self):
-        """Test update_cell method
+    def test_update_points(self):
+        """Test update_points method
+
+        """
+
+        foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
+        with self.assertRaises(NotImplementedError):
+            foam_mesh.update_points(self.points)
+
+    def test_update_edges(self):
+        """Test update_edges method
+
+        """
+
+        foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
+        with self.assertRaises(NotImplementedError):
+            foam_mesh.update_edges(self.edges)
+
+    def test_update_faces(self):
+        """Test update_faces method
+
+        """
+
+        foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
+        with self.assertRaises(NotImplementedError):
+            foam_mesh.update_faces(self.faces)
+
+    def test_update_cells(self):
+        """Test update_cells method
 
         """
 
         foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
         cell = self.cells[0]
         cell.data[CUBA.VELOCITY] = (2, 1, 3)
-        foam_mesh.update_cell(cell)
+        foam_mesh.update_cells(self.cells)
         cell_f = foam_mesh.get_cell(cell.uid)
         self.assertIsInstance(cell_f.data, DataContainer)
         self.assertEqual(cell.data, cell_f.data)
@@ -195,7 +196,7 @@ class FoamMeshTestCase(unittest.TestCase):
         cell.points = [self.points[1].uid, self.points[2].uid,
                        self.points[3].uid]
         with self.assertRaises(Warning):
-            foam_mesh.update_cell(cell)
+            foam_mesh.update_cells(self.cells)
 
     def test_iter_points(self):
         """Test iter_points method
@@ -251,6 +252,29 @@ class FoamMeshTestCase(unittest.TestCase):
 
         foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
         self.assertTrue(foam_mesh.has_cells())
+
+    def test_count_of(self):
+        """Test count_of method
+
+        """
+
+        foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
+
+        item_type = CUDSItem.POINT
+        self.assertEqual(foam_mesh.count_of(item_type),
+                         self.mesh.count_of(item_type))
+
+        item_type = CUDSItem.EDGE
+        with self.assertRaises(ValueError):
+            foam_mesh.count_of(item_type)
+
+        item_type = CUDSItem.FACE
+        self.assertEqual(foam_mesh.count_of(item_type),
+                         self.mesh.count_of(item_type))
+
+        item_type = CUDSItem.CELL
+        self.assertEqual(foam_mesh.count_of(item_type),
+                         self.mesh.count_of(item_type))
 
     def test_write(self):
         """Test write method
