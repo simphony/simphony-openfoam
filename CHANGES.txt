@@ -1,6 +1,12 @@
 Simphony-OpenFOAM CHANGELOG
 ======================
 
+Release 0.1.5
+-------------
+
+* Wrapper compatibility to common-0.2.0 (#51)
+* Unittest data generation on the fly (#25)
+
 Release 0.1.4
 -------------
 
