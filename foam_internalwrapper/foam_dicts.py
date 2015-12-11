@@ -202,13 +202,14 @@ def modifyFields(mesh, BC):
         p_values[mesh._uuidToFoamLabel[cell.uid]] = \
             cell.data[CUBA.PRESSURE]
         U_values[mesh._uuidToFoamLabel[cell.uid]] = \
-            cell.data[CUBA.VELOCITY]
+            list(cell.data[CUBA.VELOCITY])
     foamface.setAllCellData(mesh.name, "p", p_values)
     foamface.setAllCellVectorData(mesh.name, "U", U_values)
 
 #       Refresh boundary conditions
     velocityBCs = BC[CUBA.VELOCITY]
     myDict = ""
+
     for boundary in velocityBCs:
         myDict = myDict + str(boundary) + "\n{\n"
         if velocityBCs[boundary] == "zeroGradient":

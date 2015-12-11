@@ -28,6 +28,7 @@ License
 #ifndef simphonyInterface_H
 #define simphonyInterface_H
 
+#include "time/TimeMod.H"
 #include "fvSchemes/fvSchemes.H"
 #include "solution/solution.H"
 #include "fvCFD.H"

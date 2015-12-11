@@ -920,11 +920,9 @@ void foam_modifyNumerics(std::string name, std::string fvSch, std::string fvSol,
     IStringStream fvSolIS(fvSol.c_str());
     IStringStream cDIS(cD.c_str());
 
-
     dictionary& fvSchemesDict = const_cast<dictionary&>(mesh.schemesDict());
     dictionary& fvSolutionDict = const_cast<dictionary&>(mesh.solutionDict());
     dictionary& controlDict = const_cast<dictionary&>(runTimes[name]->controlDict());
-
 
     fvSchemesDict.read
     (
@@ -944,6 +942,9 @@ void foam_modifyNumerics(std::string name, std::string fvSch, std::string fvSol,
     (
         cDIS()
     );
+
+    TimeMod* t = (TimeMod*)(runTimes[name]);
+    t->update();
 
 }
 

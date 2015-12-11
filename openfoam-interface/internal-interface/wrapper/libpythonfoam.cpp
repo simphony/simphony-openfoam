@@ -877,10 +877,10 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
       std::vector<double> vals(ncells*3);
 
       for (int i=0;i<ncells;i++) {
-	strObj = PyList_GetItem(values, i);
-	vals[i*3] = PyFloat_AsDouble(PyList_GetItem(strObj, 0));
-	vals[i*3+1] = PyFloat_AsDouble(PyList_GetItem(strObj, 1));
-	vals[i*3+2] = PyFloat_AsDouble(PyList_GetItem(strObj, 2));
+        strObj = PyList_GetItem(values, i);
+        vals[i*3] = PyFloat_AsDouble(PyList_GetItem(strObj, 0));
+        vals[i*3+1] = PyFloat_AsDouble(PyList_GetItem(strObj, 1));
+        vals[i*3+2] = PyFloat_AsDouble(PyList_GetItem(strObj, 2));
       }
       foam_setCellVectorData(std::string(name), std::string(dataname),vals);
       return Py_BuildValue("");
