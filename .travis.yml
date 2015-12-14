@@ -4,12 +4,12 @@ python:
 virtualenv:
   system_site_packages: false
 before_install:
-  - sudo sh -c "echo deb http://www.openfoam.org/download/ubuntu precise main > /etc/apt/sources.list.d/openfoam.list"
+  - sudo add-apt-repository http://www.openfoam.org/download/ubuntu
   - sudo apt-get update -qq
-  - sudo apt-get install -y --force-yes openfoam222
+  - sudo apt-get install -y --force-yes openfoam240
   - sudo apt-get install libhdf5-serial-dev
   - pip install numpy # pyfoam requires numpy
-  - . /opt/openfoam222/etc/bashrc
+  - . /opt/openfoam240/etc/bashrc
   - ./install_external.sh
   # (1) Install cython and numexpr externally because the requirements does
   #     not work with them

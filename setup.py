@@ -28,7 +28,7 @@ class CleanCommand(Command):
 class InstallCommand(install):
     """Customized setuptools install command - prints a friendly greeting."""
     def run(self):
-        os.system("./install_foam_interface.sh")
+        #os.system("./install_foam_interface.sh")
         install.run(self)
 
 

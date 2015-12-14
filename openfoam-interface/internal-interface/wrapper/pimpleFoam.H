@@ -117,18 +117,21 @@ while (runTime.run())
         // --- Pressure corrector loop
         while (pimple.correct())
         {
+            surfaceScalarField rAUf("rAUf", fvc::interpolate(rAU));
+            
             volVectorField HbyA("HbyA", U);
             HbyA = rAU*UEqn().H();
-
+            
             if (pimple.nCorrPISO() <= 1)
             {
                 UEqn.clear();
             }
+
             surfaceScalarField phiHbyA
             (
                 "phiHbyA",
                 (fvc::interpolate(HbyA) & mesh.Sf())
-              + fvc::ddtPhiCorr(rAU, U, phi)
+              + rAUf*fvc::ddtCorr(U, phi)
             );
 
             adjustPhi(phiHbyA, U, p);
@@ -141,13 +144,13 @@ while (runTime.run())
                 // Pressure corrector
                 fvScalarMatrix pEqn
                 (
-                    fvm::laplacian(rAU, p) == fvc::div(phiHbyA)
+                    fvm::laplacian(rAUf, p) == fvc::div(phiHbyA)
                 );
-
+            
                 pEqn.setReference(pRefCell, pRefValue);
-
+            
                 pEqn.solve(mesh.solver(p.select(pimple.finalInnerIter())));
-
+            
                 if (pimple.finalNonOrthogonalIter())
                 {
                     phi = phiHbyA - pEqn.flux();
@@ -158,9 +161,11 @@ while (runTime.run())
 
             // Explicitly relax pressure for momentum corrector
             p.relax();
-
+            
             U = HbyA - rAU*fvc::grad(p);
             U.correctBoundaryConditions();
+
+
             //fvOptions.correct(U);
         }
 

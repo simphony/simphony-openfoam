@@ -9,7 +9,8 @@ from simphony.engine import openfoam_file_io
 wrapper = openfoam_internal.FoamInternalWrapper()
 CUBAExt = openfoam_internal.CUBAExt
 
-path = '.'
+import os
+path = os.path.abspath(os.curdir)
 name = 'poiseuille'
 
 wrapper.CM[CUBA.NAME] = name

@@ -147,7 +147,8 @@ class FoamInternalWrapperTestCase(unittest.TestCase):
 class FoamInternalWrapperRunTestCase(unittest.TestCase):
     def setUp(self):
         wrapper = FoamInternalWrapper()
-        path = "test_path"
+        import os
+        path = os.path.abspath(os.curdir)+"test_path"
         name = "simplemesh"
         wrapper.CM[CUBA.NAME] = name
         wrapper.CM_extensions[CUBAExt.GE] = (CUBAExt.INCOMPRESSIBLE,

@@ -40,6 +40,7 @@ SourceFiles
 #ifndef singlePhaseTransportModel_H
 #define singlePhaseTransportModel_H
 
+//#include "incompressible/transportModel/transportModel.H"
 #include "../transportModel/transportModel.H"
 #include "IOdictionary.H"
 #include "autoPtr.H"
@@ -57,6 +58,7 @@ class viscosityModel;
 
 class singlePhaseTransportModel
 :
+    public IOdictionary,
     public transportModel
 {
     // Private Data
@@ -88,7 +90,7 @@ public:
         (
             const volVectorField& U,
             const surfaceScalarField& phi,
-		    Istream& Is
+		 Istream& Is
         );
 
 
@@ -99,10 +101,13 @@ public:
     // Member Functions
 
         //- Return the laminar viscosity
-        tmp<volScalarField> nu() const;
+        virtual tmp<volScalarField> nu() const;
+
+        //- Return the laminar viscosity for patch
+        virtual tmp<scalarField> nu(const label patchi) const;
 
         //- Correct the laminar viscosity
-        void correct();
+        virtual void correct();
 
         //- Read transportProperties dictionary
         virtual bool read();
