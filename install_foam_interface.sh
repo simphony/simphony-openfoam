@@ -5,9 +5,13 @@ export FOAM_MPI_INCLUDE=$WM_THIRD_PARTY_DIR/platforms/$WM_ARCH$WM_COMPILER/$FOAM
 
 pushd .
 cd openfoam-interface/internal-interface/libs
-./Allwmake
+#./Allwmake
 cd ../wrapper
+wclean mixtureViscosityModels
+wclean relativeVelocityModels
 wclean
+wmake libso mixtureViscosityModels
+wmake libso relativeVelocityModels
 wmake libso
 python setup.py install
 popd

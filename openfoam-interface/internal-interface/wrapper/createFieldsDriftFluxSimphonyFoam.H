@@ -25,20 +25,19 @@ License
 
 
 \*---------------------------------------------------------------------------*/
-
-Info<< "Creating field p\n" << endl;
+Info<< "Creating field p_rgh\n" << endl;
 new volScalarField
 (
     IOobject
     (
-        "p",
+        "p_rgh",
         runTimes[name]->timeName(),
         mesh,
         IOobject::NO_READ,
         IOobject::NO_WRITE
     ),
     mesh,
-    dimensionedScalar("p", dimensionSet(0, 2, -2, 0, 0, 0, 0), 0)
+    dimensionedScalar("p", dimensionSet(1, -1, -2, 0, 0, 0, 0), 0)
 );
 
 Info<< "Creating field U\n" << endl;
@@ -56,6 +55,21 @@ volVectorField* U = new volVectorField
     dimensionedVector("U", dimensionSet(0, 1, -1, 0, 0, 0, 0), vector::zero)
 );
 
+Info<< "Creating field Sigma_mu" << endl;
+new volTensorField
+(
+    IOobject
+    (
+        "Sigma_mu",
+        runTimes[name]->timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    mesh,
+    dimensionedTensor("Sigma_mu", dimensionSet(1, -1, -2, 0, 0, 0, 0), tensor::zero)
+);
+
 Info<< "Calculating face flux field phi\n" << endl;
 
 new surfaceScalarField
@@ -71,3 +85,17 @@ new surfaceScalarField
     linearInterpolate(*U) & mesh.Sf()
 );
 
+Info<< "Creating field alpha1\n" << endl;
+new volScalarField
+(
+    IOobject
+    (
+        "alpha1",
+        runTimes[name]->timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    mesh,
+    dimensionedScalar("alpha1", dimensionSet(0, 0, 0, 0, 0, 0, 0), 0)
+);

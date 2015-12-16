@@ -12,6 +12,8 @@ module = Extension('simphonyfoaminterface',
                                  openfoam_src_dir +
                                  '/OpenFOAM/lnInclude',
                                  openfoam_src_dir +
+                                 '/meshTools/lnInclude',
+                                 openfoam_src_dir +
                                  '/transportModels',
                                  openfoam_src_dir +
                                  '/transportModels/incompressible \

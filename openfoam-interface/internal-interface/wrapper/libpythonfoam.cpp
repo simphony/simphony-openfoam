@@ -1179,13 +1179,14 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
      char *name;
      int nproc;
      double time;
+     char *solver;
 
-     if (!PyArg_ParseTuple(args,"si",&name,&nproc)) {
+     if (!PyArg_ParseTuple(args,"sis",&name,&nproc,&solver)) {
       PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
       return NULL;
     }
     try {
-      time = foam_run(std::string(name),nproc);
+      time = foam_run(std::string(name),nproc,std::string(solver));
       return Py_BuildValue("d",time);
     }
     catch (Foam::error& fErr)

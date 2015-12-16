@@ -35,9 +35,9 @@ Info<< "\nStarting time loop\n" << endl;
 
 std::string pName = "p";
 std::string UName = "U";
-volScalarField& p = find_Data<scalar>(runTime,pName);
-volVectorField& U = find_Data<vector>(runTime,UName);
-surfaceScalarField& phi = const_cast<surfaceScalarField&>(runTime.db().lookupObject<surfaceScalarField>(word("phi"))); 
+volScalarField& p = find_Data<scalar>(mesh,pName);
+volVectorField& U = find_Data<vector>(mesh,UName);
+surfaceScalarField& phi = const_cast<surfaceScalarField&>(mesh.lookupObject<surfaceScalarField>(word("phi"))); 
 
 
 label pRefCell = 0;

@@ -1,5 +1,7 @@
 simphonyInterface.C
+twoPhaseMixture/twoPhaseMixture.C
 singlePhaseTransportModel/singlePhaseTransportModel.C
+incompressibleTwoPhaseInteractingMixture/incompressibleTwoPhaseInteractingMixture.C
 fvSchemes/fvSchemes.C
 solution/solution.C
 time/TimeMod.C

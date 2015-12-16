@@ -158,8 +158,11 @@ class FoamMesh(ABCMesh):
 
             patchTypes = []
             print "We choose patch types between empty or patch"
-            if CUBA.PRESSURE in BC.keys():
-                pressureBCs = BC[CUBA.PRESSURE]
+            if CUBA.PRESSURE in BC.keys() or CUBA.CONCENTRATION in BC.keys():
+                if CUBA.PRESSURE in BC.keys():
+                    pressureBCs = BC[CUBA.PRESSURE]
+                else:
+                    pressureBCs = BC[CUBA.CONCENTRATION]
                 for boundary in patchNameFacesMap:
                     if pressureBCs[boundary] == "empty":
                         patchTypes.append("empty")
@@ -175,7 +178,11 @@ class FoamMesh(ABCMesh):
                 error_str += 'Mesh has not boundary face definitions.'
                 raise ValueError(error_str.format(mesh.name))
 
-            mapContent = dictionaryMaps['pimpleFoam']
+            solver = 'pimpleFoam'
+            if CUBA.VOLUME_FRACTION in BC.keys():
+                solver = 'driftFluxSimphonyFoam'
+
+            mapContent = dictionaryMaps[solver]
             controlDict = parse_map(mapContent['controlDict'])
 
             # init objectRegistry and map to mesh name
@@ -185,7 +192,7 @@ class FoamMesh(ABCMesh):
             foamface.addMesh(name, pointCoordinates, cellPoints,
                              facePoints, patchNames, patchFaces, patchTypes)
 
-            foamface.createDefaultFields(name, 'pimpleFoam')
+            foamface.createDefaultFields(name, solver)
 
             # write possible cell data to time directory
             self.update_cells(mesh.iter_cells())
@@ -347,6 +354,11 @@ class FoamMesh(ABCMesh):
                         foamface.getCellData(self.name,
                                              label,
                                              dataName)
+                elif dataName == "p_rgh":
+                    cell.data[CUBA.CONCENTRATION] = \
+                        foamface.getCellData(self.name,
+                                             label,
+                                             dataName)
                 elif dataName == "U":
                     cell.data[CUBA.VELOCITY] = \
                         tuple(foamface.getCellVectorData(self.name,
@@ -418,6 +430,7 @@ class FoamMesh(ABCMesh):
 
         dataNames = foamface.getCellDataNames(self.name)
         dataNames += foamface.getCellVectorDataNames(self.name)
+        
         # if cell data does not exists in the mesh at all, initialize it
         newDataNames = []
         dataNameKeyMap = {}

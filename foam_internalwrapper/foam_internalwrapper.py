@@ -50,6 +50,15 @@ class FoamInternalWrapper(ABCModelingEngine):
         if not self._meshes:
             error_str = "Meshes not added to wrapper. Use add_mesh method"
             raise ValueError(error_str)
+            
+        GE = self.CM_extensions[CUBAExt.GE]
+        if CUBAExt.MIXTURE in GE and CUBAExt.INCOMPRESSIBLE in GE and CUBAExt.LAMINAR_MODEL in GE:
+            solver = "driftFluxSimphonyFoam"
+        elif CUBAExt.INCOMPRESSIBLE in GE:
+            solver = "pimpleFoam"
+        else:
+            error_str = "GE does not define supported solver: GE = {}"
+            raise NotImplementedError(error_str.format(GE))
 
         name = self.CM[CUBA.NAME]
 
@@ -60,10 +69,10 @@ class FoamInternalWrapper(ABCModelingEngine):
         mesh = self._meshes[name]
 
 #       a) Modify fvSchemes and fvSolution
-        modifyNumerics(mesh, self.SP)
+        modifyNumerics(mesh, self.SP, solver)
 
 #       b) Set boundary condition and Fields
-        modifyFields(mesh, self.BC)
+        modifyFields(mesh, self.BC, solver)
 
 #       c) Call solver
         if CUBAExt.NUMBER_OF_CORES in self.CM_extensions:
@@ -71,7 +80,7 @@ class FoamInternalWrapper(ABCModelingEngine):
         else:
             ncores = 1
 
-        mesh._time = foamface.run(mesh.name, ncores)
+        mesh._time = foamface.run(mesh.name, ncores, solver)
 
     def add_dataset(self, mesh):
         """Add a mesh to the OpenFoam modeling engine.

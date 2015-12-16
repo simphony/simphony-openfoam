@@ -28,12 +28,12 @@ License
 #ifndef simphonyInterface_H
 #define simphonyInterface_H
 
-#include "time/TimeMod.H"
 #include "fvSchemes/fvSchemes.H"
 #include "solution/solution.H"
 #include "fvCFD.H"
 #include "simpleControl.H"
 #include "pimpleControl.H"
+#include "time/TimeMod.H"
 
 #include<vector>
 #include<string>
@@ -122,12 +122,12 @@ void foam_modifyNumerics(std::string name, std::string fvSch, std::string fvSol,
 //modifying boundary conditions
 void foam_setBC(std::string name, std::string fieldname, std::string dict);
 //running the time steps
-double foam_run(std::string name, int nproc);
+double foam_run(std::string name, int nproc, std::string solver);
 
 template<class Type> 
-GeometricField<Type, fvPatchField, volMesh> & find_Data(Time& runTime,std::string& dataname)
+GeometricField<Type, fvPatchField, volMesh> & find_Data(fvMesh& mesh,std::string& dataname)
 {
-  return const_cast< GeometricField < Type, fvPatchField, volMesh > &>(runTime.db().lookupObject< GeometricField <Type, fvPatchField, volMesh> >(word(dataname))); 
+  return const_cast< GeometricField < Type, fvPatchField, volMesh > &>(mesh.lookupObject< GeometricField <Type, fvPatchField, volMesh> >(word(dataname))); 
 }
 
 

@@ -4,6 +4,8 @@ sinclude $(RULES)/mplib$(WM_MPLIB)
 EXE_INC = \
     $(PFLAGS) $(PINC) \
     -I$(LIB_SRC)/finiteVolume/lnInclude \
+    -I./mixtureViscosityModels/lnInclude \
+    -I./relativeVelocityModels/lnInclude \
     -I$(LIB_SRC)/transportModels \
     -I$(LIB_SRC)/transportModels/incompressible/lnInclude \
     -I$(LIB_SRC)/turbulenceModels \
@@ -13,6 +15,8 @@ EXE_INC = \
     -I../libs/incompressibleTurbulenceModel/RAS/lnInclude
 
 LIB_LIBS = \
+    -ldriftFluxTransportModels \
+    -ldriftFluxRelativeVelocityModels \
     -lincompressibleTurbulenceModelSimphony \
     -lincompressibleRASModelsSimphony \
     -lfiniteVolume \

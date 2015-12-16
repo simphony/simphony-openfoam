@@ -18,6 +18,8 @@ pushd .
 cd openfoam-interface/internal-interface/wrapper
 python setup.py clean
 wclean
+wclean mixtureViscosityModels
+wclean relativeVelocityModels
 rm -rf build
 popd
 find . -iname "*~" | xargs rm -f

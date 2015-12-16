@@ -49,12 +49,6 @@ class TimeMod
     
 public:
 
-    //TypeName("time");
-
-    //- The default control dictionary name (normally "controlDict")
-    static word controlDictName;
-
-
     // Constructors
 
         //- Construct given name of dictionary to read and argument list
@@ -65,7 +59,8 @@ public:
             const word& systemName = "system",
             const word& constantName = "constant"
         ):
-        Time(name,args,systemName,constantName){};
+        Time(name,args,systemName,constantName)
+        {}
 
         //- Construct given name of dictionary to read, rootPath and casePath
         TimeMod
@@ -77,7 +72,8 @@ public:
             const word& constantName = "constant",
             const bool enableFunctionObjects = true
         ):
-        Time(name,rootPath,caseName,systemName,constantName,enableFunctionObjects){};
+        Time(name,rootPath,caseName,systemName,constantName,enableFunctionObjects)
+        {}
 
         //- Construct given dictionary, rootPath and casePath
         TimeMod
@@ -89,7 +85,10 @@ public:
             const word& constantName = "constant",
             const bool enableFunctionObjects = true
         ):
-        Time(dict,rootPath,caseName,systemName,constantName,enableFunctionObjects){};
+        Time(dict,rootPath,caseName,systemName,constantName,enableFunctionObjects)
+        {
+            Info<<"Called parent constructor"<<endl;
+        }
 
         //- Construct given endTime, rootPath and casePath
         TimeMod
@@ -100,7 +99,8 @@ public:
             const word& constantName = "constant",
             const bool enableFunctionObjects = true
         ):
-        Time(rootPath,caseName,systemName,constantName,enableFunctionObjects){};
+        Time(rootPath,caseName,systemName,constantName,enableFunctionObjects)
+        {}
 
 
     //- Destructor
