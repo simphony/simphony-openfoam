@@ -15,7 +15,7 @@ path = os.path.abspath(os.curdir)
 name = 'dahl'
 
 wrapper.CM[CUBA.NAME] = name
-                                     
+
 wrapper.CM_extensions[CUBAExt.GE] = (CUBAExt.INCOMPRESSIBLE,
                                      CUBAExt.LAMINAR_MODEL,
                                      CUBAExt.MIXTURE)
@@ -27,11 +27,12 @@ wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 5000
 
 wrapper.SP_extensions[CUBAExt.PHASE_LIST] = ('sludge', 'water')
 wrapper.SP[CUBA.DENSITY] = {'sludge': 1996.0, 'water': 996}
-wrapper.SP[CUBA.DYNAMIC_VISCOSITY] = {'sludge': 'BinghamPlastic', 'water': 0.0017}
+wrapper.SP[CUBA.DYNAMIC_VISCOSITY] = {'sludge': 'BinghamPlastic',
+                                      'water': 0.0017}
 
 # this is just an example. It is not enough for general setting of BC's
 wrapper.BC[CUBA.VELOCITY] = {'boundary0': (0, 0, 0),
-                             'boundary1': 'zeroGradient', #pressureInletOutletVelocity uniform (0 0 0);
+                             'boundary1': ('pressureIOVelocity', (0, 0, 0)),
                              'boundary2': (0, 0, 0),
                              'boundary3': (0, 0, 0),
                              'boundary4': 'slip',
@@ -48,17 +49,17 @@ wrapper.BC[CUBA.VOLUME_FRACTION] = {'boundary0': 0.001,
                                     'boundary3': 'zeroGradient',
                                     'boundary4': 'zeroGradient',
                                     'boundary5': 'empty'}
-                                    
+
 wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 10
 
-#creating the mesh
+# creating the mesh
 file_name = 'blockMeshDict'
 case = os.path.join(path, name)
 templateName = 'simpleFoam'
 openfoam_file_io.foam_files.write_default_files(case, templateName, '0', True)
 
 full_name = os.path.join(os.path.join(
-        os.path.join(case, 'constant'), 'polyMesh'), file_name)
+    os.path.join(case, 'constant'), 'polyMesh'), file_name)
 with open(full_name, 'w') as f:
     f.write(dahl_mesh.blockMeshDict)
 

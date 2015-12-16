@@ -50,9 +50,10 @@ class FoamInternalWrapper(ABCModelingEngine):
         if not self._meshes:
             error_str = "Meshes not added to wrapper. Use add_mesh method"
             raise ValueError(error_str)
-            
+
         GE = self.CM_extensions[CUBAExt.GE]
-        if CUBAExt.MIXTURE in GE and CUBAExt.INCOMPRESSIBLE in GE and CUBAExt.LAMINAR_MODEL in GE:
+        if CUBAExt.MIXTURE in GE and CUBAExt.INCOMPRESSIBLE in GE \
+                and CUBAExt.LAMINAR_MODEL in GE:
             solver = "driftFluxSimphonyFoam"
         elif CUBAExt.INCOMPRESSIBLE in GE:
             solver = "pimpleFoam"

@@ -430,7 +430,7 @@ class FoamMesh(ABCMesh):
 
         dataNames = foamface.getCellDataNames(self.name)
         dataNames += foamface.getCellVectorDataNames(self.name)
-        
+
         # if cell data does not exists in the mesh at all, initialize it
         newDataNames = []
         dataNameKeyMap = {}

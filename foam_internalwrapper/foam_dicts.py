@@ -381,7 +381,7 @@ def modifyNumerics(mesh, SP, solver='pimpleFoam'):
 def modifyFields(mesh, BC, solver='pimpleFoam'):
     """ Modifies the internal fields and boundary conditions
     """
-    if solver=='pimpleFoam':
+    if solver == 'pimpleFoam':
         name_pressure = 'p'
         ID_pressure = CUBA.PRESSURE
     elif solver == 'driftFluxSimphonyFoam':
@@ -400,7 +400,7 @@ def modifyFields(mesh, BC, solver='pimpleFoam'):
         if solver == 'driftFluxSimphonyFoam':
             alpha_values[mesh._uuidToFoamLabel[cell.uid]] = \
                 cell.data[CUBA.VOLUME_FRACTION]
-    foamface.setAllCellData(mesh.name, name_pressure , p_values)
+    foamface.setAllCellData(mesh.name, name_pressure, p_values)
     foamface.setAllCellVectorData(mesh.name, "U", U_values)
     if solver == 'driftFluxSimphonyFoam':
         foamface.setAllCellData(mesh.name, "alpha1", alpha_values)
@@ -410,14 +410,21 @@ def modifyFields(mesh, BC, solver='pimpleFoam'):
     myDict = ""
 
     for boundary in velocityBCs:
+        patch = velocityBCs[boundary]
         myDict = myDict + str(boundary) + "\n{\n"
-        if velocityBCs[boundary] == "zeroGradient":
+        if patch == "zeroGradient":
             myDict = myDict + "\t type \t zeroGradient;\n"
             myDict = myDict + "\t value \t uniform (0 0 0);\n"
-        elif velocityBCs[boundary] == "empty":
+        elif patch == "empty":
             myDict = myDict + "\t type \t empty;\n"
-        elif velocityBCs[boundary] == "slip":
+        elif patch == "slip":
             myDict = myDict + "\t type \t slip;\n"
+        elif isinstance(patch, tuple) and patch[0] == "pressureIOVelocity":
+            myDict = myDict + "\t type \t pressureInletOutletVelocity;\n"
+            myDict = myDict + "\t value \t uniform (" \
+                + str(patch[1][0]) + " " \
+                + str(patch[1][1]) + " " \
+                + str(patch[1][2]) + ");\n"
         else:
             myDict = myDict + "\t type \t fixedValue;\n"
             myDict = myDict + "\t value \t uniform (" \
@@ -425,7 +432,7 @@ def modifyFields(mesh, BC, solver='pimpleFoam'):
                             + str(velocityBCs[boundary][1]) + " " \
                             + str(velocityBCs[boundary][2]) + ");\n"
         myDict = myDict + "}\n"
-
+    print myDict
     foamface.setBC(mesh.name, "U", myDict)
 
     pressureBCs = BC[ID_pressure]
@@ -447,9 +454,8 @@ def modifyFields(mesh, BC, solver='pimpleFoam'):
         myDict = myDict + "}\n"
 
     foamface.setBC(mesh.name, name_pressure, myDict)
-    
-    
-    if solver=='driftFluxSimphonyFoam':
+
+    if solver == 'driftFluxSimphonyFoam':
         volumeFractionBCs = BC[CUBA.VOLUME_FRACTION]
         myDict = ""
         for boundary in volumeFractionBCs:
@@ -457,11 +463,13 @@ def modifyFields(mesh, BC, solver='pimpleFoam'):
             if volumeFractionBCs[boundary] == "zeroGradient":
                 myDict = myDict + "\t type \t zeroGradient;\n"
                 myDict = myDict + "\t value \t uniform 0;\n"
-            elif isinstance(volumeFractionBCs[boundary], tuple) and volumeFractionBCs[boundary][0] == "inletOutlet":
-                myDict = myDict + "\t type \t inletOutlet;\n"
-                myDict = myDict + "\t inletValue \t uniform %s;\n"%str(volumeFractionBCs[boundary][1])
+            elif isinstance(volumeFractionBCs[boundary], tuple):
+                if volumeFractionBCs[boundary][0] == "inletOutlet":
+                    myDict = myDict + "\t type \t inletOutlet;\n"
+                    myDict = myDict + "\t inletValue \t uniform %s;\n" % \
+                                      str(volumeFractionBCs[boundary][1])
             elif volumeFractionBCs[boundary] == "empty":
-                 myDict = myDict + "\t type \t empty;\n"
+                myDict = myDict + "\t type \t empty;\n"
             else:
                 myDict = myDict + "\t type \t fixedValue;\n"
                 myDict = myDict + "\t value \t uniform " \
@@ -469,4 +477,3 @@ def modifyFields(mesh, BC, solver='pimpleFoam'):
             myDict = myDict + "}\n"
 
         foamface.setBC(mesh.name, "alpha1", myDict)
-        
