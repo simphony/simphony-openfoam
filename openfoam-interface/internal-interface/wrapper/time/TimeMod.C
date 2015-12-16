@@ -29,7 +29,7 @@ License
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 
-bool Foam::TimeMod::update()
+bool Foam::TimeMod::read()
 {
     Time::readDict();
     return true;

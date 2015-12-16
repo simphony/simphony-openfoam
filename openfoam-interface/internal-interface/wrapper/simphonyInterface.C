@@ -50,7 +50,7 @@ License
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 
-std::map<std::string,Foam::Time *> runTimes;
+std::map<std::string,Foam::Time*> runTimes;
 //std::map<std::string,Foam::fvMesh *> meshes;
 
 
@@ -64,7 +64,7 @@ void foam_init(std::string caseName,std::string cD)
     )());
 
     Foam::Info<< "Create time\n" << Foam::endl;
-    Foam::Time *runTime = new Time(controlDict_, "..", ".");
+    Foam::Time *runTime = new TimeMod(controlDict_);
     runTimes[caseName] = runTime;
 
 }
@@ -943,8 +943,9 @@ void foam_modifyNumerics(std::string name, std::string fvSch, std::string fvSol,
         cDIS()
     );
 
-    TimeMod* t = (TimeMod*)(runTimes[name]);
-    t->update();
+    //TimeMod* t = static_cast<TimeMod*>(runTimes[name]);
+    //t->read();
+    runTimes[name]->read();
 
 }
 
