@@ -3,5 +3,6 @@ singlePhaseTransportModel/singlePhaseTransportModel.C
 transportModel/transportModel.C
 fvSchemes/fvSchemes.C
 solution/solution.C
+time/TimeMod.C
 
 LIB = $(FOAM_USER_LIBBIN)/libfoaminterface

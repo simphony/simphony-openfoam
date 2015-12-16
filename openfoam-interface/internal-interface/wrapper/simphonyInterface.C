@@ -50,7 +50,7 @@ License
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 
-std::map<std::string,Foam::Time *> runTimes;
+std::map<std::string,Foam::Time*> runTimes;
 //std::map<std::string,Foam::fvMesh *> meshes;
 
 
@@ -64,7 +64,7 @@ void foam_init(std::string caseName,std::string cD)
     )());
 
     Foam::Info<< "Create time\n" << Foam::endl;
-    Foam::Time *runTime = new Time(controlDict_, "..", ".");
+    Foam::Time *runTime = new TimeMod(controlDict_);
     runTimes[caseName] = runTime;
 
 }
@@ -920,11 +920,9 @@ void foam_modifyNumerics(std::string name, std::string fvSch, std::string fvSol,
     IStringStream fvSolIS(fvSol.c_str());
     IStringStream cDIS(cD.c_str());
 
-
     dictionary& fvSchemesDict = const_cast<dictionary&>(mesh.schemesDict());
     dictionary& fvSolutionDict = const_cast<dictionary&>(mesh.solutionDict());
     dictionary& controlDict = const_cast<dictionary&>(runTimes[name]->controlDict());
-
 
     fvSchemesDict.read
     (
@@ -944,6 +942,10 @@ void foam_modifyNumerics(std::string name, std::string fvSch, std::string fvSol,
     (
         cDIS()
     );
+
+    //TimeMod* t = static_cast<TimeMod*>(runTimes[name]);
+    //t->read();
+    runTimes[name]->read();
 
 }
 
