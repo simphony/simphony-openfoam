@@ -49,64 +49,18 @@ class TimeMod
     
 public:
 
-    // Constructors
+    //- Construct given dictionary, rootPath and casePath
+    TimeMod
+    (
+        const dictionary& dict
+    ):
+    Time(dict, "..", "."){};
 
-        //- Construct given name of dictionary to read and argument list
-        TimeMod
-        (
-            const word& name,
-            const argList& args,
-            const word& systemName = "system",
-            const word& constantName = "constant"
-        ):
-        Time(name,args,systemName,constantName)
-        {}
-
-        //- Construct given name of dictionary to read, rootPath and casePath
-        TimeMod
-        (
-            const word& name,
-            const fileName& rootPath,
-            const fileName& caseName,
-            const word& systemName = "system",
-            const word& constantName = "constant",
-            const bool enableFunctionObjects = true
-        ):
-        Time(name,rootPath,caseName,systemName,constantName,enableFunctionObjects)
-        {}
-
-        //- Construct given dictionary, rootPath and casePath
-        TimeMod
-        (
-            const dictionary& dict,
-            const fileName& rootPath,
-            const fileName& caseName,
-            const word& systemName = "system",
-            const word& constantName = "constant",
-            const bool enableFunctionObjects = true
-        ):
-        Time(dict,rootPath,caseName,systemName,constantName,enableFunctionObjects)
-        {
-            Info<<"Called parent constructor"<<endl;
-        }
-
-        //- Construct given endTime, rootPath and casePath
-        TimeMod
-        (
-            const fileName& rootPath,
-            const fileName& caseName,
-            const word& systemName = "system",
-            const word& constantName = "constant",
-            const bool enableFunctionObjects = true
-        ):
-        Time(rootPath,caseName,systemName,constantName,enableFunctionObjects)
-        {}
-
-
-    //- Destructor
-    virtual ~TimeMod();
-
-    bool update();
+    /* 
+        This method override the one from the parent class. It allows to update 
+        the controlDict data without needing the file "system/controlDict"
+    */
+    bool read();
 
 };
 

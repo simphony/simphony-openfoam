@@ -69,7 +69,7 @@ void foam_init(std::string caseName,std::string cD)
     )());
 
     Foam::Info<< "Create time\n" << Foam::endl;
-    Foam::Time *runTime = new Foam::Time(controlDict_, "..", ".");
+    Foam::Time *runTime = new Foam::TimeMod(controlDict_);
     runTimes[caseName] = runTime;
 
 }
@@ -951,9 +951,7 @@ void foam_modifyNumerics(std::string name, std::string fvSch, std::string fvSol,
         cDIS()
     );
 
-    TimeMod* t = static_cast<TimeMod*>(runTimes[name]);
-    t->update();
-
+    runTimes[name]->read();
 }
 
 
