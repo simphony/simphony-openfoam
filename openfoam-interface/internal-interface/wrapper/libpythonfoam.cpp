@@ -1118,14 +1118,15 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
     char *fvSch;
     char *fvSol;
     char *cD;
+    char *TP;
  
 
-    if (!PyArg_ParseTuple(args,"ssss",&name,&fvSch,&fvSol,&cD)) {
+    if (!PyArg_ParseTuple(args,"sssss",&name,&fvSch,&fvSol,&cD,&TP)) {
       PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
       return NULL;
     }
     try {
-      foam_modifyNumerics(std::string(name),std::string(fvSch),std::string(fvSol),std::string(cD));
+      foam_modifyNumerics(std::string(name),std::string(fvSch),std::string(fvSol),std::string(cD),std::string(TP));
       return Py_BuildValue("");
     }
     catch (Foam::error& fErr)

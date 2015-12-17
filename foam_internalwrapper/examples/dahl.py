@@ -23,12 +23,11 @@ wrapper.CM_extensions[CUBAExt.GE] = (CUBAExt.INCOMPRESSIBLE,
 wrapper.CM_extensions[CUBAExt.NUMBER_OF_CORES] = 1
 
 wrapper.SP[CUBA.TIME_STEP] = 0.1
-wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 5000
+wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 1
 
 wrapper.SP_extensions[CUBAExt.PHASE_LIST] = ('sludge', 'water')
-wrapper.SP[CUBA.DENSITY] = {'sludge': 1996.0, 'water': 996}
-wrapper.SP[CUBA.DYNAMIC_VISCOSITY] = {'sludge': 'BinghamPlastic',
-                                      'water': 0.0017}
+wrapper.SP[CUBA.DENSITY] = {'sludge': 1900.0, 'water': 1000.0}
+wrapper.SP[CUBA.DYNAMIC_VISCOSITY] = {'sludge': 0.01, 'water': 1e-3}
 
 # this is just an example. It is not enough for general setting of BC's
 wrapper.BC[CUBA.VELOCITY] = {'boundary0': (0, 0, 0),

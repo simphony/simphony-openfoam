@@ -70,7 +70,7 @@ class FoamInternalWrapper(ABCModelingEngine):
         mesh = self._meshes[name]
 
 #       a) Modify fvSchemes and fvSolution
-        modifyNumerics(mesh, self.SP, solver)
+        modifyNumerics(mesh, self.SP, self.SP_extensions, solver)
 
 #       b) Set boundary condition and Fields
         modifyFields(mesh, self.BC, solver)

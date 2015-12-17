@@ -6,6 +6,7 @@ Managment of OpenFOAM dicts and Fields
 
 import simphonyfoaminterface as foamface
 from simphony.core.cuba import CUBA
+from cuba_extension import CUBAExt
 
 dictionaryMaps = \
     {'pimpleFoam':
@@ -48,7 +49,23 @@ dictionaryMaps = \
              'writePrecision': '6',
              'writeCompression': 'no',
              'timeFormat': 'general',
-             'runTimeModifiable': 'yes'}}}
+             'runTimeModifiable': 'yes'},
+         'transportProperties':
+            {'phases': '(heavy light)',
+             'heavy':
+                 {'transportModel': 'dummyViscosity',
+                  'nu': '1e-4',
+                  'rho': '1996'},
+              'light':
+                 {'transportModel': 'Newtonian',
+                  'nu': '1.7871e-06',
+                  'rho': '996'},
+              'relativeVelocityModel': 'simple',
+              'simpleCoeffs':
+                  {'V0': '(0 -0.002198 0)',
+                   'a': '285.84',
+                   'a1': '0.1',
+                   'residualAlpha': '0'}}}}
 
 dictionaryTemplates = {'pimpleFoam':
                        {'transportProperties':
@@ -176,24 +193,12 @@ fluxRequired
                        {'transportProperties':
                         """
 phases (heavy light);
-
+    
 heavy
 {
-    transportModel  BinghamPlastic;
-
-    "(plastic|BinghamPlastic)Coeffs"
-    {
-        coeff       0.00023143;
-        exponent    179.26;
-
-        BinghamCoeff    0.0005966;
-        BinghamExponent 1050.8;
-        BinghamOffset   0;
-
-        muMax       10;
-    }
-
-    rho         1996;
+    transportModel  dummyViscosity;
+    nu              1e-04;
+    rho             1996;
 }
 
 light
@@ -350,12 +355,18 @@ def parse_map(mapContent):
     """
     result = ""
     for i, j in mapContent.iteritems():
-        result += "%s\t%s; \n" % (i, j)
+        if isinstance(j, dict):
+            result += "%s{\n" % i
+            for k, l in j.iteritems():
+                result += "%s\t%s; \n" % (k, l)
+            result += "}\n"
+        else:
+            result += "%s\t%s; \n" % (i, j)
 
     return result
 
 
-def modifyNumerics(mesh, SP, solver='pimpleFoam'):
+def modifyNumerics(mesh, SP, SPExt, solver='pimpleFoam'):
     """ Modifies the numerical parameters of the simulation
     """
     fileContent = dictionaryTemplates[solver]
@@ -363,6 +374,7 @@ def modifyNumerics(mesh, SP, solver='pimpleFoam'):
 
     fvSchemesDict = fileContent['fvSchemes']
     fvSolutionDict = fileContent['fvSolution']
+    transportPropertiesDict = fileContent['transportProperties']
 
     nOfTimeSteps = SP[CUBA.NUMBER_OF_TIME_STEPS]
     deltaT = SP[CUBA.TIME_STEP]
@@ -374,8 +386,27 @@ def modifyNumerics(mesh, SP, solver='pimpleFoam'):
 
     controlDict = parse_map(mapContent['controlDict'])
 
+    if solver == 'pimpleFoam':
+        mapContent['transportProperties']['nu nu     [ 0 2 -1 0 0 0 0 ]'] = \
+            SP[CUBA.DYNAMIC_VISCOSITY]/SP[CUBA.DENSITY]
+        transportPropertiesDict = parse_map(mapContent['transportProperties'])
+    elif solver == 'driftFluxSimphonyFoam':
+        density = SP[CUBA.DENSITY]
+        viscosity = SP[CUBA.DYNAMIC_VISCOSITY]
+        mapContent['transportProperties']['heavy']['nu'] = \
+            viscosity[SPExt[CUBAExt.PHASE_LIST][0]] / \
+            density[SPExt[CUBAExt.PHASE_LIST][0]]
+        mapContent['transportProperties']['heavy']['rho'] = \
+            density[SPExt[CUBAExt.PHASE_LIST][0]]
+        mapContent['transportProperties']['light']['nu'] = \
+            viscosity[SPExt[CUBAExt.PHASE_LIST][1]] / \
+            density[SPExt[CUBAExt.PHASE_LIST][1]]
+        mapContent['transportProperties']['light']['rho'] = \
+            density[SPExt[CUBAExt.PHASE_LIST][1]]
+        transportPropertiesDict = parse_map(mapContent['transportProperties'])
+
     foamface.modifyNumerics(mesh.name, fvSchemesDict, fvSolutionDict,
-                            controlDict)
+                            controlDict, transportPropertiesDict)
 
 
 def modifyFields(mesh, BC, solver='pimpleFoam'):
@@ -432,7 +463,7 @@ def modifyFields(mesh, BC, solver='pimpleFoam'):
                             + str(velocityBCs[boundary][1]) + " " \
                             + str(velocityBCs[boundary][2]) + ");\n"
         myDict = myDict + "}\n"
-    print myDict
+
     foamface.setBC(mesh.name, "U", myDict)
 
     pressureBCs = BC[ID_pressure]

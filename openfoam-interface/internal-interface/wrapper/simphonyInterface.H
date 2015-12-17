@@ -118,7 +118,7 @@ void foam_setMesh(std::string name);
 // create default files
 void foam_createDefaultFields(std::string name, std::string solver);
 // modifying numerics fvSolution and fvSchemes
-void foam_modifyNumerics(std::string name, std::string fvSch, std::string fvSol, std::string cD);
+void foam_modifyNumerics(std::string name, std::string fvSch, std::string fvSol, std::string cD, std::string TP);
 //modifying boundary conditions
 void foam_setBC(std::string name, std::string fieldname, std::string dict);
 //running the time steps

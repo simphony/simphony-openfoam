@@ -99,3 +99,43 @@ new volScalarField
     mesh,
     dimensionedScalar("alpha1", dimensionSet(0, 0, 0, 0, 0, 0, 0), 0)
 );
+
+
+Info<< "Creating transportProperties\n" << endl;
+IStringStream TP
+    (
+    "phases (heavy light);\n"
+    "heavy\n"
+    "{\n"
+    "    transportModel  dummyViscosity;\n"
+    "    nu              1e-04;\n"
+    "    rho             1996;\n"
+    "}\n"
+    "light\n"
+    "{\n"
+    "    transportModel  Newtonian;\n"
+    "    nu              1.7871e-06;\n"
+    "    rho             996;\n"
+    "}\n"
+    "relativeVelocityModel simple;\n"
+    "\"(simple|general)Coeffs\"\n"
+    "{\n"
+    "    V0              (0 -0.002198 0);\n"
+    "    a               285.84;\n"
+    "    a1              0.1;\n"
+    "    residualAlpha   0;\n"
+    "}\n"
+    );
+
+new IOdictionary
+(
+    IOobject
+    (
+        "transportProperties",
+        runTimes[name]->timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    TP()
+);

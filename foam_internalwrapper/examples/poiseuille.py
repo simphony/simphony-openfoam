@@ -21,7 +21,9 @@ wrapper.CM_extensions[CUBAExt.GE] = (CUBAExt.INCOMPRESSIBLE,
 wrapper.CM_extensions[CUBAExt.NUMBER_OF_CORES] = 1
 
 wrapper.SP[CUBA.TIME_STEP] = 0.001
-wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 100
+wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 1
+wrapper.SP[CUBA.DENSITY] = 1.0
+wrapper.SP[CUBA.DYNAMIC_VISCOSITY] = 0.001
 
 # this is just an example. It is not enough for general setting of BC's
 wrapper.BC[CUBA.VELOCITY] = {'boundary0': (0, 0, 0),

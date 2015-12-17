@@ -1,12 +1,13 @@
 /*---------------------------------------------------------------------------*\
-  =========                 |
-  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2014 OpenFOAM Foundation
-     \\/     M anipulation  |
+=========                 |
+\\      /  F ield         | Unsupported Contributions for OpenFOAM
+ \\    /   O peration     |
+  \\  /    A nd           | Copyright (C) 2015 SimPhoNy -project
+   \\/     M anipulation  |
 -------------------------------------------------------------------------------
+
 License
-    This file is part of OpenFOAM.
+    This file is a derivative work of OpenFOAM.
 
     OpenFOAM is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
@@ -182,6 +183,70 @@ incompressibleTwoPhaseInteractingMixture
     correct();
 }
 
+Foam::incompressibleTwoPhaseInteractingMixture::
+incompressibleTwoPhaseInteractingMixture
+(
+    const volVectorField& U,
+    const surfaceScalarField& phi,
+    IOdictionary& dict
+)
+:
+    IOdictionary
+    (
+        dict
+    ),
+    twoPhaseMixture(U.mesh(), *this, true),
+
+    muModel_
+    (
+        mixtureViscosityModel::New
+        (
+            "mu",
+            subDict(phase1Name_),
+            U,
+            phi
+        )
+    ),
+
+    nucModel_
+    (
+        viscosityModel::New
+        (
+            "nuc",
+            subDict(phase2Name_),
+            U,
+            phi
+        )
+    ),
+
+    rhod_("rho", dimDensity, muModel_->viscosityProperties().lookup("rho")),
+    rhoc_("rho", dimDensity, nucModel_->viscosityProperties().lookup("rho")),
+    dd_
+    (
+        "d",
+        dimLength,
+        muModel_->viscosityProperties().lookupOrDefault("d", 0.0)
+    ),
+    alphaMax_(muModel_->viscosityProperties().lookupOrDefault("alphaMax", 1.0)),
+
+    U_(U),
+    phi_(phi),
+
+    mu_
+    (
+        IOobject
+        (
+            "mu",
+            U_.time().timeName(),
+            U_.db()
+        ),
+        U_.mesh(),
+        dimensionedScalar("mu", dimensionSet(1, -1, -1, 0, 0), 0),
+        calculatedFvPatchScalarField::typeName
+    )
+{
+    correct();
+}
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
 bool Foam::incompressibleTwoPhaseInteractingMixture::read()

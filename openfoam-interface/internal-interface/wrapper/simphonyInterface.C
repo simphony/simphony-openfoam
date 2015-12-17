@@ -919,7 +919,7 @@ void foam_createDefaultFields(std::string name, std::string solver)
     return;
 }
 
-void foam_modifyNumerics(std::string name, std::string fvSch, std::string fvSol, std::string cD)
+void foam_modifyNumerics(std::string name, std::string fvSch, std::string fvSol, std::string cD, std::string TP)
 {
     fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
     runTimes[name]->setTime(0.0,0); // restarting times
@@ -927,6 +927,7 @@ void foam_modifyNumerics(std::string name, std::string fvSch, std::string fvSol,
     IStringStream fvSchIS(fvSch.c_str());
     IStringStream fvSolIS(fvSol.c_str());
     IStringStream cDIS(cD.c_str());
+    IStringStream TPIS(TP.c_str());
 
     dictionary& fvSchemesDict = const_cast<dictionary&>(mesh.schemesDict());
     dictionary& fvSolutionDict = const_cast<dictionary&>(mesh.solutionDict());
@@ -952,6 +953,12 @@ void foam_modifyNumerics(std::string name, std::string fvSch, std::string fvSol,
     );
 
     runTimes[name]->read();
+
+    dictionary& TPDict = const_cast<dictionary&>(mesh.lookupObject<dictionary>(word("transportProperties"))); 
+    TPDict.read
+    (
+        TPIS()
+    );    
 }
 
 

@@ -56,58 +56,9 @@ volTensorField S
     fvc::grad(U) + T(fvc::grad(U))
 );
 
+IOdictionary& transportProperties = const_cast<IOdictionary&>(mesh.lookupObject<IOdictionary>(word("transportProperties"))); 
 
-Info<< "Creating transportProperties\n" << endl;
-IStringStream TP
-    (
-    "phases (heavy light);\n"
-    "heavy\n"
-    "{\n"
-    "    transportModel  BinghamPlastic;\n"
-    "    \"(plastic|BinghamPlastic)Coeffs\"\n"
-    "    {\n"
-    "        coeff       0.00023143;\n"
-    "        exponent    179.26;\n"
-    "        BinghamCoeff    0.0005966;\n"
-    "        BinghamExponent 1050.8;\n"
-    "        BinghamOffset   0;\n"
-    "        muMax       10;\n"
-    "    }\n"
-    "    rho         1996;\n"
-    "}\n"
-    "light\n"
-    "{\n"
-    "    transportModel  Newtonian;\n"
-    "    nu              1.7871e-06;\n"
-    "    rho             996;\n"
-    "}\n"
-    "relativeVelocityModel simple;\n"
-    "\"(simple|general)Coeffs\"\n"
-    "{\n"
-    "    V0              (0 -0.002198 0);\n"
-    "    a               285.84;\n"
-    "    a1              0.1;\n"
-    "    residualAlpha   0;\n"
-    "}\n"
-    );
-
-incompressibleTwoPhaseInteractingMixture mixture(U, phi, TP());
-
-
-IOdictionary transportProperties
-(
-    IOobject
-    (
-        "transportProperties",
-        runTimes[name]->timeName(),
-        mesh,
-        IOobject::NO_READ,
-        IOobject::NO_WRITE
-    ),
-    TP()
-);
-
-transportProperties = mixture;
+incompressibleTwoPhaseInteractingMixture mixture(U, phi, transportProperties);
 
 // Relative Velocity
 autoPtr<relativeVelocityModel> UdmModelPtr

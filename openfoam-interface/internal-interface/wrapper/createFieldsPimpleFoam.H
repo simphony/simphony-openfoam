@@ -71,3 +71,22 @@ new surfaceScalarField
     linearInterpolate(*U) & mesh.Sf()
 );
 
+
+IStringStream TP
+    (
+        "transportModel  Newtonian;"
+        "nu              nu [ 0 2 -1 0 0 0 0 ] 0.01;"
+    );
+
+new IOdictionary
+(
+    IOobject
+    (
+        "transportProperties",
+        runTimes[name]->timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    TP()
+);
