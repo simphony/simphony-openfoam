@@ -26,6 +26,20 @@
         mesh
     );
 
+    Info<< "Reading field Vdj\n" << endl;
+    volVectorField Vdj
+    (
+        IOobject
+        (
+            "Vdj",
+            runTime.timeName(),
+            mesh,
+            IOobject::MUST_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh
+    );
+
     /*Info<< "Reading field tauPrime\n" << endl;
     volTensorField tauPrime
     (

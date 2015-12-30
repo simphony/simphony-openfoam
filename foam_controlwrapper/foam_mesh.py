@@ -399,12 +399,12 @@ class FoamMesh(ABCMesh):
         for cell in cellList:
             for data in cell.data:
                 if data not in dataNameMap:
-                    error_str = "Data named "+data+" not supported"
+                    error_str = "Data named "+data.name+" not supported"
                     raise NotImplementedError(error_str)
                 dataName = dataNameMap[data]
                 if data not in dataNameKeyMap:
                     dataNameKeyMap[dataName] = data
-                if dataName not in dataNames or dataName not in newDataNames:
+                if dataName not in dataNames and dataName not in newDataNames:
                     newDataNames.append(dataName)
         for dataName in newDataNames:
             create_dummy_celldata(self.path, self.name,

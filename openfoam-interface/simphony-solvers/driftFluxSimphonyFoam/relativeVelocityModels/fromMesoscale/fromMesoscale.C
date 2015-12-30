@@ -46,7 +46,9 @@ Foam::relativeVelocityModels::fromMesoscale::fromMesoscale
     const incompressibleTwoPhaseInteractingMixture& mixture
 )
 :
-    relativeVelocityModel(dict, mixture),
+  relativeVelocityModel(dict, mixture),
+  Vdj_(const_cast< GeometricField < vector, fvPatchField, volMesh > &>(mixture.U().mesh().lookupObject< GeometricField <vector, fvPatchField, volMesh> >(word("Vdj"))))
+  /*
 	Vdj_
 	(
         IOobject
@@ -54,18 +56,18 @@ Foam::relativeVelocityModels::fromMesoscale::fromMesoscale
             "Vdj",
             mixture.U().time().timeName(),
             mixture.U().mesh(),
-            IOobject::MUST_READ,
+	    IOobject::MUST_READ,
             IOobject::AUTO_WRITE
         ),
         mixture.U().mesh()
-    )
+	)*/
 {}
 
 Foam::relativeVelocityModels::fromMesoscale::fromMesoscale
 (
     const dictionary& dict,
     const incompressibleTwoPhaseInteractingMixture& mixture,
-	const volVectorField& Vdj
+    const volVectorField& Vdj
 )
 :
     relativeVelocityModel(dict, mixture),
@@ -73,6 +75,7 @@ Foam::relativeVelocityModels::fromMesoscale::fromMesoscale
 	(
 		Vdj
     )
+ 
 {}
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
@@ -87,7 +90,7 @@ void Foam::relativeVelocityModels::fromMesoscale::correct()
 {
     Udm_ =
         (rhoc_/rho())
-       *Vdj_;
+      *Vdj_;
 }
 
 
