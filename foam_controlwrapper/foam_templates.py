@@ -699,6 +699,10 @@ generalCoeffs
     a1              0.1;
     residualAlpha   0;
 }
+fromMesoscaleCoeffs
+{
+
+}
                         """,
                             os.path.join('constant', 'turbulenceProperties'):
                                 """
@@ -976,6 +980,15 @@ boundaryField
 {
 
 }
+                    """, 'Vdj': """
+dimensions [ 0 1 -1 0 0 0 0 ];
+
+internalField uniform (0 0 0);
+
+boundaryField
+{
+
+}
                     """, 'Sigma': """
 dimensions [1 -1 -2 0 0 0 0];
 
@@ -985,6 +998,7 @@ boundaryField
 {
 
 }
+
 
 
 
@@ -1022,6 +1036,15 @@ boundaryField
 dimensions [ 0 0 0 0 0 0 0 ];
 
 internalField uniform 0;
+
+boundaryField
+{
+
+}
+                    """, 'Vdj': """
+dimensions [ 0 1 -1 0 0 0 0 ];
+
+internalField uniform (0 0 0);
 
 boundaryField
 {

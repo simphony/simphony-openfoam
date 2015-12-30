@@ -82,7 +82,15 @@ dictionaryMaps = \
                      {'V0': '(0 -0.002198 0)',
                       'a': '285.84',
                       'a1': '0.1',
-                      'residualAlpha': '0'}}}}
+                      'residualAlpha': '0'},
+                 'generalCoeffs':
+                     {'V0': '(0 -0.002198 0)',
+                      'a': '285.84',
+                      'a1': '0.1',
+                      'residualAlpha': '0'},
+                 'fromMesoscaleCoeffs':
+                     {}
+                 }}}
 
 dictionaryTemplates = {'pimpleFoam':
                        {'transportProperties':

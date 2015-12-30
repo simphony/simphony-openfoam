@@ -7,7 +7,8 @@ import os
 from .foam_templates import (head, dictionaryTemplates)
 from .foam_templates import dataTemplates
 from .foam_templates import multiphase_solvers
-from .foam_variables import (dataKeyMap, dataTypeMap, foamTypeMap)
+from .foam_variables import (dataKeyMap, dataTypeMap)
+from .foam_variables import (foamTypeMap, cellDataTypes)
 from simphony.core.cuba import CUBA
 from cuba_extension import CUBAExt
 from PyFoam.RunDictionary.ParsedParameterFile import ParsedParameterFile
@@ -401,6 +402,19 @@ def modify_files(case, startTime, SP, BC, solver, SPExt, CMExt):
                     "zeroGradient"
         control.writeFile()
 
+        # parse startTime/Vdj -file in case directory
+        parFile = os.path.join(case, str(startTime), 'Vdj')
+        control = ParsedParameterFile(parFile)
+        for boundary in volumeFractionBCs:
+            control["boundaryField"][boundary] = {}
+            if volumeFractionBCs[boundary] == "empty":
+                control["boundaryField"][boundary]["type"] = \
+                    "empty"
+            else:
+                control["boundaryField"][boundary]["type"] = \
+                    "zeroGradient"
+        control.writeFile()
+
 
 def set_all_cell_data(path, time_name, data_name,
                       values, value_type):
@@ -492,25 +506,33 @@ def set_cells_data(path, time_name, cells, uuidToFoamLabel, dataNameKeyMap):
 
     for dataName in dataNameKeyMap:
         dataKey = dataNameKeyMap[dataName]
-        control = ParsedParameterFile(os.path.join(dir_name, dataName))
-        values = control['internalField']
-        if dataTypeMap[dataKey] == "vector":
-            for cell in cells:
-                if dataKey in cell.data:
-                    values[uuidToFoamLabel[cell.uid]] = \
-                        tuple(cell.data[dataKey])
-        else:
-            for cell in cells:
-                if dataKey in cell.data:
-                    values[uuidToFoamLabel[cell.uid]] = \
-                        cell.data[dataKey]
-        field_str = 'nonuniform List<' + dataTypeMap[dataKey] + '>\n'
-        field_str += str(len(values.val)) + '\n' + '(' + '\n'
-        for value in values:
-            field_str += str(value).replace(',', '') + '\n'
-        field_str += ')'
-        control['internalField'] = field_str
-        control.writeFile()
+        if dataTypeMap[dataKey] in cellDataTypes:
+            control = ParsedParameterFile(os.path.join(dir_name, dataName))
+            if dataTypeMap[dataKey] == "vector":
+                values = [(0, 0, 0) for cell in cells]
+                for cell in cells:
+                    if dataKey in cell.data:
+                        values[uuidToFoamLabel[cell.uid]] = \
+                            tuple(cell.data[dataKey])
+            elif dataTypeMap[dataKey] == "tensor":
+                values = [(0, 0, 0, 0, 0, 0, 0, 0, 0) for cell in cells]
+                for cell in cells:
+                    if dataKey in cell.data:
+                        values[uuidToFoamLabel[cell.uid]] = \
+                            tuple(cell.data[dataKey])
+            elif dataTypeMap[dataKey] == "scalar":
+                values = [0 for cell in cells]
+                for cell in cells:
+                    if dataKey in cell.data:
+                        values[uuidToFoamLabel[cell.uid]] = \
+                            cell.data[dataKey]
+            field_str = 'nonuniform List<' + dataTypeMap[dataKey] + '>\n'
+            field_str += str(len(values)) + '\n' + '(' + '\n'
+            for value in values:
+                field_str += str(value).replace(',', '') + '\n'
+            field_str += ')'
+            control['internalField'] = field_str
+            control.writeFile()
 
 
 def get_all_cell_data(path, time_name, data_name):

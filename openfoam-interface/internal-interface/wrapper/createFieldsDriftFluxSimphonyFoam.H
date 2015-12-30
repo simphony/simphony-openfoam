@@ -55,6 +55,23 @@ volVectorField* U = new volVectorField
     dimensionedVector("U", dimensionSet(0, 1, -1, 0, 0, 0, 0), vector::zero)
 );
 
+Info<< "Creating field Vdj\n" << endl;
+volVectorField* Vdj = new volVectorField
+(
+    IOobject
+    (
+        "Vdj",
+        runTimes[name]->timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    mesh,
+    dimensionedVector("Vdj", dimensionSet(0, 1, -1, 0, 0, 0, 0), vector::zero)
+);
+
+
+
 Info<< "Creating field Sigma_mu" << endl;
 new volTensorField
 (
