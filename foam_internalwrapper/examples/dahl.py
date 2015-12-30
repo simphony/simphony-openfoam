@@ -1,24 +1,22 @@
-"""Example to solve 2D poiseuille flow
-
+"""Example to solve mixture model
 """
 
 from simphony.core.cuba import CUBA
 from simphony.engine import openfoam_internal
 from simphony.engine import openfoam_file_io
 import dahl_mesh
+import tempfile
 
-wrapper = openfoam_internal.FoamInternalWrapper()
+wrapper = openfoam_internal.Wrapper()
 CUBAExt = openfoam_internal.CUBAExt
 
-import os
-path = os.path.abspath(os.curdir)
 name = 'dahl'
 
 wrapper.CM[CUBA.NAME] = name
 
 wrapper.CM_extensions[CUBAExt.GE] = (CUBAExt.INCOMPRESSIBLE,
                                      CUBAExt.LAMINAR_MODEL,
-                                     CUBAExt.MIXTURE)
+                                     CUBAExt.MIXTURE_MODEL)
 
 wrapper.CM_extensions[CUBAExt.NUMBER_OF_CORES] = 1
 
@@ -28,52 +26,46 @@ wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 1
 wrapper.SP_extensions[CUBAExt.PHASE_LIST] = ('sludge', 'water')
 wrapper.SP[CUBA.DENSITY] = {'sludge': 1900.0, 'water': 1000.0}
 wrapper.SP[CUBA.DYNAMIC_VISCOSITY] = {'sludge': 0.01, 'water': 1e-3}
-
-# this is just an example. It is not enough for general setting of BC's
-wrapper.BC[CUBA.VELOCITY] = {'boundary0': (0, 0, 0),
+wrapper.SP_extensions[CUBAExt.VISCOSITY_MODEL] =\
+    {'sludge': 'BinghamPlastic', 'water': 'Newtonian'}
+wrapper.SP_extensions[CUBAExt.VISCOSITY_MODEL_COEFFS] =\
+    {'BinghamPlastic': {'coeff': 0.00023143, 'exponent': 179.26,
+                        'BinghamCoeff': 0.0005966, 'BinghamExponent': 1050.8,
+                        'BinghamOffset': 0, 'muMax': 10}}
+wrapper.SP_extensions[CUBAExt.RELATIVE_VELOCITY_MODEL] = 'simple'
+wrapper.SP_extensions[CUBAExt.RELATIVE_VELOCITY_MODEL_COEFFS] =\
+    {'V0': (0.0, -0.002, 0.0), 'a': 285.0, 'a1': 0.1, 'residualAlpha': 0}
+wrapper.SP_extensions[CUBAExt.EXTERNAL_BODY_FORCE_MODEL] = 'gravitation'
+wrapper.SP_extensions[CUBAExt.EXTERNAL_BODY_FORCE_MODEL_COEFFS] =\
+    {'g': (0.0, -9.81, 0.0)}
+wrapper.BC[CUBA.VELOCITY] = {'boundary0': ('fixedValue', (0.0191, 0, 0)),
                              'boundary1': ('pressureIOVelocity', (0, 0, 0)),
-                             'boundary2': (0, 0, 0),
-                             'boundary3': (0, 0, 0),
+                             'boundary2': ('fixedValue', (0, 0, 0)),
+                             'boundary3': ('fixedValue', (0, 0, 0)),
                              'boundary4': 'slip',
                              'boundary5': 'empty'}
+# CUBA.CONCENTRATION is used for dynamic pressure while not in CUBA keys
 wrapper.BC[CUBA.CONCENTRATION] = {'boundary0': 'fixedFluxPressure',
-                                  'boundary1': 0,
+                                  'boundary1': ('fixedValue', 0),
                                   'boundary2': 'fixedFluxPressure',
                                   'boundary3': 'fixedFluxPressure',
                                   'boundary4': 'fixedFluxPressure',
                                   'boundary5': 'empty'}
-wrapper.BC[CUBA.VOLUME_FRACTION] = {'boundary0': 0.001,
+
+wrapper.BC[CUBA.VOLUME_FRACTION] = {'boundary0': ('fixedValue', 0.001),
                                     'boundary1': ('inletOutlet', 0.001),
                                     'boundary2': 'zeroGradient',
                                     'boundary3': 'zeroGradient',
                                     'boundary4': 'zeroGradient',
                                     'boundary5': 'empty'}
 
-wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 10
-
-# creating the mesh
-file_name = 'blockMeshDict'
-case = os.path.join(path, name)
-templateName = 'simpleFoam'
-openfoam_file_io.foam_files.write_default_files(case, templateName, '0', True)
-
-full_name = os.path.join(os.path.join(
-    os.path.join(case, 'constant'), 'polyMesh'), file_name)
-with open(full_name, 'w') as f:
-    f.write(dahl_mesh.blockMeshDict)
-
-ncores = 1
-solver = 'blockMesh'
-runner = openfoam_file_io.foam_runner.FoamRunner(solver, case, ncores)
-runner.run()
-
-foam_mesh = openfoam_file_io.read_foammesh(name, path)
-
-# add mesh to engine
-wrapper.add_dataset(foam_mesh)
-
+# create mesh
+openfoam_file_io.create_block_mesh(tempfile.mkdtemp(), name, wrapper,
+                                   dahl_mesh.blockMeshDict)
 
 mesh_inside_wrapper = wrapper.get_dataset(name)
+
+print mesh_inside_wrapper.path
 
 updated_cells = []
 for cell in mesh_inside_wrapper.iter_cells():
@@ -84,5 +76,4 @@ for cell in mesh_inside_wrapper.iter_cells():
 
 mesh_inside_wrapper.update_cells(updated_cells)
 
-# run returns the latest time
 wrapper.run()

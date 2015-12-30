@@ -4,11 +4,11 @@
 
 from simphony.core.cuba import CUBA
 from simphony.engine import openfoam_file_io
+import tempfile
 
-wrapper = openfoam_file_io.FoamControlWrapper()
+wrapper = openfoam_file_io.Wrapper()
 CUBAExt = openfoam_file_io.CUBAExt
 
-path = '.'
 name = 'poiseuille'
 
 wrapper.CM[CUBA.NAME] = name
@@ -21,12 +21,12 @@ wrapper.SP[CUBA.DENSITY] = 1.0
 wrapper.SP[CUBA.DYNAMIC_VISCOSITY] = 1.0
 
 # this is just an example. It is not enough for general setting of BC's
-wrapper.BC[CUBA.VELOCITY] = {'boundary0': (0.1, 0, 0),
+wrapper.BC[CUBA.VELOCITY] = {'boundary0': ('fixedValue', (0.1, 0, 0)),
                              'boundary1': 'zeroGradient',
-                             'boundary2': (0, 0, 0),
+                             'boundary2': ('fixedValue', (0, 0, 0)),
                              'boundary3': 'empty'}
 wrapper.BC[CUBA.PRESSURE] = {'boundary0': 'zeroGradient',
-                             'boundary1': 0,
+                             'boundary1': ('fixedValue', 0),
                              'boundary2': 'zeroGradient',
                              'boundary3': 'empty'}
 
@@ -38,8 +38,8 @@ corner_points = [(0.0, 0.0, 0.0), (20.0e-3, 0.0, 0.0),
 nex = 10
 # elements in y -direction
 ney = 4
-openfoam_file_io.create_quad_mesh(path, name, wrapper, corner_points,
-                                  nex, ney, 1)
+openfoam_file_io.create_quad_mesh(tempfile.mkdtemp(), name, wrapper,
+                                  corner_points, nex, ney, 1)
 
 mesh_inside_wrapper = wrapper.get_dataset(name)
 

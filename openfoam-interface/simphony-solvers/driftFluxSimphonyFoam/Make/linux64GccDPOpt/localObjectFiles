@@ -1,0 +1,4 @@
+LOCAL_OBJECTS = \
+incompressibleTwoPhaseInteractingMixture.o\
+compressibleTurbulenceModels.o\
+driftFluxSimphonyFoam.o

@@ -37,7 +37,7 @@ new volScalarField
         IOobject::NO_WRITE
     ),
     mesh,
-    dimensionedScalar("p", dimensionSet(1, -1, -2, 0, 0, 0, 0), 0)
+    dimensionedScalar("p_rgh", dimensionSet(1, -1, -2, 0, 0, 0, 0), 0)
 );
 
 Info<< "Creating field U\n" << endl;
@@ -85,33 +85,33 @@ new surfaceScalarField
     linearInterpolate(*U) & mesh.Sf()
 );
 
-Info<< "Creating field alpha1\n" << endl;
+Info<< "Creating field alpha.phase1\n" << endl;
 new volScalarField
 (
     IOobject
     (
-        "alpha1",
+        "alpha.phase1",
         runTimes[name]->timeName(),
         mesh,
         IOobject::NO_READ,
         IOobject::NO_WRITE
     ),
     mesh,
-    dimensionedScalar("alpha1", dimensionSet(0, 0, 0, 0, 0, 0, 0), 0)
+    dimensionedScalar("alpha.phase1", dimensionSet(0, 0, 0, 0, 0, 0, 0), 0)
 );
 
 
 Info<< "Creating transportProperties\n" << endl;
 IStringStream TP
     (
-    "phases (heavy light);\n"
-    "heavy\n"
+    "phases (phase1 phase2);\n"
+    "phase1\n"
     "{\n"
     "    transportModel  dummyViscosity;\n"
     "    nu              1e-04;\n"
     "    rho             1996;\n"
     "}\n"
-    "light\n"
+    "phase2\n"
     "{\n"
     "    transportModel  Newtonian;\n"
     "    nu              1.7871e-06;\n"
@@ -125,6 +125,7 @@ IStringStream TP
     "    a1              0.1;\n"
     "    residualAlpha   0;\n"
     "}\n"
+    "g (0 0 0);\n"
     );
 
 new IOdictionary

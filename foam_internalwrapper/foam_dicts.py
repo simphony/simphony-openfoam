@@ -6,13 +6,14 @@ Managment of OpenFOAM dicts and Fields
 
 import simphonyfoaminterface as foamface
 from simphony.core.cuba import CUBA
-from cuba_extension import CUBAExt
+from foam_controlwrapper.cuba_extension import CUBAExt
 
 dictionaryMaps = \
     {'pimpleFoam':
         {'transportProperties':
             {'transportModel': 'Newtonian',
-             'nu nu     [ 0 2 -1 0 0 0 0 ]': '0.0'},
+             'nu nu     [ 0 2 -1 0 0 0 0 ]': '0.0',
+             'g': '( 0 0 0)'},
          'turbulenceProperties':
             {'simulationType': 'laminar'},
          'RASProperties':
@@ -35,37 +36,53 @@ dictionaryMaps = \
              'timeFormat': 'general',
              'runTimeModifiable': 'yes'}},
      'driftFluxSimphonyFoam':
-         {'controlDict':
-            {'application': 'driftFluxSimphonyFoam',
-             'startFrom': 'startTime',
-             'startTime': '0',
-             'stopAt': 'endTime',
-             'endTime': '0.1',
-             'deltaT': '0.1',
-             'writeControl': 'timeStep',
-             'writeInterval': '10000',
-             'purgeWrite': '0',
-             'writeFormat': 'ascii',
-             'writePrecision': '6',
-             'writeCompression': 'no',
-             'timeFormat': 'general',
-             'runTimeModifiable': 'yes'},
-         'transportProperties':
-            {'phases': '(heavy light)',
-             'heavy':
-                 {'transportModel': 'dummyViscosity',
-                  'nu': '1e-4',
-                  'rho': '1996'},
-              'light':
-                 {'transportModel': 'Newtonian',
-                  'nu': '1.7871e-06',
-                  'rho': '996'},
-              'relativeVelocityModel': 'simple',
-              'simpleCoeffs':
-                  {'V0': '(0 -0.002198 0)',
-                   'a': '285.84',
-                   'a1': '0.1',
-                   'residualAlpha': '0'}}}}
+         {
+            'controlDict':
+                {'application': 'driftFluxSimphonyFoam',
+                 'startFrom': 'startTime',
+                 'startTime': '0',
+                 'stopAt': 'endTime',
+                 'endTime': '0.1',
+                 'deltaT': '0.1',
+                 'writeControl': 'timeStep',
+                 'writeInterval': '10000',
+                 'purgeWrite': '0',
+                 'writeFormat': 'ascii',
+                 'writePrecision': '6',
+                 'writeCompression': 'no',
+                 'timeFormat': 'general',
+                 'runTimeModifiable': 'yes'},
+            'transportProperties':
+                {'g': '( 0 0 0)',
+                 'phases': '(phase1 phase2)',
+                 'phase1':
+                     {'transportModel': 'dummyViscosity',
+                      'BinghamPlasticCoeffs':
+                          {'coeff': '0.00023143',
+                           'exponent': '179.26',
+                           'BinghamCoeff': '0.0005966',
+                           'BinghamExponent': '1050.8',
+                           'BinghamOffset': '0',
+                           'muMax': '10'},
+                      'plasticCoeffs':
+                          {'coeff': '0.00023143',
+                           'exponent': '179.26',
+                           'BinghamCoeff': '0.0005966',
+                           'BinghamExponent': '1050.8',
+                           'BinghamOffset': '0',
+                           'muMax': '10'},
+                      'nu': '1e-4',
+                      'rho': '1996'},
+                 'phase2':
+                     {'transportModel': 'Newtonian',
+                      'nu': '1.7871e-06',
+                      'rho': '996'},
+                 'relativeVelocityModel': 'simple',
+                 'simpleCoeffs':
+                     {'V0': '(0 -0.002198 0)',
+                      'a': '285.84',
+                      'a1': '0.1',
+                      'residualAlpha': '0'}}}}
 
 dictionaryTemplates = {'pimpleFoam':
                        {'transportProperties':
@@ -192,16 +209,16 @@ fluxRequired
                        'driftFluxSimphonyFoam':
                        {'transportProperties':
                         """
-phases (heavy light);
-    
-heavy
+phases (phase1 phase2);
+
+phase1
 {
     transportModel  dummyViscosity;
     nu              1e-04;
     rho             1996;
 }
 
-light
+phase2
 {
     transportModel  Newtonian;
 
@@ -357,8 +374,7 @@ def parse_map(mapContent):
     for i, j in mapContent.iteritems():
         if isinstance(j, dict):
             result += "%s{\n" % i
-            for k, l in j.iteritems():
-                result += "%s\t%s; \n" % (k, l)
+            result += parse_map(j)
             result += "}\n"
         else:
             result += "%s\t%s; \n" % (i, j)
@@ -387,23 +403,67 @@ def modifyNumerics(mesh, SP, SPExt, solver='pimpleFoam'):
     controlDict = parse_map(mapContent['controlDict'])
 
     if solver == 'pimpleFoam':
-        mapContent['transportProperties']['nu nu     [ 0 2 -1 0 0 0 0 ]'] = \
+        control = mapContent['transportProperties']
+        control['nu nu     [ 0 2 -1 0 0 0 0 ]'] = \
             SP[CUBA.DYNAMIC_VISCOSITY]/SP[CUBA.DENSITY]
-        transportPropertiesDict = parse_map(mapContent['transportProperties'])
+        transportPropertiesDict = parse_map(control)
     elif solver == 'driftFluxSimphonyFoam':
+        control = mapContent['transportProperties']
         density = SP[CUBA.DENSITY]
         viscosity = SP[CUBA.DYNAMIC_VISCOSITY]
-        mapContent['transportProperties']['heavy']['nu'] = \
-            viscosity[SPExt[CUBAExt.PHASE_LIST][0]] / \
-            density[SPExt[CUBAExt.PHASE_LIST][0]]
-        mapContent['transportProperties']['heavy']['rho'] = \
-            density[SPExt[CUBAExt.PHASE_LIST][0]]
-        mapContent['transportProperties']['light']['nu'] = \
-            viscosity[SPExt[CUBAExt.PHASE_LIST][1]] / \
-            density[SPExt[CUBAExt.PHASE_LIST][1]]
-        mapContent['transportProperties']['light']['rho'] = \
-            density[SPExt[CUBAExt.PHASE_LIST][1]]
-        transportPropertiesDict = parse_map(mapContent['transportProperties'])
+        # phase1 uses mixtureViscosity models
+        viscosity_model = SPExt[CUBAExt.VISCOSITY_MODEL][
+            SPExt[CUBAExt.PHASE_LIST][0]]
+        vmc = viscosity_model + 'Coeffs'
+        viscosity_model_coeffs =\
+            SPExt[CUBAExt.VISCOSITY_MODEL_COEFFS][viscosity_model]
+        for coeff in viscosity_model_coeffs:
+            control['phase1'][vmc][coeff] = viscosity_model_coeffs[coeff]
+        control['phase1']['rho'] = density[SPExt[CUBAExt.PHASE_LIST][0]]
+
+        viscosity_model = SPExt[CUBAExt.VISCOSITY_MODEL][
+            SPExt[CUBAExt.PHASE_LIST][1]]
+        if viscosity_model == 'Newtonian':
+            control["phase2"]["transportModel"] = viscosity_model
+            control['phase2']['nu'] = \
+                viscosity[SPExt[CUBAExt.PHASE_LIST][1]] / \
+                density[SPExt[CUBAExt.PHASE_LIST][1]]
+            control['phase2']['rho'] = \
+                density[SPExt[CUBAExt.PHASE_LIST][1]]
+        else:
+            control["phase2"]["transportModel"] = viscosity_model
+            vmc = viscosity_model + 'Coeffs'
+            viscosity_model_coeffs =\
+                SPExt[CUBAExt.VISCOSITY_MODEL_COEFFS][viscosity_model]
+            for coeff in viscosity_model_coeffs:
+                control["phase2"][vmc][coeff] =\
+                    viscosity_model_coeffs[coeff]
+        if CUBAExt.RELATIVE_VELOCITY_MODEL in SPExt:
+            control["relativeVelocityModel"] =\
+                SPExt[CUBAExt.RELATIVE_VELOCITY_MODEL]
+        else:
+            error_str = "Relative velocity model not specified"
+            raise ValueError(error_str)
+        if SPExt[CUBAExt.RELATIVE_VELOCITY_MODEL] == "simple"\
+                or SPExt[CUBAExt.RELATIVE_VELOCITY_MODEL] == "general":
+            relVelModelCoeffs = SPExt[CUBAExt.RELATIVE_VELOCITY_MODEL]+'Coeffs'
+            if CUBAExt.RELATIVE_VELOCITY_MODEL_COEFFS in SPExt:
+                coeffs = SPExt[CUBAExt.RELATIVE_VELOCITY_MODEL_COEFFS]
+                V0 = coeffs["V0"]
+                control[relVelModelCoeffs]["V0"] = "( " \
+                    + str(V0[0]) + " " + str(V0[1]) + " " + str(V0[2]) + " )"
+                control[relVelModelCoeffs]["a"] = coeffs["a"]
+                control[relVelModelCoeffs]["a1"] = coeffs["a1"]
+                control[relVelModelCoeffs]["residualAlpha"] =\
+                    coeffs["residualAlpha"]
+            if CUBAExt.EXTERNAL_BODY_FORCE_MODEL in SPExt:
+                if SPExt[CUBAExt.EXTERNAL_BODY_FORCE_MODEL] == 'gravitation':
+                    g = SPExt[CUBAExt.EXTERNAL_BODY_FORCE_MODEL_COEFFS]["g"]
+                    control["g"] =\
+                        "( " \
+                        + str(g[0]) + " " + str(g[1]) + " " + str(g[2]) + " )"
+
+        transportPropertiesDict = parse_map(control)
 
     foamface.modifyNumerics(mesh.name, fvSchemesDict, fvSolutionDict,
                             controlDict, transportPropertiesDict)
@@ -434,7 +494,7 @@ def modifyFields(mesh, BC, solver='pimpleFoam'):
     foamface.setAllCellData(mesh.name, name_pressure, p_values)
     foamface.setAllCellVectorData(mesh.name, "U", U_values)
     if solver == 'driftFluxSimphonyFoam':
-        foamface.setAllCellData(mesh.name, "alpha1", alpha_values)
+        foamface.setAllCellData(mesh.name, "alpha.phase1", alpha_values)
 
 #       Refresh boundary conditions
     velocityBCs = BC[CUBA.VELOCITY]
@@ -456,12 +516,12 @@ def modifyFields(mesh, BC, solver='pimpleFoam'):
                 + str(patch[1][0]) + " " \
                 + str(patch[1][1]) + " " \
                 + str(patch[1][2]) + ");\n"
-        else:
+        elif isinstance(patch, tuple) and patch[0] == "fixedValue":
             myDict = myDict + "\t type \t fixedValue;\n"
             myDict = myDict + "\t value \t uniform (" \
-                            + str(velocityBCs[boundary][0]) + " " \
-                            + str(velocityBCs[boundary][1]) + " " \
-                            + str(velocityBCs[boundary][2]) + ");\n"
+                + str(patch[1][0]) + " " \
+                + str(patch[1][1]) + " " \
+                + str(patch[1][2]) + ");\n"
         myDict = myDict + "}\n"
 
     foamface.setBC(mesh.name, "U", myDict)
@@ -478,10 +538,11 @@ def modifyFields(mesh, BC, solver='pimpleFoam'):
             myDict = myDict + "\t value \t uniform 0;"
         elif pressureBCs[boundary] == "empty":
             myDict = myDict + "\t type \t empty;\n"
-        else:
+        elif isinstance(pressureBCs[boundary], tuple) and\
+                pressureBCs[boundary][0] == "fixedValue":
             myDict = myDict + "\t type \t fixedValue;\n"
             myDict = myDict + "\t value \t uniform " \
-                            + str(pressureBCs[boundary]) + ";\n"
+                            + str(pressureBCs[boundary][1]) + ";\n"
         myDict = myDict + "}\n"
 
     foamface.setBC(mesh.name, name_pressure, myDict)
@@ -494,17 +555,17 @@ def modifyFields(mesh, BC, solver='pimpleFoam'):
             if volumeFractionBCs[boundary] == "zeroGradient":
                 myDict = myDict + "\t type \t zeroGradient;\n"
                 myDict = myDict + "\t value \t uniform 0;\n"
+            elif volumeFractionBCs[boundary] == "empty":
+                myDict = myDict + "\t type \t empty;\n"
             elif isinstance(volumeFractionBCs[boundary], tuple):
                 if volumeFractionBCs[boundary][0] == "inletOutlet":
                     myDict = myDict + "\t type \t inletOutlet;\n"
-                    myDict = myDict + "\t inletValue \t uniform %s;\n" % \
-                                      str(volumeFractionBCs[boundary][1])
-            elif volumeFractionBCs[boundary] == "empty":
-                myDict = myDict + "\t type \t empty;\n"
-            else:
-                myDict = myDict + "\t type \t fixedValue;\n"
-                myDict = myDict + "\t value \t uniform " \
-                                + str(volumeFractionBCs[boundary]) + ";\n"
+                    myDict = myDict + "\t inletValue \t uniform " \
+                        + str(volumeFractionBCs[boundary][1]) + ";\n"
+                elif volumeFractionBCs[boundary][0] == "fixedValue":
+                    myDict = myDict + "\t type \t fixedValue;\n"
+                    myDict = myDict + "\t value \t uniform " \
+                        + str(volumeFractionBCs[boundary][1]) + ";\n"
             myDict = myDict + "}\n"
 
-        foamface.setBC(mesh.name, "alpha1", myDict)
+        foamface.setBC(mesh.name, "alpha.phase1", myDict)

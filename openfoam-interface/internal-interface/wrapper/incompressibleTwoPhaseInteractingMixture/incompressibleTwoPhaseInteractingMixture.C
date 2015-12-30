@@ -58,7 +58,6 @@ incompressibleTwoPhaseInteractingMixture
         )
     ),
     twoPhaseMixture(U.mesh(), *this),
-
     muModel_
     (
         mixtureViscosityModel::New

@@ -1,0 +1,5 @@
+LOCAL_OBJECTS = \
+relativeVelocityModel.o\
+simple.o\
+general.o\
+fromMesoscale.o

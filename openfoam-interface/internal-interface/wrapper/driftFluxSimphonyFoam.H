@@ -34,7 +34,8 @@ Info<< "\nStarting time loop\n" << endl;
 
 std::string p_rghName = "p_rgh";
 std::string UName = "U";
-std::string alphaName = "alpha1";
+//std::string alphaName = "alpha1";
+std::string alphaName = "alpha.phase1";
 std::string Sigma_muName = "Sigma_mu";
 
 volScalarField& p_rgh = find_Data<scalar>(mesh,p_rghName);
@@ -59,7 +60,6 @@ volTensorField S
 IOdictionary& transportProperties = const_cast<IOdictionary&>(mesh.lookupObject<IOdictionary>(word("transportProperties"))); 
 
 incompressibleTwoPhaseInteractingMixture mixture(U, phi, transportProperties);
-
 // Relative Velocity
 autoPtr<relativeVelocityModel> UdmModelPtr
 (
@@ -120,7 +120,10 @@ surfaceScalarField rhoPhi
     fvc::interpolate(rho)*phi
 );
 
-Info<< "\nCreating g" << endl;
+// g from transportproperties
+
+
+Info<< "\nCreating g " <<endl;
 uniformDimensionedVectorField g
 (
     IOobject
@@ -131,8 +134,10 @@ uniformDimensionedVectorField g
         IOobject::NO_READ,
         IOobject::NO_WRITE
     ),
-    dimensionedVector("g", dimensionSet(0, 1, -2, 0, 0, 0, 0), vector(0,-9.81,0))
+    dimensionedVector("g", dimensionSet(0, 1, -2, 0, 0, 0, 0), vector(transportProperties.lookup("g")))
 );
+
+Info<< "\nGravitational vector: " <<vector(transportProperties.lookup("g"))<<endl;
 
 Info<< "Calculating field (g.h)f\n" << endl;
 volScalarField gh("gh", g & mesh.C());

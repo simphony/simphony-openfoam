@@ -6,19 +6,20 @@ Wrapper module for OpenFOAM
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
-from .cuba_extension import CUBAExt
+from foam_controlwrapper.cuba_extension import CUBAExt
 from .foam_mesh import FoamMesh
 from .foam_dicts import (modifyNumerics, modifyFields)
+from foam_controlwrapper.foam_templates import get_foam_solver
 import simphonyfoaminterface as foamface
 
 
-class FoamInternalWrapper(ABCModelingEngine):
+class Wrapper(ABCModelingEngine):
     """ Wrapper to OpenFOAM
 
     """
 
     def __init__(self):
-
+        super(Wrapper, self).__init__()
         self._meshes = {}
         self.CM = DataContainer()
         self.BC = DataContainer()
@@ -51,15 +52,7 @@ class FoamInternalWrapper(ABCModelingEngine):
             error_str = "Meshes not added to wrapper. Use add_mesh method"
             raise ValueError(error_str)
 
-        GE = self.CM_extensions[CUBAExt.GE]
-        if CUBAExt.MIXTURE in GE and CUBAExt.INCOMPRESSIBLE in GE \
-                and CUBAExt.LAMINAR_MODEL in GE:
-            solver = "driftFluxSimphonyFoam"
-        elif CUBAExt.INCOMPRESSIBLE in GE:
-            solver = "pimpleFoam"
-        else:
-            error_str = "GE does not define supported solver: GE = {}"
-            raise NotImplementedError(error_str.format(GE))
+        solver = get_foam_solver(self.CM_extensions)
 
         name = self.CM[CUBA.NAME]
 
@@ -107,7 +100,9 @@ class FoamInternalWrapper(ABCModelingEngine):
         if mesh.name in self._meshes:
             raise ValueError('Mesh \'{}\` already exists'.format(mesh.name))
         else:
-            self._meshes[mesh.name] = FoamMesh(mesh.name, self.BC, mesh)
+            solver = get_foam_solver(self.CM_extensions)
+            self._meshes[mesh.name] = FoamMesh(mesh.name, self.BC,
+                                               solver, mesh)
             return self._meshes[mesh.name]
 
     def remove_dataset(self, name):
@@ -196,35 +191,3 @@ class FoamInternalWrapper(ABCModelingEngine):
         """
 
         return self._meshes.keys()
-
-    def add_particles(self, particle_container):
-        message = 'FoamWrapper does not handle particle container'
-        raise NotImplementedError(message)
-
-    def get_particles(self, name):
-        message = 'FoamWrapper does not handle particle container'
-        raise NotImplementedError(message)
-
-    def delete_particles(self, name):
-        message = 'FoamWrapper does not handle particle container'
-        raise NotImplementedError(message)
-
-    def iter_particles(self, names=None):
-        message = 'FoamWrapper does not handle particle container'
-        raise NotImplementedError(message)
-
-    def add_lattice(self, lattice):
-        message = 'FoamWrapper does not handle lattice'
-        raise NotImplementedError(message)
-
-    def get_lattice(self, name):
-        message = 'FoamWrapper does not handle lattice'
-        raise NotImplementedError(message)
-
-    def delete_lattice(self, name):
-        message = 'FoamWrapper does not handle lattice'
-        raise NotImplementedError(message)
-
-    def iter_lattices(self, names=None):
-        message = 'FoamWrapper does not handle lattice'
-        raise NotImplementedError(message)

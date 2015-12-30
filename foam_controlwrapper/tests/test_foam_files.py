@@ -15,7 +15,7 @@ from simphony.core.data_container import DataContainer
 
 
 from foam_controlwrapper import foam_files
-from foam_controlwrapper.foam_controlwrapper import FoamControlWrapper
+from foam_controlwrapper.foam_controlwrapper import Wrapper
 from foam_controlwrapper.blockmesh_utils import create_quad_mesh
 
 
@@ -86,7 +86,7 @@ class FoamFilesTestCase(unittest.TestCase):
 
         """
 
-        wrapper = FoamControlWrapper()
+        wrapper = Wrapper()
         path = "test_path"
         name = "test_mesh"
         corner_points = [(0.0, 0.0, 0.0), (5.0, 0.0, 0.0),

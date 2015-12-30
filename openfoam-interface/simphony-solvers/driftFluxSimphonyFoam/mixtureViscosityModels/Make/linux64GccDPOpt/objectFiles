@@ -1,0 +1,7 @@
+OBJECTS = \
+$(OBJECTS_DIR)/mixtureViscosityModel.o\
+$(OBJECTS_DIR)/mixtureViscosityModelNew.o\
+$(OBJECTS_DIR)/plastic.o\
+$(OBJECTS_DIR)/BinghamPlastic.o\
+$(OBJECTS_DIR)/slurry.o\
+$(OBJECTS_DIR)/dummyViscosity.o

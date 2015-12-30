@@ -1,0 +1,7 @@
+DEPENDENCIES = \
+mixtureViscosityModel/mixtureViscosityModel.dep\
+mixtureViscosityModel/mixtureViscosityModelNew.dep\
+plastic/plastic.dep\
+BinghamPlastic/BinghamPlastic.dep\
+slurry/slurry.dep\
+dummyViscosity/dummyViscosity.dep

@@ -36,6 +36,9 @@ class FoamMesh(ABCMesh):
     BC : dictionary
        boundary conditions
 
+    solver : str
+       name of OpenFoam solver
+
     mesh : ABCMesh
        mesh to store
 
@@ -58,7 +61,7 @@ class FoamMesh(ABCMesh):
 
     """
 
-    def __init__(self, name, BC, mesh=None, path=None):
+    def __init__(self, name, BC, solver, mesh=None, path=None):
         super(FoamMesh, self).__init__()
         self.name = name
         self.data = dc.DataContainer()
@@ -177,10 +180,6 @@ class FoamMesh(ABCMesh):
                 error_str = 'Could not initialize with mesh  {}. '
                 error_str += 'Mesh has not boundary face definitions.'
                 raise ValueError(error_str.format(mesh.name))
-
-            solver = 'pimpleFoam'
-            if CUBA.VOLUME_FRACTION in BC.keys():
-                solver = 'driftFluxSimphonyFoam'
 
             mapContent = dictionaryMaps[solver]
             controlDict = parse_map(mapContent['controlDict'])
@@ -364,7 +363,7 @@ class FoamMesh(ABCMesh):
                         tuple(foamface.getCellVectorData(self.name,
                                                          label,
                                                          dataName))
-                elif dataName == "alpha1":
+                elif dataName == "alpha.phase1":
                     cell.data[CUBA.VOLUME_FRACTION] = \
                         foamface.getCellData(self.name,
                                              label,

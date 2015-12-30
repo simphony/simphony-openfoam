@@ -72,17 +72,16 @@ Foam::twoPhaseMixture::twoPhaseMixture
 :
     phase1Name_(wordList(dict.lookup("phases"))[0]),
     phase2Name_(wordList(dict.lookup("phases"))[1]),
-
     alpha1_
     (
-        mesh.lookupObject<volScalarField>(word("alpha1"))
+        mesh.lookupObject<volScalarField>(IOobject::groupName("alpha", phase1Name_))
     ),
 
     alpha2_
     (
         IOobject
         (
-            "alpha2", //IOobject::groupName("alpha", phase2Name_),
+            IOobject::groupName("alpha", phase2Name_),
             mesh.time().timeName(),
             mesh
         ),

@@ -427,14 +427,22 @@ std::vector<std::string> foam_getCellVectorDataNames(std::string name)
 
 volVectorField& find_vectorData(std::string name,std::string dataname)
 {
-  const fvMesh & mesh = getMeshFromDb(name);
-  return const_cast<volVectorField&>(mesh.lookupObject<volVectorField>(word(dataname))); 
+  //    const fvMesh & mesh = getMeshFromDb(name);
+  //    return const_cast<volVectorField&>(mesh.lookupObject<volVectorField>(word(dataname))); 
+    fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
+    volVectorField& vF = find_Data<vector>(mesh,dataname);
+    return const_cast<volVectorField&>(vF);  
 }
    
 volScalarField& find_scalarData(std::string name,std::string dataname)
 {
-  const fvMesh & mesh = getMeshFromDb(name);
-  return const_cast<volScalarField&>(mesh.lookupObject<volScalarField>(word(dataname)));  
+  //    const fvMesh & mesh = getMeshFromDb(name);
+  //    return const_cast<volScalarField&>(mesh.lookupObject<volScalarField>(word(dataname)));  
+    fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
+    volScalarField& vS = find_Data<scalar>(mesh,dataname);
+    return const_cast<volScalarField&>(vS);  
+
+
 }
 
 
@@ -924,6 +932,7 @@ void foam_modifyNumerics(std::string name, std::string fvSch, std::string fvSol,
     fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
     runTimes[name]->setTime(0.0,0); // restarting times
     
+
     IStringStream fvSchIS(fvSch.c_str());
     IStringStream fvSolIS(fvSol.c_str());
     IStringStream cDIS(cD.c_str());
@@ -978,7 +987,7 @@ void foam_setBC(std::string name, std::string fieldname, std::string dict)
 		vF.boundaryField().readField(vF,IOdict);
 	}
 	
-	if(fieldname=="p" || fieldname=="p_rgh" || fieldname=="alpha1"){
+	if(fieldname=="p" || fieldname=="p_rgh" || fieldname=="alpha.phase1"){
 		volScalarField& vS = find_Data<scalar>(mesh,fieldname);
 		vS.boundaryField().readField(vS,IOdict);
 	}

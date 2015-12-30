@@ -23,13 +23,13 @@ def create_dummy_celldata(path, name, time, data_name, dimensionset):
 
     """
 
-    version = '2.2'
+    version = '2.4'
     nCells = foamface.getCellCount(name)
     if dataTypeMap[dataKeyMap[data_name]] == 'scalar':
         values = [0.0 for item in range(nCells)]
     else:
         values = [(0.0, 0.0, 0.0) for item in range(nCells)]
-    solver = 'interFoam'
+    solver = 'generalFoam'
     foamFile = os.path.join(time, data_name)
     foamClass = foamTypeMap[dataTypeMap[dataKeyMap[data_name]]]
     location = '\"' + os.path.dirname(foamFile) + '\"'

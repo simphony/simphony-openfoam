@@ -1,0 +1,16 @@
+.
+incompressibleTwoPhaseInteractingMixture
+mixtureViscosityModels/BinghamPlastic
+mixtureViscosityModels/dummyViscosity
+mixtureViscosityModels/lnInclude
+mixtureViscosityModels/mixtureViscosityModel
+mixtureViscosityModels/plastic
+mixtureViscosityModels/slurry
+relativeVelocityModels/fromMesoscale
+relativeVelocityModels/general
+relativeVelocityModels/lnInclude
+relativeVelocityModels/relativeVelocityModel
+relativeVelocityModels/simple
+/opt/openfoam240/src/OpenFOAM/lnInclude
+/opt/openfoam240/src/finiteVolume/lnInclude
+/opt/openfoam240/src/turbulenceModels/incompressible/turbulenceModel/lnInclude/

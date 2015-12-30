@@ -14,16 +14,17 @@ from .cuba_extension import CUBAExt
 from .foam_mesh import FoamMesh
 from .foam_runner import FoamRunner
 from .foam_files import modify_files, write_default_files, remove_parser_files
+from .foam_templates import get_foam_solver
 import simphonyfoaminterface
 
 
-class FoamControlWrapper(ABCModelingEngine):
+class Wrapper(ABCModelingEngine):
     """ Wrapper to OpenFOAM
 
     """
 
     def __init__(self):
-        super(FoamControlWrapper, self).__init__()
+        super(Wrapper, self).__init__()
         self._meshes = {}
         self.CM = DataContainer()
         self.BC = DataContainer()
@@ -61,16 +62,7 @@ class FoamControlWrapper(ABCModelingEngine):
         case = mesh.path
 
         GE = self.CM_extensions[CUBAExt.GE]
-        solver = "simpleFoam"
-        if CUBAExt.LAMINAR_MODEL in GE:
-            if CUBAExt.VOF in GE:
-                solver = "interFoam"
-            else:
-                solver = "simpleFoam"
-        else:
-            error_str = "GE does not define supported solver: GE = {}"
-            raise NotImplementedError(error_str.format(GE))
-
+        solver = get_foam_solver(self.CM_extensions)
         turbulent = 'Turbulent' if not (CUBAExt.LAMINAR_MODEL in GE) else ''
 
         # write default files based on solver
