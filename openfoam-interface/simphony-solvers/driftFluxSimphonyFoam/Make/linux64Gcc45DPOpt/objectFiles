@@ -1,4 +1,0 @@
-OBJECTS = \
-$(OBJECTS_DIR)/incompressibleTwoPhaseInteractingMixture.o\
-$(OBJECTS_DIR)/compressibleTurbulenceModels.o\
-$(OBJECTS_DIR)/driftFluxSimphonyFoam.o

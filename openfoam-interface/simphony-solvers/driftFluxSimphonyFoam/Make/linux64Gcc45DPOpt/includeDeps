@@ -1,3 +1,0 @@
-include incompressibleTwoPhaseInteractingMixture/incompressibleTwoPhaseInteractingMixture.dep
-include compressibleTurbulenceModels.dep
-include driftFluxSimphonyFoam.dep
