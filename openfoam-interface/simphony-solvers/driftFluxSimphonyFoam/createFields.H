@@ -40,19 +40,7 @@
         mesh
     );
 
-    /*Info<< "Reading field tauPrime\n" << endl;
-    volTensorField tauPrime
-    (
-        IOobject
-        (
-            "tauPrime",
-            runTime.timeName(),
-            mesh,
-            IOobject::MUST_READ,
-            IOobject::AUTO_WRITE
-        ),
-        mesh
-    );*/
+
     Info<< "Reading field Sigma" << endl;
     volTensorField Sigma
     (
@@ -115,7 +103,7 @@
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
         ),
-        Sigma - (mixture.mu()*fvc::grad(U) - mixture.mu()*T(fvc::grad(U)))
+        Sigma - (mixture.mu()*fvc::grad(U) + mixture.mu()*T(fvc::grad(U)))
     );
 
 
@@ -159,6 +147,9 @@
     );
 
     relativeVelocityModel& UdmModel(UdmModelPtr());
+
+    word stressModelType(transportProperties.lookup("stressModel"));
+    Info<< "Stressmodel is "<< stressModelType<<"\n" << endl;
 
     Info<< "Calculating field (g.h)f\n" << endl;
     volScalarField gh("gh", g & mesh.C());

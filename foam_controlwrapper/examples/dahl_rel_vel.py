@@ -34,6 +34,7 @@ wrapper.SP_extensions[CUBAExt.VISCOSITY_MODEL_COEFFS] =\
     {'BinghamPlastic': {'coeff': 0.00023143, 'exponent': 179.26,
                         'BinghamCoeff': 0.0005966, 'BinghamExponent': 1050.8,
                         'BinghamOffset': 0, 'muMax': 10}}
+wrapper.SP_extensions[CUBAExt.STRESS_MODEL] = 'standard'
 wrapper.SP_extensions[CUBAExt.RELATIVE_VELOCITY_MODEL] = 'fromMesoscale'
 wrapper.SP_extensions[CUBAExt.EXTERNAL_BODY_FORCE_MODEL] = 'gravitation'
 wrapper.SP_extensions[CUBAExt.EXTERNAL_BODY_FORCE_MODEL_COEFFS] =\

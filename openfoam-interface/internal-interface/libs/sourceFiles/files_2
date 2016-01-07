@@ -60,11 +60,13 @@ derivedFvPatchFields/turbulentMixingLengthDissipationRateInlet/turbulentMixingLe
 derivedFvPatchFields/turbulentMixingLengthFrequencyInlet/turbulentMixingLengthFrequencyInletFvPatchScalarField.C
 
 /* Atmospheric boundary layer */
+/* Include this if OF version > 2.3
+
 derivedFvPatchFields/atmBoundaryLayer/atmBoundaryLayer.C
 derivedFvPatchFields/atmBoundaryLayerInletVelocity/atmBoundaryLayerInletVelocityFvPatchVectorField.C
 derivedFvPatchFields/atmBoundaryLayerInletK/atmBoundaryLayerInletKFvPatchScalarField.C
 derivedFvPatchFields/atmBoundaryLayerInletEpsilon/atmBoundaryLayerInletEpsilonFvPatchScalarField.C
-
+*/
 backwardsCompatibility/wallFunctions/backwardsCompatibilityWallFunctions.C
 
 LIB = $(FOAM_USER_LIBBIN)/libincompressibleRASModelsSimphony

@@ -36,7 +36,8 @@ std::string p_rghName = "p_rgh";
 std::string UName = "U";
 //std::string alphaName = "alpha1";
 std::string alphaName = "alpha.phase1";
-std::string Sigma_muName = "Sigma_mu";
+//std::string Sigma_muName = "Sigma_mu";
+std::string Sigma_muName = "Sigma";
 
 volScalarField& p_rgh = find_Data<scalar>(mesh,p_rghName);
 volScalarField& alpha1 = find_Data<scalar>(mesh,alphaName);
@@ -72,11 +73,16 @@ autoPtr<relativeVelocityModel> UdmModelPtr
 
 relativeVelocityModel& UdmModel(UdmModelPtr());
 
+word stressModelType(transportProperties.lookup("stressModel"));
+Info<< "Stressmodel is "<< stressModelType<<"\n" << endl;
+
+
 //volScalarField& alpha1(mixture.alpha1());
 volScalarField& alpha2(mixture.alpha2());
 
 const dimensionedScalar& rho1 = mixture.rhod();
 const dimensionedScalar& rho2 = mixture.rhoc();
+
 
 Info<< "Creating field SigmaPrime\n" << endl;
 volTensorField SigmaPrime
@@ -198,6 +204,7 @@ while (runTime.run())
     runTime++;
 
     Info<< "Time = " << runTime.timeName() << nl << endl;
+
 
     // --- Pressure-velocity PIMPLE corrector loop
     while (pimple.loop())

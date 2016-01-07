@@ -1,6 +1,7 @@
 EXE_INC = \
-    -IincompressibleTwoPhaseInteractingMixture \
-    -ImixtureViscosityModels/lnInclude \
+    -I./relativeVelocityModels/lnInclude \
+    -I./incompressibleTwoPhaseInteractingMixture \
+    -I./mixtureViscosityModels/lnInclude \
     -I$(LIB_SRC)/finiteVolume/lnInclude \
     -I$(LIB_SRC)/meshTools/lnInclude \
     -I$(LIB_SRC)/sampling/lnInclude \
@@ -11,7 +12,7 @@ EXE_INC = \
     -I$(LIB_SRC)/transportModels/interfaceProperties/lnInclude \
     -I$(LIB_SRC)/TurbulenceModels/turbulenceModels/lnInclude \
     -I$(LIB_SRC)/TurbulenceModels/compressible/lnInclude \
-    -I./relativeVelocityModels/lnInclude
+    -L$(FOAM_USER_LIBBIN)
 
 EXE_LIBS = \
     -ldriftFluxTransportModels \

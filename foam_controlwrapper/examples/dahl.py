@@ -34,6 +34,7 @@ wrapper.SP_extensions[CUBAExt.VISCOSITY_MODEL_COEFFS] =\
     {'BinghamPlastic': {'coeff': 0.00023143, 'exponent': 179.26,
                         'BinghamCoeff': 0.0005966, 'BinghamExponent': 1050.8,
                         'BinghamOffset': 0, 'muMax': 10}}
+wrapper.SP_extensions[CUBAExt.STRESS_MODEL] = 'standard'
 wrapper.SP_extensions[CUBAExt.RELATIVE_VELOCITY_MODEL] = 'simple'
 wrapper.SP_extensions[CUBAExt.RELATIVE_VELOCITY_MODEL_COEFFS] =\
     {'V0': (0.0, -0.002, 0.0), 'a': 285.0, 'a1': 0.1, 'residualAlpha': 0}

@@ -25,6 +25,9 @@ License
 
 
 \*---------------------------------------------------------------------------*/
+//std::string Sigma_muName = "Sigma_mu";
+std::string Sigma_muName = "Sigma";
+
 Info<< "Creating field p_rgh\n" << endl;
 new volScalarField
 (
@@ -63,7 +66,7 @@ volVectorField* Vdj = new volVectorField
         "Vdj",
         runTimes[name]->timeName(),
         mesh,
-        IOobject::NO_READ,
+        IOobject::MUST_READ,
         IOobject::NO_WRITE
     ),
     mesh,
@@ -77,14 +80,14 @@ new volTensorField
 (
     IOobject
     (
-        "Sigma_mu",
+        Sigma_muName,
         runTimes[name]->timeName(),
         mesh,
-        IOobject::NO_READ,
+        IOobject::MUST_READ,
         IOobject::NO_WRITE
     ),
     mesh,
-    dimensionedTensor("Sigma_mu", dimensionSet(1, -1, -2, 0, 0, 0, 0), tensor::zero)
+    dimensionedTensor(Sigma_muName, dimensionSet(1, -1, -2, 0, 0, 0, 0), tensor::zero)
 );
 
 Info<< "Calculating face flux field phi\n" << endl;

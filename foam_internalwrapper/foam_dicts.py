@@ -77,6 +77,7 @@ dictionaryMaps = \
                      {'transportModel': 'Newtonian',
                       'nu': '1.7871e-06',
                       'rho': '996'},
+                 'stressModel': 'standard',
                  'relativeVelocityModel': 'simple',
                  'simpleCoeffs':
                      {'V0': '(0 -0.002198 0)',
@@ -234,6 +235,7 @@ phase2
     rho             996;
 }
 
+stressModel standard;                                                  
 relativeVelocityModel simple;
 
 "(simple|general)Coeffs"
@@ -446,6 +448,14 @@ def modifyNumerics(mesh, SP, SPExt, solver='pimpleFoam'):
             for coeff in viscosity_model_coeffs:
                 control["phase2"][vmc][coeff] =\
                     viscosity_model_coeffs[coeff]
+
+        if CUBAExt.STRESS_MODEL in SPExt:
+                    control["stressModel"] =\
+                        SPExt[CUBAExt.STRESS_MODEL]
+        else:
+            error_str = "Stress model not specified"
+            raise ValueError(error_str)
+
         if CUBAExt.RELATIVE_VELOCITY_MODEL in SPExt:
             control["relativeVelocityModel"] =\
                 SPExt[CUBAExt.RELATIVE_VELOCITY_MODEL]
