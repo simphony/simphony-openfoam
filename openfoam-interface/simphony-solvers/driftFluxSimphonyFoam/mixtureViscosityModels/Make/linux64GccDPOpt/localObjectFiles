@@ -1,7 +1,0 @@
-LOCAL_OBJECTS = \
-mixtureViscosityModel.o\
-mixtureViscosityModelNew.o\
-plastic.o\
-BinghamPlastic.o\
-slurry.o\
-dummyViscosity.o

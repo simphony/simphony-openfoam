@@ -1,5 +1,0 @@
-OBJECTS = \
-$(OBJECTS_DIR)/relativeVelocityModel.o\
-$(OBJECTS_DIR)/simple.o\
-$(OBJECTS_DIR)/general.o\
-$(OBJECTS_DIR)/fromMesoscale.o
