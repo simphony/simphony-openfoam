@@ -6,7 +6,7 @@ virtualenv:
 before_install:
   - sudo add-apt-repository http://www.openfoam.org/download/ubuntu
   - sudo apt-get update -qq
-  - sudo apt-get install -y --force-yes openfoam240
+  - sudo apt-get install -y --force-yes openfoam230
   - sudo apt-get install libhdf5-serial-dev
   - pip install numpy # pyfoam requires numpy
   - . /opt/openfoam240/etc/bashrc
