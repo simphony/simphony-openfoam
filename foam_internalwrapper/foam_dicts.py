@@ -235,7 +235,7 @@ phase2
     rho             996;
 }
 
-stressModel standard;                                                  
+stressModel standard;
 relativeVelocityModel simple;
 
 "(simple|general)Coeffs"

@@ -250,7 +250,6 @@ def modify_files(case, startTime, SP, BC, solver, SPExt, CMExt):
             error_str = "Stress model not specified"
             raise ValueError(error_str)
 
-
         if CUBAExt.RELATIVE_VELOCITY_MODEL in SPExt:
                     control["relativeVelocityModel"] =\
                         SPExt[CUBAExt.RELATIVE_VELOCITY_MODEL]

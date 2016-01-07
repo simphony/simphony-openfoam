@@ -6,6 +6,7 @@ import simphonyfoaminterface as foamface
 from foam_controlwrapper.foam_variables import (dataTypeMap, dataKeyMap)
 from foam_controlwrapper.foam_variables import cellDataTypes
 
+
 def create_dummy_celldata(name, data_name):
     """Created dummy cell data to OpenFoams objectRegistry
 
