@@ -1,4 +1,0 @@
-DEPENDENCIES = \
-incompressibleTwoPhaseInteractingMixture/incompressibleTwoPhaseInteractingMixture.dep\
-compressibleTurbulenceModels.dep\
-driftFluxSimphonyFoam.dep
