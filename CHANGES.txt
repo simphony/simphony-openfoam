@@ -2,7 +2,7 @@ Simphony-OpenFOAM CHANGELOG
 ======================
 
 
-Release 0.1.5
+Release 0.1.6
 -------------
 
 * Compatibility with OpenFoam version 2.4
