@@ -729,7 +729,7 @@ endTime         0.1;
 
 deltaT          0.1;
 
-writeControl    timeStep;
+writeControl    adjustableRunTime;
 
 writeInterval   10000;
 

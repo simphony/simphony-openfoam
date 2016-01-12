@@ -128,7 +128,7 @@ def modify_files(case, startTime, SP, BC, solver, SPExt, CMExt):
     nOfTimeSteps = SP[CUBA.NUMBER_OF_TIME_STEPS]
     deltaT = SP[CUBA.TIME_STEP]
     endTime = float(startTime) + nOfTimeSteps*deltaT
-    writeInterval = nOfTimeSteps
+    writeInterval = nOfTimeSteps*deltaT
     # if empty type boundary condition is used this must be
     # changed in foam's polyMesh/boundary file to the same
     # type (default type is patch)
