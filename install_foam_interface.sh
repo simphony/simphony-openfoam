@@ -13,7 +13,7 @@ cd openfoam-interface/internal-interface/libs
 cd ../wrapper
 wclean
 wmake libso
-python setup.py install
+python setup.py install $1
 popd
 
 export PATH=$PATH:$PWD/openfoam-interface/internal-interface/bin
