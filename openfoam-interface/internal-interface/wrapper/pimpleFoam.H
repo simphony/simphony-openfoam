@@ -43,13 +43,19 @@ surfaceScalarField& phi = const_cast<surfaceScalarField&>(mesh.lookupObject<surf
 label pRefCell = 0;
 scalar pRefValue = 0.0;
 setRefCell(p, mesh.solutionDict().subDict("PIMPLE"), pRefCell, pRefValue);
+dictionary& TPDict = const_cast<dictionary&>(mesh.lookupObject<dictionary>(word("transportProperties"))); 
+dimensionedScalar nu = TPDict.lookup(word("nu"));
+std::ostringstream nus;
+nus << nu.value();
+std::string newtonianTransport ="transportModel  Newtonian;\n nu              nu [ 0 2 -1 0 0 0 0 ]"+nus.str()+";";
 
 singlePhaseTransportModel laminarTransport(U,phi,IStringStream
     (
-        "transportModel  Newtonian;"
-        "nu              nu [ 0 2 -1 0 0 0 0 ] 0.01;"
-    )()
+     newtonianTransport
+   )()
 );
+
+
 
 IStringStream RASPropertiesDict
 (
@@ -71,7 +77,6 @@ autoPtr<incompressible::RASModel> turbulence
 );
 
 
-
 Info<< "\nStarting time loop\n" << endl;
 
 U.storePrevIter();
@@ -91,6 +96,8 @@ while (runTime.run())
     while (pimple.loop())
     {
         // Solve the Momentum equation
+
+      //      Info<< "\n nuEff "<<turbulence->nuEff()<<"\n"<< endl;
 
         tmp<fvVectorMatrix> UEqn
         (

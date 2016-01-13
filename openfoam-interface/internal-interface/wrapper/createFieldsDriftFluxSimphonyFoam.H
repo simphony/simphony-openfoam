@@ -59,7 +59,7 @@ volVectorField* U = new volVectorField
 );
 
 Info<< "Creating field Vdj\n" << endl;
-volVectorField* Vdj = new volVectorField
+new volVectorField
 (
     IOobject
     (
