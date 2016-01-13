@@ -2,6 +2,8 @@
 
 """
 
+import os
+
 from simphony.core.cuba import CUBA
 from simphony.engine import openfoam_internal
 from simphony.engine import openfoam_file_io
@@ -9,7 +11,6 @@ from simphony.engine import openfoam_file_io
 wrapper = openfoam_internal.Wrapper()
 CUBAExt = openfoam_internal.CUBAExt
 
-import os
 path = os.path.abspath(os.curdir)
 name = 'poiseuille'
 
