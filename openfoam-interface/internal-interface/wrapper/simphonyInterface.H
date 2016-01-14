@@ -71,12 +71,16 @@ std::vector<int> foam_getCellPoints(std::string name);
 std::vector<std::string> foam_getCellDataNames(std::string name);
 // get vector data names associated to mesh cells
 std::vector<std::string> foam_getCellVectorDataNames(std::string name);
+// get tensor data names associated to mesh cells
+std::vector<std::string> foam_getCellTensorDataNames(std::string name);
 // get mesh single cell scalar data named dataname
 double foam_getCellData(std::string name, int label,std::string dataname);
 // get mesh cells scalar data named dataname
 std::vector<double> foam_getCellData(std::string name, std::string dataname);
 // get mesh single cell vector data named dataname
 std::vector<double> foam_getCellVectorData(std::string name, int label,std::string dataname);
+// get mesh single cell tensor data named dataname
+std::vector<double> foam_getCellTensorData(std::string name, int label,std::string dataname);
 // get mesh cells vector data named dataname
 std::vector<double> foam_getCellVectorData(std::string name, std::string dataname);
 // get mesh boundary patch names
@@ -97,6 +101,8 @@ void foam_deleteMesh(std::string name);
 void foam_setCellData(std::string name, int label,std::string dataname,double value);
 // set mesh single cell vector data (data must exists in registry)
 void foam_setCellVectorData(std::string name, int label,std::string dataname,std::vector<double> values);
+// set mesh single cell tensor data (data must exists in registry)
+void foam_setCellTensorData(std::string name, int label,std::string dataname,std::vector<double> values);
 // set mesh cell data
 void foam_setCellData(std::string name, std::string dataname, std::vector<double> values);
 // set mesh cell vector data

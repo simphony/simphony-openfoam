@@ -76,13 +76,15 @@ class Wrapper(ABCModelingEngine):
 
         mesh._time = foamface.run(mesh.name, ncores, solver)
 
-    def add_dataset(self, mesh):
+    def add_dataset(self, mesh, name=None):
         """Add a mesh to the OpenFoam modeling engine.
 
         Parameters
         ----------
         mesh : ABCMesh
             mesh to be added.
+        name : string
+            name to give to mesh (optional)
 
         Returns
         -------
@@ -96,14 +98,17 @@ class Wrapper(ABCModelingEngine):
         Exception if mesh already exists
 
         """
-
-        if mesh.name in self._meshes:
-            raise ValueError('Mesh \'{}\` already exists'.format(mesh.name))
+        
+        mesh_name = mesh.name
+        if name:
+            mesh_name = name
+        if mesh_name in self._meshes:
+            raise ValueError('Mesh \'{}\` already exists'.format(mesh_name))
         else:
             solver = get_foam_solver(self.CM_extensions)
-            self._meshes[mesh.name] = FoamMesh(mesh.name, self.BC,
+            self._meshes[mesh_name] = FoamMesh(mesh_name, self.BC,
                                                solver, mesh)
-            return self._meshes[mesh.name]
+            return self._meshes[mesh_name]
 
     def remove_dataset(self, name):
         """Delete mesh from the OpenFoam modeling engine.

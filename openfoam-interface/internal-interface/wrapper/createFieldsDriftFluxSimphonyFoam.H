@@ -120,6 +120,47 @@ new volScalarField
     dimensionedScalar("alpha.phase1", dimensionSet(0, 0, 0, 0, 0, 0, 0), 0)
 );
 
+new volTensorField
+(
+    IOobject
+    (
+        "S",
+        runTimes[name]->timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    mesh,
+    dimensionedTensor("S", dimensionSet(1, -1, -2, 0, 0, 0, 0), tensor::zero)
+);
+
+new volVectorField
+(
+ IOobject
+ (
+  "gradAlpha1",
+  runTimes[name]->timeName(),
+  mesh,
+  IOobject::NO_READ,
+  IOobject::AUTO_WRITE
+  ),
+ mesh,
+ dimensionedVector("gradAlpha1", dimensionSet(0, -1, 0, 0, 0, 0, 0), vector::zero)
+ );
+
+new volTensorField
+(
+ IOobject
+ (
+  "Stress",
+  runTimes[name]->timeName(),
+  mesh,
+  IOobject::NO_READ,
+  IOobject::AUTO_WRITE
+  ),
+ mesh,
+ dimensionedTensor("Stress", dimensionSet(1, -1, -2, 0, 0, 0, 0), tensor::zero)
+ );
 
 Info<< "Creating transportProperties\n" << endl;
 IStringStream TP

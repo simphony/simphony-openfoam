@@ -14,14 +14,18 @@ dataNameMap = {CUBA.PRESSURE: "p",
                CUBA.VOLUME_FRACTION: "alpha.phase1",
                # CUBAExt.FLUX: "phi"
                CUBA.DISTRIBUTION: "phi",
-               # CUBAExt.STRESS_TENSOR: "Sigma"
+               # CUBAExt.MESO_STRESS_TENSOR: "Sigma"
                CUBA.ACCELERATION: "Sigma",
                # CUBAExt.MICROSCOPIC_STRESS_TENSOR: "S"
                CUBA.ANGULAR_ACCELERATION: "S",
                # CUBAExt.RELATIVE_VELOCITY: "Vdj"
                CUBA.ANGULAR_VELOCITY: "Vdj",
                # CUBAExt.DIFFUSION_VELOCITY: "Udm"
-               CUBA.FORCE: "Udm"
+               CUBA.FORCE: "Udm",
+               # CUBAExt.VOLUME_FRACTION_GRADIENT: "gradAlpha1"
+               CUBA.OCCUPANCY: "gradAlpha1",
+               # CUBAExt.STRESS_TENSOR: "Stress"
+               CUBA.TORQUE: "Stress"
                }
 
 dataKeyMap = {"p": CUBA.PRESSURE,
@@ -32,7 +36,9 @@ dataKeyMap = {"p": CUBA.PRESSURE,
               "Sigma": CUBA.ACCELERATION,
               "S": CUBA.ANGULAR_ACCELERATION,
               "Vdj": CUBA.ANGULAR_VELOCITY,
-              "Udm": CUBA.FORCE
+              "Udm": CUBA.FORCE,
+              "gradAlpha1": CUBA.OCCUPANCY,
+              "Stress": CUBA.TORQUE
               }
 
 dataTypeMap = {CUBA.PRESSURE: "scalar",
@@ -43,7 +49,9 @@ dataTypeMap = {CUBA.PRESSURE: "scalar",
                CUBA.ACCELERATION: "tensor",
                CUBA.ANGULAR_ACCELERATION: "tensor",
                CUBA.ANGULAR_VELOCITY: "vector",
-               CUBA.FORCE: "vector"
+               CUBA.FORCE: "vector",
+               CUBA.OCCUPANCY: "vector",
+               CUBA.TORQUE: "tensor"
                }
 
 dataDimensionMap = {CUBA.PRESSURE: "[0, 2, -2, 0, 0, 0, 0]",
@@ -54,7 +62,9 @@ dataDimensionMap = {CUBA.PRESSURE: "[0, 2, -2, 0, 0, 0, 0]",
                     CUBA.ACCELERATION: "[1 -1 -2 0 0 0 0]",
                     CUBA.ANGULAR_ACCELERATION: "[1 -1 -2 0 0 0 0]",
                     CUBA.ANGULAR_VELOCITY: "[0, 1, -1, 0, 0, 0, 0]",
-                    CUBA.FORCE: "[0, 1, -1, 0, 0, 0, 0]"
+                    CUBA.FORCE: "[0, 1, -1, 0, 0, 0, 0]",
+                    CUBA.OCCUPANCY: "[0, -1, 0, 0, 0, 0, 0]",
+                    CUBA.TORQUE: "[1 -1 -2 0 0 0 0]"
                     }
 
 foamTypeMap = {"scalar": "volScalarField",

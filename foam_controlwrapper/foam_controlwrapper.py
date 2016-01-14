@@ -92,13 +92,15 @@ class Wrapper(ABCModelingEngine):
         # save timestep to mesh
         mesh._time = runner.get_last_time()
 
-    def add_dataset(self, mesh):
+    def add_dataset(self, mesh, name=None):
         """Add a mesh to the OpenFoam modeling engine.
 
         Parameters
         ----------
         mesh : ABCMesh
             mesh to be added.
+        name : string
+            name to give to mesh (optional)
 
         Returns
         -------
@@ -117,14 +119,17 @@ class Wrapper(ABCModelingEngine):
         if not isinstance(mesh, ABCMesh):
             raise TypeError('Mesh not instance of ABCMesh')
 
-        if mesh.name in self._meshes:
-            raise ValueError('Mesh \'{}\` already exists'.format(mesh.name))
+        mesh_name = mesh.name
+        if name:
+            mesh_name = name
+        if mesh_name in self._meshes:
+            raise ValueError('Mesh \'{}\` already exists'.format(mesh_name))
         else:
             if self.BC:
-                self._meshes[mesh.name] = FoamMesh(mesh.name, self.BC, mesh)
+                self._meshes[mesh_name] = FoamMesh(mesh_name, self.BC, mesh)
             else:
-                self._meshes[mesh.name] = FoamMesh(mesh.name, {}, mesh)
-            return self._meshes[mesh.name]
+                self._meshes[mesh_name] = FoamMesh(mesh_name, {}, mesh)
+            return self._meshes[mesh_name]
 
     def remove_dataset(self, name):
         """Delete mesh from the OpenFoam modeling engine.

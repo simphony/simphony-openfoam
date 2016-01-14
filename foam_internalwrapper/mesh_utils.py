@@ -47,7 +47,7 @@ def set_cells_data(name, cells, uuidToFoamLabel, dataNameKeyMap):
     """
 
     for dataName in dataNameKeyMap:
-
+        
         dataKey = dataNameKeyMap[dataName]
         if dataTypeMap[dataKey] in cellDataTypes:
             if dataTypeMap[dataKey] == "scalar":
@@ -55,9 +55,15 @@ def set_cells_data(name, cells, uuidToFoamLabel, dataNameKeyMap):
                     foamface.setCellData(name,
                                          uuidToFoamLabel[cell.uid],
                                          dataName, cell.data[dataKey])
-            else:
+            elif dataTypeMap[dataKey] == "vector":
                 for cell in cells:
                     foamface.setCellVectorData(name,
+                                               uuidToFoamLabel[cell.uid],
+                                               dataName,
+                                               list(cell.data[dataKey]))
+            elif dataTypeMap[dataKey] == "tensor":
+                for cell in cells:
+                    foamface.setCellTensorData(name,
                                                uuidToFoamLabel[cell.uid],
                                                dataName,
                                                list(cell.data[dataKey]))

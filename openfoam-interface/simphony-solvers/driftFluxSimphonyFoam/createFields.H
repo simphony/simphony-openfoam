@@ -68,6 +68,7 @@
         fvc::grad(U) + T(fvc::grad(U))
     );
 
+
     #include "createPhi.H"
 
 
@@ -147,6 +148,35 @@
     );
 
     relativeVelocityModel& UdmModel(UdmModelPtr());
+
+
+    volVectorField gradAlpha1
+    (
+        IOobject
+        (
+            "gradAlpha1",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        fvc::grad(alpha1)
+    );
+
+    volTensorField Stress
+    (
+        IOobject
+        (
+            "Stress",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mixture.mu()*fvc::grad(U) + mixture.mu()*T(fvc::grad(U))
+    );
+
+
 
     word stressModelType(transportProperties.lookup("stressModel"));
     Info<< "Stressmodel is "<< stressModelType<<"\n" << endl;

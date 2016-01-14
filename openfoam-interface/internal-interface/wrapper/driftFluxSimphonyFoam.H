@@ -45,18 +45,6 @@ volVectorField& U = find_Data<vector>(mesh,UName);
 volTensorField& Sigma_mu = find_Data<tensor>(mesh,Sigma_muName);
 surfaceScalarField& phi = const_cast<surfaceScalarField&>(mesh.lookupObject<surfaceScalarField>(word("phi"))); 
 
-volTensorField S
-(
-    IOobject
-    (
-        "S",
-        runTimes[name]->timeName(),
-        mesh,
-        IOobject::NO_READ,
-        IOobject::NO_WRITE
-    ),
-    fvc::grad(U) + T(fvc::grad(U))
-);
 
 IOdictionary& transportProperties = const_cast<IOdictionary&>(mesh.lookupObject<IOdictionary>(word("transportProperties"))); 
 
@@ -72,6 +60,8 @@ autoPtr<relativeVelocityModel> UdmModelPtr
 );
 
 relativeVelocityModel& UdmModel(UdmModelPtr());
+
+
 
 word stressModelType(transportProperties.lookup("stressModel"));
 Info<< "Stressmodel is "<< stressModelType<<"\n" << endl;

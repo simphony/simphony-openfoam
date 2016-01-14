@@ -21,7 +21,8 @@ import simphony.core.data_container as dc
 import simphonyfoaminterface as foamface
 
 from .foam_dicts import (dictionaryMaps, parse_map)
-from foam_controlwrapper.foam_variables import (dataNameMap)
+from foam_controlwrapper.foam_variables import dataNameMap
+from foam_controlwrapper.foam_variables import (dataKeyMap, dataTypeMap)
 from .mesh_utils import (create_dummy_celldata, set_cells_data)
 
 
@@ -347,29 +348,23 @@ class FoamMesh(ABCMesh):
 
             dataNames = foamface.getCellDataNames(self.name)
             dataNames += foamface.getCellVectorDataNames(self.name)
-            for dataName in dataNames:
-                if dataName == "p":
-                    cell.data[CUBA.PRESSURE] = \
+            dataNames += foamface.getCellTensorDataNames(self.name)
+            for dataName in set(dataKeyMap.keys()).intersection(dataNames):
+                if dataTypeMap[dataKeyMap[dataName]] == "scalar":
+                    cell.data[dataKeyMap[dataName]] = \
                         foamface.getCellData(self.name,
                                              label,
                                              dataName)
-                elif dataName == "p_rgh":
-                    cell.data[CUBA.CONCENTRATION] = \
-                        foamface.getCellData(self.name,
-                                             label,
-                                             dataName)
-                elif dataName == "U":
-                    cell.data[CUBA.VELOCITY] = \
+                elif dataTypeMap[dataKeyMap[dataName]] == "vector":
+                    cell.data[dataKeyMap[dataName]] = \
                         tuple(foamface.getCellVectorData(self.name,
                                                          label,
                                                          dataName))
-                elif dataName == "alpha.phase1":
-                    cell.data[CUBA.VOLUME_FRACTION] = \
-                        foamface.getCellData(self.name,
-                                             label,
-                                             dataName)
-                else:
-                    pass
+                elif dataTypeMap[dataKeyMap[dataName]] == "tensor":
+                    cell.data[dataKeyMap[dataName]] = \
+                        tuple(foamface.getCellTensorData(self.name,
+                                                         label,
+                                                         dataName))
 
             return cell
 

@@ -425,6 +425,20 @@ std::vector<std::string> foam_getCellVectorDataNames(std::string name)
   return names;
 }
 
+std::vector<std::string> foam_getCellTensorDataNames(std::string name)
+{
+  const fvMesh & mesh = getMeshFromDb(name);
+  wordList tensorDataNames = mesh.names("volTensorField");
+  
+  std::vector<std::string> names(tensorDataNames.size());
+
+  for (int i=0;i<tensorDataNames.size();i++) {
+    names.push_back(tensorDataNames[i]);
+  }
+
+  return names;
+}
+
 volVectorField& find_vectorData(std::string name,std::string dataname)
 {
   //    const fvMesh & mesh = getMeshFromDb(name);
@@ -432,6 +446,13 @@ volVectorField& find_vectorData(std::string name,std::string dataname)
     fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
     volVectorField& vF = find_Data<vector>(mesh,dataname);
     return const_cast<volVectorField&>(vF);  
+}
+
+volTensorField& find_tensorData(std::string name,std::string dataname)
+{
+    fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
+    volTensorField& vF = find_Data<tensor>(mesh,dataname);
+    return const_cast<volTensorField&>(vF);  
 }
    
 volScalarField& find_scalarData(std::string name,std::string dataname)
@@ -461,6 +482,24 @@ std::vector<double> foam_getCellVectorData(std::string name, int label,std::stri
   values[0] = field[label].x(); 
   values[1] = field[label].y(); 
   values[2] = field[label].z();
+  return values;
+
+}
+
+std::vector<double> foam_getCellTensorData(std::string name, int label,std::string dataname)
+{
+  volTensorField& field = find_tensorData(name,dataname);
+
+  std::vector<double> values(9);
+  values[0] = field[label].xx(); 
+  values[1] = field[label].xy(); 
+  values[2] = field[label].xz();
+  values[3] = field[label].yx(); 
+  values[4] = field[label].yy(); 
+  values[5] = field[label].yz();
+  values[6] = field[label].zx(); 
+  values[7] = field[label].zy(); 
+  values[8] = field[label].zz();
   return values;
 
 }
@@ -666,7 +705,7 @@ void foam_addMesh(std::string name,std::vector<double> points,  std::vector<int>
     cind+=cellpoints[cind]+1;
   }
 
-
+ 
   // create cellshape list
   cellShapeList cellShapes(nOfCells);
     
@@ -845,6 +884,18 @@ void foam_setCellVectorData(std::string name, int label,std::string dataname,std
   volVectorField& field = find_vectorData(name, dataname);
   
   vector newValues(values[0],values[1],values[2]);
+
+  field[label] = newValues;
+
+}
+
+void foam_setCellTensorData(std::string name, int label,std::string dataname,std::vector<double> values)
+{
+  volTensorField& field = find_tensorData(name, dataname);
+  
+  tensor newValues(values[0],values[1],values[2],
+		   values[3],values[4],values[5],
+		   values[6],values[7],values[8]);
 
   field[label] = newValues;
 

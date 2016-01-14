@@ -118,59 +118,45 @@ printCoeffs         on;
 
 solvers
 {
-"(p|pFinal)"
-{
-solver          GAMG;
-tolerance       1e-07;
-relTol          0.001;
-smoother        GaussSeidel;
-nPreSweeps      0;
-nPostSweeps     2;
-cacheAgglomeration true;
-nCellsInCoarsestLevel 10;
-agglomerator    faceAreaPair;
-mergeLevels     1;
-}
+    p
+    {
+        solver           GAMG;
+        tolerance        1e-7;
+        relTol           0.01;
 
-"(U|UFinal)"
-{
-solver          smoothSolver;
-smoother        GaussSeidel;
-nSweeps         2;
-tolerance       1e-08;
-relTol          0.01;
-}
+        smoother         DICGaussSeidel;
 
-nuTilda
-{
-solver          smoothSolver;
-smoother        GaussSeidel;
-nSweeps         2;
-tolerance       1e-08;
-relTol          0.1;
-}
+        cacheAgglomeration true;
+        nCellsInCoarsestLevel 10;
+        agglomerator     faceAreaPair;
+        mergeLevels      1;
+    }
+
+    pFinal
+    {
+        $p;
+        relTol          0;
+    }
+
+    "(U|k|epsilon)"
+    {
+        solver          smoothSolver;
+        smoother        symGaussSeidel;
+        tolerance       1e-05;
+        relTol          0.1;
+    }
+
+    "(U|k|epsilon)Final"
+    {
+        $U;
+        relTol          0;
+    }
 }
 
 PIMPLE
 {
-nOuterCorrectors    2;
-nCorrectors         3;
-nNonOrthogonalCorrectors 2;
-pRefCell        0;
-pRefValue       0;
-}
-
-relaxationFactors
-{
-fields
-{
-p               0.3;
-}
-equations
-{
-U               0.7;
-nuTilda         0.7;
-}
+    nNonOrthogonalCorrectors 0;
+    nCorrectors         2;
 }
                         """,
                         'fvSchemes':
@@ -183,23 +169,37 @@ ddtSchemes
 gradSchemes
 {
     default         Gauss linear;
+    grad(p)         Gauss linear;
+    grad(U)         Gauss linear;
 }
 
 divSchemes
 {
     default         none;
-    div(phi,U)     Gauss upwind;
+    div(phi,U)      bounded Gauss linearUpwind grad(U);
+    div(phi,k)      bounded Gauss upwind;
+    div(phi,epsilon) bounded Gauss upwind;
+    div(phi,R)      bounded Gauss upwind;
+    div(R)          Gauss linear;
+    div(phi,nuTilda) bounded Gauss upwind;
     div((nuEff*dev(T(grad(U))))) Gauss linear;
 }
 
 laplacianSchemes
 {
-    default         Gauss linear corrected;
+    default         none;
+    laplacian(nuEff,U) Gauss linear corrected;
+    laplacian(rAUf,p)  Gauss linear corrected;
+    laplacian(DkEff,k) Gauss linear corrected;
+    laplacian(DepsilonEff,epsilon) Gauss linear corrected;
+    laplacian(DREff,R) Gauss linear corrected;
+    laplacian(DnuTildaEff,nuTilda) Gauss linear corrected;
 }
 
 interpolationSchemes
 {
     default         linear;
+    interpolate(U)  linear;
 }
 
 snGradSchemes
@@ -210,7 +210,6 @@ snGradSchemes
 fluxRequired
 {
     default         no;
-    pcorr           ;
     p               ;
 }
 

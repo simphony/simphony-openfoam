@@ -999,9 +999,33 @@ boundaryField
 {
 
 }
+                    """, 'gradAlpha1': """
+dimensions [0 -1 0 0 0 0 0];
 
+internalField uniform (0 0 0);
 
+boundaryField
+{
 
+}
+                    """, 'Stress': """
+dimensions [1 -1 -2 0 0 0 0];
+
+internalField uniform (0 0 0 0 0 0 0 0 0);
+
+boundaryField
+{
+
+}
+                    """, 'S': """
+dimensions [1 -1 -2 0 0 0 0];
+
+internalField uniform (0 0 0 0 0 0 0 0 0);
+
+boundaryField
+{
+
+}
 
                     """}, 'generalFoam': {'U': """
 dimensions [ 0 1 -1 0 0 0 0 ];
@@ -1060,6 +1084,34 @@ boundaryField
 {
 
 }
+                    """, 'gradAlpha1': """
+dimensions [0 -1 0 0 0 0 0];
+
+internalField uniform (0 0 0);
+
+boundaryField
+{
+
+}
+                    """, 'Stress': """
+dimensions [1 -1 -2 0 0 0 0];
+
+internalField uniform (0 0 0 0 0 0 0 0 0);
+
+boundaryField
+{
+
+}
+                    """, 'S': """
+dimensions [1 -1 -2 0 0 0 0];
+
+internalField uniform (0 0 0 0 0 0 0 0 0);
+
+boundaryField
+{
+
+}
+
                     """}
 
 

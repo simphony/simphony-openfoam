@@ -381,6 +381,41 @@ extern "C" {
     }
   }
 
+  static PyObject* getCellTensorDataNames(PyObject *self, PyObject *args)
+  {
+    char *name;
+    
+    if (!PyArg_ParseTuple(args,"s",&name)) {
+      PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
+      return NULL;
+    }
+    try {
+      std::vector<std::string> values = foam_getCellTensorDataNames(std::string(name));
+      PyObject *pylist = PyList_New(values.size());
+      if (pylist != NULL) {
+	for (std::vector<std::string>::size_type i=0;i<values.size();i++) {
+	  PyObject *item = Py_BuildValue("s",values[i].c_str());
+	  PyList_SetItem(pylist, i, item);
+	}
+	return pylist;
+      }else
+	return NULL;	
+    }
+    catch (Foam::error& fErr)
+    {
+      PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
+      return NULL;
+    }
+    catch (std::exception& e) {
+      PyErr_SetString(PyExc_RuntimeError,e.what());
+      return NULL;
+    }
+    catch (...) {
+      PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
+      return NULL;
+    }
+  }
+
   static PyObject* getCellData(PyObject *self, PyObject *args)
   {
     char *name;
@@ -459,6 +494,44 @@ extern "C" {
     }
     try {
       std::vector<double> values = foam_getCellVectorData(std::string(name), label, std::string(dataname));
+      PyObject *pylist = PyList_New(values.size());
+      if (pylist != NULL) {
+	for (std::vector<double>::size_type i=0;i<values.size();i++) {
+	  PyObject *item = Py_BuildValue("d",values[i]);
+	  PyList_SetItem(pylist, i, item);
+	}
+	return pylist;
+      }else
+	return NULL;	
+	
+    }
+    catch (Foam::error& fErr)
+    {
+      PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
+      return NULL;
+    }
+    catch (std::exception& e) {
+      PyErr_SetString(PyExc_RuntimeError,e.what());
+      return NULL;
+    }
+    catch (...) {
+      PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
+      return NULL;
+    }
+  }
+
+  static PyObject* getCellTensorData(PyObject *self, PyObject *args)
+  {
+    char *name;
+    int label;
+    char *dataname;
+
+    if (!PyArg_ParseTuple(args,"sis",&name,&label,&dataname)) {
+      PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
+      return NULL;
+    }
+    try {
+      std::vector<double> values = foam_getCellTensorData(std::string(name), label, std::string(dataname));
       PyObject *pylist = PyList_New(values.size());
       if (pylist != NULL) {
 	for (std::vector<double>::size_type i=0;i<values.size();i++) {
@@ -900,6 +973,7 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
       return NULL;
     }
   }
+
  static PyObject* setCellVectorData(PyObject *self, PyObject *args)
   {
     char *name;
@@ -940,6 +1014,48 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
     }
   
   }
+
+ static PyObject* setCellTensorData(PyObject *self, PyObject *args)
+  {
+    char *name;
+    int label;
+    char *dataname;
+    PyObject *values;
+    if (!PyArg_ParseTuple(args,"sisO!",&name,&label,&dataname,&PyList_Type,&values)) {
+      PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
+      return NULL;
+    }
+    try {
+      PyObject * strObj;
+      int valuessize = PyList_Size(values);
+
+      std::vector<double> vals(valuessize);
+      for (int i=0;i<valuessize;i++) {
+	strObj = PyList_GetItem(values, i);
+	vals[i] = PyFloat_AsDouble(strObj);
+      }
+
+ 
+      foam_setCellTensorData(std::string(name), label, std::string(dataname), vals);
+      return Py_BuildValue("");
+	    	 
+    }
+    catch (Foam::error& fErr)
+      {
+	PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
+	return NULL;
+      }
+    catch (std::exception& e) {
+      PyErr_SetString(PyExc_RuntimeError,e.what());
+      return NULL;
+    }
+    catch (...) {
+      PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
+      return NULL;
+    }
+  
+  }
+
 
    static PyObject* writeCellData(PyObject *self, PyObject *args)
   {
@@ -1218,9 +1334,11 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
     {"getAllCellPoints",getAllCellPoints,METH_VARARGS,"Get every cell points"},
     {"getCellDataNames",getCellDataNames,METH_VARARGS,"Get names of data associated to cell"},
     {"getCellVectorDataNames",getCellVectorDataNames,METH_VARARGS,"Get names of vector data associated to cell"},
+    {"getCellTensorDataNames",getCellTensorDataNames,METH_VARARGS,"Get names of tensor data associated to cell"},
     {"getCellData",getCellData,METH_VARARGS,"Get data associated to cell"},
     {"getAllCellData",getAllCellData,METH_VARARGS,"Get data associated to cells"},
     {"getCellVectorData",getCellVectorData,METH_VARARGS,"Get vector data associated to cell"},
+    {"getCellTensorData",getCellTensorData,METH_VARARGS,"Get tensor data associated to cell"},
     {"getAllCellVectorData",getAllCellVectorData,METH_VARARGS,"Get vector data associated to cells"},
     {"getBoundaryPatchNames",getBoundaryPatchNames,METH_VARARGS,"Get names of the mesh boundary patches"},
     {"getBoundaryPatchFaces",getBoundaryPatchFaces,METH_VARARGS,"Get mesh boundary patches faces"},
@@ -1233,6 +1351,7 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
     {"setCellData",setCellData,METH_VARARGS,"Sets data associated to cell"},
     {"setAllCellData",setAllCellData,METH_VARARGS,"Sets data associated to all cells"},
     {"setCellVectorData",setCellVectorData,METH_VARARGS,"Sets vector data associated to cell"},
+    {"setCellTensorData",setCellTensorData,METH_VARARGS,"Sets tensor data associated to cell"},
     {"setAllCellVectorData",setAllCellVectorData,METH_VARARGS,"Sets vector data associated to cell"},
     {"writeCellData",writeCellData,METH_VARARGS,"Writes cell data to disk"},
     {"writeCellVectorData",writeCellVectorData,METH_VARARGS,"Writes cell vector data to disk"},
