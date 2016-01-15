@@ -47,7 +47,7 @@ def set_cells_data(name, cells, uuidToFoamLabel, dataNameKeyMap):
     """
 
     for dataName in dataNameKeyMap:
-        
+
         dataKey = dataNameKeyMap[dataName]
         if dataTypeMap[dataKey] in cellDataTypes:
             if dataTypeMap[dataKey] == "scalar":

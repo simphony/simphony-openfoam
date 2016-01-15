@@ -98,7 +98,7 @@ class Wrapper(ABCModelingEngine):
         Exception if mesh already exists
 
         """
-        
+
         mesh_name = mesh.name
         if name:
             mesh_name = name
