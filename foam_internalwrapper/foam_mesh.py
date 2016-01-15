@@ -128,6 +128,7 @@ class FoamMesh(ABCMesh):
                             self._uuidToFoamLabel[uuid.UUID(puid,
                                                             version=4)])
 
+
             # make points coordinate list
             pointCoordinates = []
             for point in mesh.iter_points():
@@ -161,7 +162,6 @@ class FoamMesh(ABCMesh):
                 raise ValueError(error_str.format(mesh.name))
 
             patchTypes = []
-            print "We choose patch types between empty or patch"
             if CUBA.PRESSURE in BC.keys() or CUBA.CONCENTRATION in BC.keys():
                 if CUBA.PRESSURE in BC.keys():
                     pressureBCs = BC[CUBA.PRESSURE]

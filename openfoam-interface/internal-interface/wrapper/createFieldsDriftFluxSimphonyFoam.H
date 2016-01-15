@@ -66,7 +66,7 @@ new volVectorField
         "Vdj",
         runTimes[name]->timeName(),
         mesh,
-        IOobject::MUST_READ,
+        IOobject::NO_READ,
         IOobject::NO_WRITE
     ),
     mesh,
@@ -83,7 +83,7 @@ new volTensorField
         Sigma_muName,
         runTimes[name]->timeName(),
         mesh,
-        IOobject::MUST_READ,
+        IOobject::NO_READ,
         IOobject::NO_WRITE
     ),
     mesh,
@@ -131,7 +131,7 @@ new volTensorField
         IOobject::NO_WRITE
     ),
     mesh,
-    dimensionedTensor("S", dimensionSet(1, -1, -2, 0, 0, 0, 0), tensor::zero)
+    dimensionedTensor("S", dimensionSet(0, 0, -1, 0, 0, 0, 0), tensor::zero)
 );
 
 new volVectorField
