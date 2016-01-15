@@ -293,7 +293,6 @@ class FoamMesh(ABCMesh):
             error_str = "Trying to get an non-existing edge with uuid: {}"
             raise ValueError(error_str.format(uuid))
 
-
     def get_face_without_data(self, uuid):
         """Returns a face with a given uuid without face data
 
@@ -328,7 +327,6 @@ class FoamMesh(ABCMesh):
         except KeyError:
             error_str = "Trying to get an non-existing edge with uuid: {}"
             raise ValueError(error_str.format(uuid))
-
 
     def get_cell(self, uuid):
         """Returns a cell with a given uuid.

@@ -76,8 +76,6 @@ for cell in mesh_inside_wrapper.iter_cells():
 
 mesh_inside_wrapper.update_cells(updated_cells)
 
-
-
 V0 = [0.0, -0.002, 0.0]
 a = 285.0
 
@@ -87,7 +85,7 @@ for time_i in range(number_of_outer_timesteps):
     # solve macroscopic scale
     print "Solve cfd"
     wrapper.run()
-    print "Time: ",mesh_inside_wrapper._time
+    print "Time: ", mesh_inside_wrapper._time
     print "Mesoscale as analytic coupling"
     print " Update relative velocity"
 
@@ -99,4 +97,3 @@ for time_i in range(number_of_outer_timesteps):
         updated_cells.append(cell)
 
     mesh_inside_wrapper.update_cells(updated_cells)
-

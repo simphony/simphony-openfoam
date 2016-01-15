@@ -128,7 +128,6 @@ class FoamMesh(ABCMesh):
                             self._uuidToFoamLabel[uuid.UUID(puid,
                                                             version=4)])
 
-
             # make points coordinate list
             pointCoordinates = []
             for point in mesh.iter_points():
