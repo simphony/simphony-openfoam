@@ -81,7 +81,7 @@ mesh_inside_wrapper.update_cells(updated_cells)
 V0 = [0.0, -0.002, 0.0]
 a = 285.0
 
-number_of_outer_timesteps = 1
+number_of_outer_timesteps = 6400
 
 for time_i in range(number_of_outer_timesteps):
     # solve macroscopic scale

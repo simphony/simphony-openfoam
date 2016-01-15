@@ -22,7 +22,7 @@ wrapper.CM_extensions[CUBAExt.GE] = (CUBAExt.INCOMPRESSIBLE,
 wrapper.CM_extensions[CUBAExt.NUMBER_OF_CORES] = 1
 
 wrapper.SP[CUBA.TIME_STEP] = 0.001
-wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 1
+wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 100
 wrapper.SP[CUBA.DENSITY] = 1.0
 wrapper.SP[CUBA.DYNAMIC_VISCOSITY] = 0.001
 
@@ -42,13 +42,11 @@ corner_points = [(0.0, 0.0, 0.0), (20.0e-3, 0.0, 0.0),
                  (20.0e-3, 1.0e-3, 0.1), (0.0, 1.0e-3, 0.1)]
 
 # elements in x -direction
-nex = 10
+nex = 50
 # elements in y -direction
-ney = 4
-print "To mesh creation"
+ney = 6
 openfoam_file_io.create_quad_mesh(path, name, wrapper, corner_points,
                                   nex, ney, 1)
-print "Mesh created"
 mesh_inside_wrapper = wrapper.get_dataset(name)
 
 
