@@ -38,11 +38,18 @@ std::string UName = "U";
 std::string alphaName = "alpha.phase1";
 //std::string Sigma_muName = "Sigma_mu";
 std::string Sigma_muName = "Sigma";
+std::string SName = "S";
+std::string gradAlpha1Name = "gradAlpha1";
+std::string StressName = "Stress";
 
 volScalarField& p_rgh = find_Data<scalar>(mesh,p_rghName);
 volScalarField& alpha1 = find_Data<scalar>(mesh,alphaName);
 volVectorField& U = find_Data<vector>(mesh,UName);
 volTensorField& Sigma_mu = find_Data<tensor>(mesh,Sigma_muName);
+volTensorField& S = find_Data<tensor>(mesh,SName);
+volVectorField& gradAlpha1 = find_Data<vector>(mesh,gradAlpha1Name);
+volTensorField& Stress = find_Data<tensor>(mesh,StressName);
+
 surfaceScalarField& phi = const_cast<surfaceScalarField&>(mesh.lookupObject<surfaceScalarField>(word("phi"))); 
 
 
