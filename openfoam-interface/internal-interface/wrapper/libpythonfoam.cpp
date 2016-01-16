@@ -1298,7 +1298,7 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
      double time;
      char *solver;
 
-     if (!PyArg_ParseTuple(args,"sisd",&name,&nproc,&solver,&initime)) {
+     if (!PyArg_ParseTuple(args,"sis",&name,&nproc,&solver)) {
       PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
       return NULL;
     }
