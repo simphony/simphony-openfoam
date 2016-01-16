@@ -7,7 +7,7 @@ import shutil
 
 from PyFoam.RunDictionary.ParsedParameterFile import ParsedParameterFile
 
-from .foam_files import write_default_files
+from .foam_files import write_default_files, remove_parser_files
 from .foam_templates import blockMeshDict
 from .foam_runner import FoamRunner
 from .io_utils import read_foammesh
@@ -57,6 +57,8 @@ def create_quad_mesh(path, name, mesh_engine, corner_points,
     blockMesh["blocks"] = blockLines
 
     blockMesh.writeFile()
+    # remove PyFoam parser files
+    remove_parser_files(os.getcwd())
 
     # this to overcome bug in blockMesh case attribute
     # blockMesh searches blockMeshDict -file from doubled case directory

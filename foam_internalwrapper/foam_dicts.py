@@ -499,7 +499,11 @@ def modifyFields(mesh, BC, solver='pimpleFoam'):
     nCells = foamface.getCellCount(mesh.name)
     p_values = [0.0 for item in range(nCells)]
     U_values = [[0.0, 0.0, 0.0] for item in range(nCells)]
-    alpha_values = [0.0 for item in range(nCells)]
+    if solver == 'driftFluxSimphonyFoam':
+        alpha_values = [0.0 for item in range(nCells)]
+        vdj_values = [[0.0, 0.0, 0.0] for item in range(nCells)]
+        mu_sigma_values = [[0.0, 0.0, 0.0, 0.0, 0.0,
+                            0.0, 0.0, 0.0, 0.0] for item in range(nCells)]
     for cell in mesh.iter_cells():
         p_values[mesh._uuidToFoamLabel[cell.uid]] = \
             cell.data[ID_pressure]
@@ -508,6 +512,10 @@ def modifyFields(mesh, BC, solver='pimpleFoam'):
         if solver == 'driftFluxSimphonyFoam':
             alpha_values[mesh._uuidToFoamLabel[cell.uid]] = \
                 cell.data[CUBA.VOLUME_FRACTION]
+            vdj_values[mesh._uuidToFoamLabel[cell.uid]] = \
+                cell.data[CUBA.ANGULAR_VELOCITY]
+            mu_sigma_values[mesh._uuidToFoamLabel[cell.uid]] = \
+                cell.data[CUBA.ACCELERATION]
     foamface.setAllCellData(mesh.name, name_pressure, p_values)
     foamface.setAllCellVectorData(mesh.name, "U", U_values)
     if solver == 'driftFluxSimphonyFoam':

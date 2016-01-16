@@ -981,7 +981,7 @@ void foam_createDefaultFields(std::string name, std::string solver)
 void foam_modifyNumerics(std::string name, std::string fvSch, std::string fvSol, std::string cD, std::string TP)
 {
     fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
-    runTimes[name]->setTime(0.0,0); // restarting times
+    //    runTimes[name]->setTime(0.0,0); // restarting times
     
 
     IStringStream fvSchIS(fvSch.c_str());
