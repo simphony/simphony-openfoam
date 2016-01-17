@@ -51,6 +51,7 @@ volVectorField& gradAlpha1 = find_Data<vector>(mesh,gradAlpha1Name);
 volTensorField& Stress = find_Data<tensor>(mesh,StressName);
 
 surfaceScalarField& phi = const_cast<surfaceScalarField&>(mesh.lookupObject<surfaceScalarField>(word("phi"))); 
+phi = linearInterpolate(U) & mesh.Sf();
 
 
 IOdictionary& transportProperties = const_cast<IOdictionary&>(mesh.lookupObject<IOdictionary>(word("transportProperties"))); 
@@ -186,11 +187,14 @@ tmp<surfaceScalarField> tphiAlphaCorr0;
 
 Info<< "\nStarting time loop\n" << endl;
 
+//Info<< alpha1 << endl;
+//Info<< U << endl;
 U.storePrevIter();
 p_rgh.storePrevIter();
 alpha1.storePrevIter();
 
 scalar cumulativeContErr = 0;
+
 
 while (runTime.run())
 {
@@ -215,6 +219,7 @@ while (runTime.run())
         mixture.correct();
 
         #include "UEqn.H"
+
 
         // --- Pressure corrector loop
         while (pimple.correct())

@@ -21,7 +21,10 @@
         )*rAUf*mesh.magSf()
     );
 
+
     phiHbyA += phig;
+
+   
 
     // Update the fixedFluxPressure BCs to ensure flux consistency
     setSnGrad<fixedFluxPressureFvPatchScalarField>
@@ -32,6 +35,7 @@
           //- fvOptions.relative(mesh.Sf().boundaryField() & U.boundaryField())
         )/(mesh.magSf().boundaryField()*rAUf.boundaryField())
     );
+
 
     while (pimple.correctNonOrthogonal())
     {

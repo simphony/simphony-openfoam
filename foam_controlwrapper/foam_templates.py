@@ -747,6 +747,11 @@ timePrecision   6;
 
 runTimeModifiable yes;
 
+adjustTimeStep  on;
+
+maxCo           5;
+
+maxDeltaT       1;
                         """,
                             os.path.join('system', 'decomposeParDict'):
                                 """
