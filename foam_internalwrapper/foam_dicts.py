@@ -55,7 +55,7 @@ dictionaryMaps = \
                  'adjustTimeStep':  'on',
                  'maxCo': '5',
                  'maxDeltaT': '1'
-},
+                 },
             'transportProperties':
                 {'g': '( 0 0 0)',
                  'phases': '(phase1 phase2)',
