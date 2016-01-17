@@ -423,6 +423,7 @@ def modifyNumerics(mesh, SP, SPExt, solver='pimpleFoam'):
         # phase1 uses mixtureViscosity models
         viscosity_model = SPExt[CUBAExt.VISCOSITY_MODEL][
             SPExt[CUBAExt.PHASE_LIST][0]]
+        control["phase1"]["transportModel"] = viscosity_model
         vmc = viscosity_model + 'Coeffs'
         viscosity_model_coeffs =\
             SPExt[CUBAExt.VISCOSITY_MODEL_COEFFS][viscosity_model]
@@ -481,7 +482,6 @@ def modifyNumerics(mesh, SP, SPExt, solver='pimpleFoam'):
                         + str(g[0]) + " " + str(g[1]) + " " + str(g[2]) + " )"
 
         transportPropertiesDict = parse_map(control)
-
     foamface.modifyNumerics(mesh.name, fvSchemesDict, fvSolutionDict,
                             controlDict, transportPropertiesDict)
 
