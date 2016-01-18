@@ -161,11 +161,12 @@ class FoamMesh(ABCMesh):
                 raise ValueError(error_str.format(mesh.name))
 
             patchTypes = []
-            if CUBA.PRESSURE in BC.keys() or CUBA.CONCENTRATION in BC.keys():
+            if CUBA.PRESSURE in BC.keys() or\
+                    CUBA.DYNAMIC_PRESSURE in BC.keys():
                 if CUBA.PRESSURE in BC.keys():
                     pressureBCs = BC[CUBA.PRESSURE]
                 else:
-                    pressureBCs = BC[CUBA.CONCENTRATION]
+                    pressureBCs = BC[CUBA.DYNAMIC_PRESSURE]
                 for boundary in patchNameFacesMap:
                     if pressureBCs[boundary] == "empty":
                         patchTypes.append("empty")

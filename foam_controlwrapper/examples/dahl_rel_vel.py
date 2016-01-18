@@ -43,13 +43,12 @@ wrapper.BC[CUBA.VELOCITY] = {'boundary0': ('fixedValue', (0.0191, 0, 0)),
                              'boundary3': ('fixedValue', (0, 0, 0)),
                              'boundary4': 'slip',
                              'boundary5': 'empty'}
-# CUBA.CONCENTRATION is used for dynamic pressure while not in CUBA keys
-wrapper.BC[CUBA.CONCENTRATION] = {'boundary0': 'fixedFluxPressure',
-                                  'boundary1': ('fixedValue', 0),
-                                  'boundary2': 'fixedFluxPressure',
-                                  'boundary3': 'fixedFluxPressure',
-                                  'boundary4': 'fixedFluxPressure',
-                                  'boundary5': 'empty'}
+wrapper.BC[CUBA.DYNAMIC_PRESSURE] = {'boundary0': 'fixedFluxPressure',
+                                     'boundary1': ('fixedValue', 0),
+                                     'boundary2': 'fixedFluxPressure',
+                                     'boundary3': 'fixedFluxPressure',
+                                     'boundary4': 'fixedFluxPressure',
+                                     'boundary5': 'empty'}
 
 wrapper.BC[CUBA.VOLUME_FRACTION] = {'boundary0': ('fixedValue', 0.001),
                                     'boundary1': ('inletOutlet', 0.001),
@@ -67,10 +66,9 @@ mesh_inside_wrapper = wrapper.get_dataset(name)
 updated_cells = []
 for cell in mesh_inside_wrapper.iter_cells():
     cell.data[CUBA.VOLUME_FRACTION] = 0.001
-    cell.data[CUBA.CONCENTRATION] = 0.0
+    cell.data[CUBA.DYNAMIC_PRESSURE] = 0.0
     cell.data[CUBA.VELOCITY] = [0.0191, 0.0, 0.0]
-    # CUBA.ANGULAR_VELOCITY is used for relative velocity
-    cell.data[CUBA.ANGULAR_VELOCITY] = [0.0, 0.0, 0.0]
+    cell.data[CUBA.RELATIVE_VELOCITY] = [0.0, 0.0, 0.0]
     updated_cells.append(cell)
 
 mesh_inside_wrapper.update_cells(updated_cells)
@@ -93,7 +91,7 @@ for time_i in range(number_of_outer_timesteps):
     for cell in mesh_inside_wrapper.iter_cells():
         alphad = cell.data[CUBA.VOLUME_FRACTION]
         vdj = [V*pow(10.0, -a*max(alphad, 0.0)) for V in V0]
-        cell.data[CUBA.ANGULAR_VELOCITY] = vdj
+        cell.data[CUBA.RELATIVE_VELOCITY] = vdj
         updated_cells.append(cell)
 
     mesh_inside_wrapper.update_cells(updated_cells)

@@ -134,7 +134,7 @@ def modify_files(case, startTime, SP, BC, solver, SPExt, CMExt):
     # type (default type is patch)
 
     if solver in multiphase_solvers:
-        pressureBCs = BC[CUBA.CONCENTRATION]
+        pressureBCs = BC[CUBA.DYNAMIC_PRESSURE]
     else:
         pressureBCs = BC[CUBA.PRESSURE]
     emptyBoundaries = []

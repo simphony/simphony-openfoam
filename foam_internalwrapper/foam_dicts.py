@@ -498,7 +498,7 @@ def modifyFields(mesh, BC, solver='pimpleFoam'):
         ID_pressure = CUBA.PRESSURE
     elif solver == 'driftFluxSimphonyFoam':
         name_pressure = 'p_rgh'
-        ID_pressure = CUBA.CONCENTRATION
+        ID_pressure = CUBA.DYNAMIC_PRESSURE
 
     nCells = foamface.getCellCount(mesh.name)
     p_values = [0.0 for item in range(nCells)]
@@ -517,9 +517,9 @@ def modifyFields(mesh, BC, solver='pimpleFoam'):
             alpha_values[mesh._uuidToFoamLabel[cell.uid]] = \
                 cell.data[CUBA.VOLUME_FRACTION]
             vdj_values[mesh._uuidToFoamLabel[cell.uid]] = \
-                cell.data[CUBA.ANGULAR_VELOCITY]
+                cell.data[CUBA.RELATIVE_VELOCITY]
             mu_sigma_values[mesh._uuidToFoamLabel[cell.uid]] = \
-                cell.data[CUBA.ACCELERATION]
+                cell.data[CUBA.HOMOGENIZED_STRESS_TENSOR]
     foamface.setAllCellData(mesh.name, name_pressure, p_values)
     foamface.setAllCellVectorData(mesh.name, "U", U_values)
     if solver == 'driftFluxSimphonyFoam':
