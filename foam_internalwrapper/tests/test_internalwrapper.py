@@ -6,22 +6,24 @@ foam_controlwrapper module functionalities
 """
 
 import unittest
+import os
+import shutil
 
 from simphony.cuds.mesh import Mesh, Face, Point, Cell
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
 
-from foam_internalwrapper.foam_internalwrapper import FoamInternalWrapper
-from foam_internalwrapper.cuba_extension import CUBAExt
+from foam_internalwrapper.foam_internalwrapper import Wrapper
+from foam_controlwrapper.cuba_extension import CUBAExt
 
 from foam_controlwrapper.blockmesh_utils import create_quad_mesh
 
 
-class FoamInternalWrapperTestCase(unittest.TestCase):
-    """Test case for FoamInternalWrapper class"""
+class WrapperTestCase(unittest.TestCase):
+    """Test case for Wrapper class"""
     def setUp(self):
         self.mesh = Mesh(name="mesh1")
-
+        self.GE = (CUBAExt.INCOMPRESSIBLE, CUBAExt.LAMINAR_MODEL)
         self.points = [
             Point(
                 (0.0, 0.0, 0.0)),
@@ -74,7 +76,8 @@ class FoamInternalWrapperTestCase(unittest.TestCase):
 
         """
 
-        wrapper = FoamInternalWrapper()
+        wrapper = Wrapper()
+        wrapper.CM_extensions[CUBAExt.GE] = self.GE
         wrapper.add_dataset(self.mesh)
         self.assertEqual(sum(1 for _ in wrapper.iter_datasets()), 1)
 
@@ -83,7 +86,8 @@ class FoamInternalWrapperTestCase(unittest.TestCase):
 
         """
 
-        wrapper = FoamInternalWrapper()
+        wrapper = Wrapper()
+        wrapper.CM_extensions[CUBAExt.GE] = self.GE
         wrapper.add_dataset(self.mesh)
         wrapper.remove_dataset(self.mesh.name)
         with self.assertRaises(ValueError):
@@ -94,7 +98,8 @@ class FoamInternalWrapperTestCase(unittest.TestCase):
 
         """
 
-        wrapper = FoamInternalWrapper()
+        wrapper = Wrapper()
+        wrapper.CM_extensions[CUBAExt.GE] = self.GE
         wrapper.add_dataset(self.mesh)
         mesh_inside_wrapper = wrapper.get_dataset(self.mesh.name)
         self.assertEqual(self.mesh.name, mesh_inside_wrapper.name)
@@ -118,7 +123,8 @@ class FoamInternalWrapperTestCase(unittest.TestCase):
 
         """
 
-        wrapper = FoamInternalWrapper()
+        wrapper = Wrapper()
+        wrapper.CM_extensions[CUBAExt.GE] = self.GE
         wrapper.add_dataset(self.mesh)
         mesh2 = self.mesh
         mesh2.name = "mesh2"
@@ -131,7 +137,8 @@ class FoamInternalWrapperTestCase(unittest.TestCase):
 
         """
 
-        wrapper = FoamInternalWrapper()
+        wrapper = Wrapper()
+        wrapper.CM_extensions[CUBAExt.GE] = self.GE
         wrapper.add_dataset(self.mesh)
         mesh2 = self.mesh
         mesh2.name = "mesh2"
@@ -144,10 +151,10 @@ class FoamInternalWrapperTestCase(unittest.TestCase):
             sum(1 for _ in mesh_inside_wrapper2.iter_points()))
 
 
-class FoamInternalWrapperRunTestCase(unittest.TestCase):
+class WrapperRunTestCase(unittest.TestCase):
     def setUp(self):
-        wrapper = FoamInternalWrapper()
-        path = "test_path"
+        wrapper = Wrapper()
+        self.path = "test_path"
         name = "simplemesh"
         wrapper.CM[CUBA.NAME] = name
         wrapper.CM_extensions[CUBAExt.GE] = (CUBAExt.INCOMPRESSIBLE,
@@ -156,12 +163,12 @@ class FoamInternalWrapperRunTestCase(unittest.TestCase):
         wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 3
         wrapper.SP[CUBA.DENSITY] = 1.0
         wrapper.SP[CUBA.DYNAMIC_VISCOSITY] = 1.0
-        wrapper.BC[CUBA.VELOCITY] = {'boundary0': (0.1, 0, 0),
+        wrapper.BC[CUBA.VELOCITY] = {'boundary0': ('fixedValue', (0.1, 0, 0)),
                                      'boundary1': 'zeroGradient',
-                                     'boundary2': (0, 0, 0),
+                                     'boundary2': ('fixedValue', (0, 0, 0)),
                                      'boundary3': 'empty'}
         wrapper.BC[CUBA.PRESSURE] = {'boundary0': 'zeroGradient',
-                                     'boundary1': 0,
+                                     'boundary1': ('fixedValue', 0),
                                      'boundary2': 'zeroGradient',
                                      'boundary3': 'empty'}
         self.wrapper = wrapper
@@ -170,8 +177,12 @@ class FoamInternalWrapperRunTestCase(unittest.TestCase):
                          (5.0, 5.0, 0.0), (0.0, 5.0, 0.0),
                          (0.0, 0.0, 1.0), (5.0, 0.0, 1.0),
                          (5.0, 5.0, 1.0), (0.0, 5.0, 1.0)]
-        create_quad_mesh(path, name, self.wrapper, corner_points, 5, 5, 5)
+        create_quad_mesh(self.path, name, self.wrapper, corner_points, 5, 5, 5)
         self.mesh_inside_wrapper = self.wrapper.get_dataset(name)
+
+    def tearDown(self):
+        if os.path.exists(self.path):
+            shutil.rmtree(self.path)
 
     def test_run_time(self):
         """Test that field variable value is changed after
@@ -195,7 +206,6 @@ class FoamInternalWrapperRunTestCase(unittest.TestCase):
 
         self.assertNotEqual(old_vel, new_vel)
         self.assertNotEqual(old_pres, new_pres)
-
 
 if __name__ == '__main__':
     unittest.main()

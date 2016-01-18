@@ -1,6 +1,21 @@
 Simphony-OpenFOAM CHANGELOG
 ======================
 
+
+Release 0.1.6
+-------------
+
+* Compatibility with OpenFoam version 2.4
+  * compatibility also with OpenFoam version 2.3
+  * Ubuntu 12.04 LTS (Precise) has official debian packages only up to OpenFoam version 2.3
+  * travis is based on OpenFoam version 2.3.0
+* Mixture model included
+* wrapper main classes (IO and internal) named to Wrapper
+* pimpleFoam as default solver in both wrappers (#60)
+* bug fix (#57)
+* internalwrapper added to coveragerc (#54)
+* single CUBA extension file (#34)
+
 Release 0.1.5
 -------------
 

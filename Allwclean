@@ -3,7 +3,7 @@
 export FOAM_MPI_INCLUDE=$WM_THIRD_PARTY_DIR/platforms/$WM_ARCH$WM_COMPILER/$FOAM_MPI/include
 rm -rf dist build foam_wrappers.egg-info
 pushd .
-cd openfoam-interface
+cd openfoam-interface/simphony-solvers/driftFluxSimphonyFoam
 wclean
 rm -rf build
 popd
@@ -18,6 +18,8 @@ pushd .
 cd openfoam-interface/internal-interface/wrapper
 python setup.py clean
 wclean
+wclean mixtureViscosityModels
+wclean relativeVelocityModels
 rm -rf build
 popd
 find . -iname "*~" | xargs rm -f

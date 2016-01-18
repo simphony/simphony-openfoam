@@ -1,6 +1,6 @@
 [run]
 branch = True
-source = foam_controlwrapper
+source = foam_controlwrapper, foam_internalwrapper
 omit = */tests/*
        */bench/*
 

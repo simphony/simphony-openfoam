@@ -1,7 +1,9 @@
 simphonyInterface.C
+twoPhaseMixture/twoPhaseMixture.C
 singlePhaseTransportModel/singlePhaseTransportModel.C
-transportModel/transportModel.C
+incompressibleTwoPhaseInteractingMixture/incompressibleTwoPhaseInteractingMixture.C
 fvSchemes/fvSchemes.C
 solution/solution.C
+time/TimeMod.C
 
 LIB = $(FOAM_USER_LIBBIN)/libfoaminterface

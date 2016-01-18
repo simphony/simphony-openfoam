@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,84 +22,96 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::transportModel
+    Foam::mixtureViscosityModels::dummyViscosity
 
 Description
-    Base-class for all transport models used by the incompressible turbulence
-    models.
+     Thomas' viscosity correction for dummyViscosity.
+
+     References:
+     \verbatim
+         "Transport characteristics of suspension:
+          VIII. A note on the viscosity of Newtonian suspensions
+          of uniform spherical particles".
+          D.G. Thomas,
+          J. Colloid Sci. 20 (3), 1965, p267.
+    \endverbatim
 
 SourceFiles
-    transportModel.C
+    dummyViscosity.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef transportModel_H
-#define transportModel_H
+#ifndef dummyViscosity_H
+#define dummyViscosity_H
 
-#include "IOdictionary.H"
-#include "volFieldsFwd.H"
-#include "surfaceFieldsFwd.H"
+#include "mixtureViscosityModel.H"
+#include "dimensionedScalar.H"
+#include "volFields.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
 
+class incompressibleTwoPhaseInteractingMixture;
+
+namespace mixtureViscosityModels
+{
+
 /*---------------------------------------------------------------------------*\
-                Class transportModel Declaration
+                           Class dummyViscosity Declaration
 \*---------------------------------------------------------------------------*/
 
-class transportModel
+class dummyViscosity
 :
-    public IOdictionary
+    public mixtureViscosityModel
 {
-    // Private Member Functions
+protected:
 
-        //- Disallow copy construct
-        transportModel(const transportModel&);
+    // Protected data
 
-        //- Disallow default bitwise assignment
-        void operator=(const transportModel&);
+        //- dummyViscosity phase fraction
+        const volScalarField& alpha_;
 
 
 public:
 
+    //- Runtime type information
+    TypeName("dummyViscosity");
+
+
     // Constructors
 
         //- Construct from components
-        transportModel
+        dummyViscosity
         (
-            const volVectorField& U,
-            const surfaceScalarField& phi
-        );
-
-        transportModel
-        (
+            const word& name,
+            const dictionary& viscosityProperties,
             const volVectorField& U,
             const surfaceScalarField& phi,
-            Istream& Is
+            const word modelName=typeName
         );
 
 
     //- Destructor
-    virtual ~transportModel();
+    ~dummyViscosity()
+    {}
 
 
     // Member Functions
 
-        //- Return the laminar viscosity
-        virtual tmp<volScalarField> nu() const = 0;
-
-        //- Correct the laminar viscosity
-        virtual void correct() = 0;
+        //- Return the mixture viscosity
+        //  given the viscosity of the continuous phase
+        tmp<volScalarField> mu(const volScalarField& muc) const;
 
         //- Read transportProperties dictionary
-        virtual bool read() = 0;
+        bool read(const dictionary& viscosityProperties);
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace mixtureViscosityModels
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

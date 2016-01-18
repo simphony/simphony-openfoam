@@ -33,6 +33,7 @@ License
 #include "fvCFD.H"
 #include "simpleControl.H"
 #include "pimpleControl.H"
+#include "time/TimeMod.H"
 
 #include<vector>
 #include<string>
@@ -70,12 +71,16 @@ std::vector<int> foam_getCellPoints(std::string name);
 std::vector<std::string> foam_getCellDataNames(std::string name);
 // get vector data names associated to mesh cells
 std::vector<std::string> foam_getCellVectorDataNames(std::string name);
+// get tensor data names associated to mesh cells
+std::vector<std::string> foam_getCellTensorDataNames(std::string name);
 // get mesh single cell scalar data named dataname
 double foam_getCellData(std::string name, int label,std::string dataname);
 // get mesh cells scalar data named dataname
 std::vector<double> foam_getCellData(std::string name, std::string dataname);
 // get mesh single cell vector data named dataname
 std::vector<double> foam_getCellVectorData(std::string name, int label,std::string dataname);
+// get mesh single cell tensor data named dataname
+std::vector<double> foam_getCellTensorData(std::string name, int label,std::string dataname);
 // get mesh cells vector data named dataname
 std::vector<double> foam_getCellVectorData(std::string name, std::string dataname);
 // get mesh boundary patch names
@@ -96,6 +101,8 @@ void foam_deleteMesh(std::string name);
 void foam_setCellData(std::string name, int label,std::string dataname,double value);
 // set mesh single cell vector data (data must exists in registry)
 void foam_setCellVectorData(std::string name, int label,std::string dataname,std::vector<double> values);
+// set mesh single cell tensor data (data must exists in registry)
+void foam_setCellTensorData(std::string name, int label,std::string dataname,std::vector<double> values);
 // set mesh cell data
 void foam_setCellData(std::string name, std::string dataname, std::vector<double> values);
 // set mesh cell vector data
@@ -117,16 +124,16 @@ void foam_setMesh(std::string name);
 // create default files
 void foam_createDefaultFields(std::string name, std::string solver);
 // modifying numerics fvSolution and fvSchemes
-void foam_modifyNumerics(std::string name, std::string fvSch, std::string fvSol, std::string cD);
+void foam_modifyNumerics(std::string name, std::string fvSch, std::string fvSol, std::string cD, std::string TP);
 //modifying boundary conditions
 void foam_setBC(std::string name, std::string fieldname, std::string dict);
 //running the time steps
-double foam_run(std::string name, int nproc);
+double foam_run(std::string name, int nproc, std::string solver);
 
 template<class Type> 
-GeometricField<Type, fvPatchField, volMesh> & find_Data(Time& runTime,std::string& dataname)
+GeometricField<Type, fvPatchField, volMesh> & find_Data(fvMesh& mesh,std::string& dataname)
 {
-  return const_cast< GeometricField < Type, fvPatchField, volMesh > &>(runTime.db().lookupObject< GeometricField <Type, fvPatchField, volMesh> >(word(dataname))); 
+  return const_cast< GeometricField < Type, fvPatchField, volMesh > &>(mesh.lookupObject< GeometricField <Type, fvPatchField, volMesh> >(word(dataname))); 
 }
 
 

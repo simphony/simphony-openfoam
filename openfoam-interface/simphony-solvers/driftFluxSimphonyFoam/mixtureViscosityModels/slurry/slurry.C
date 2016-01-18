@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,62 +23,71 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "transportModel.H"
-#include "viscosityModel.H"
-#include "volFields.H"
+#include "slurry.H"
+#include "addToRunTimeSelectionTable.H"
+
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+namespace Foam
+{
+namespace mixtureViscosityModels
+{
+    defineTypeNameAndDebug(slurry, 0);
+
+    addToRunTimeSelectionTable
+    (
+        mixtureViscosityModel,
+        slurry,
+        dictionary
+    );
+}
+}
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::transportModel::transportModel
+Foam::mixtureViscosityModels::slurry::slurry
 (
-    const volVectorField& U,
-    const surfaceScalarField& phi
-)
-:
-    IOdictionary
-    (
-        IOobject
-        (
-            "transportProperties",
-            U.time().constant(),
-            U.db(),
-            IOobject::MUST_READ_IF_MODIFIED,
-            IOobject::NO_WRITE
-        )
-    )
-{}
-
-Foam::transportModel::transportModel
-(
+    const word& name,
+    const dictionary& viscosityProperties,
     const volVectorField& U,
     const surfaceScalarField& phi,
-    Istream& Is
+    const word modelName
 )
 :
-    IOdictionary(IOobject
+    mixtureViscosityModel(name, viscosityProperties, U, phi),
+    alpha_
+    (
+        U.mesh().lookupObject<volScalarField>
         (
-            "transportProperties",
-            U.time().constant(),
-            U.db(),
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-		Is
-	)
-{}
-
-// * * * * * * * * * * * * * * * * Destructors * * * * * * * * * * * * * * * //
-
-Foam::transportModel::~transportModel()
+            IOobject::groupName
+            (
+                viscosityProperties.lookupOrDefault<word>("alpha", "alpha"),
+                viscosityProperties.dictName()
+            )
+        )
+    )
 {}
 
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
-bool Foam::transportModel::read()
+Foam::tmp<Foam::volScalarField>
+Foam::mixtureViscosityModels::slurry::mu(const volScalarField& muc) const
 {
-    return regIOobject::read();
+    return
+    (
+        muc*(1.0 + 2.5*alpha_ + 10.05*sqr(alpha_) + 0.00273*exp(16.6*alpha_))
+    );
+}
+
+
+bool Foam::mixtureViscosityModels::slurry::read
+(
+    const dictionary& viscosityProperties
+)
+{
+    return true;
 }
 
 

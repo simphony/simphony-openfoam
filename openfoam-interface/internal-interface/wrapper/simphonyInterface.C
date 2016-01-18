@@ -40,10 +40,15 @@ License
 #include "kEpsilon.H"
 #include "laminar.H"
 #include "singlePhaseTransportModel/singlePhaseTransportModel.H"
+#include "incompressibleTwoPhaseInteractingMixture/incompressibleTwoPhaseInteractingMixture.H"
+#include "relativeVelocityModel.H"
 #include "dictionaryEntry.H"
 #include "UList.H"
 #include "mpi.h"
 #include "fvSchemes/fvSchemes.H"
+#include "CMULES.H"
+#include "subCycle.H"
+#include "fixedFluxPressureFvPatchScalarField.H"
 
 #include <map>
 
@@ -64,7 +69,7 @@ void foam_init(std::string caseName,std::string cD)
     )());
 
     Foam::Info<< "Create time\n" << Foam::endl;
-    Foam::Time *runTime = new Time(controlDict_, "..", ".");
+    Foam::Time *runTime = new Foam::TimeMod(controlDict_);
     runTimes[caseName] = runTime;
 
 }
@@ -83,9 +88,8 @@ void foam_readMesh(std::string name)
 {  
     
   Foam::Time *runTime = runTimes[name];
-  //  Info<< "readMesh/Time: " << runTime->timeName() << endl;
   Foam::word regionName = Foam::fvMesh::defaultRegion;
-      
+
   new fvMesh(        
 	     Foam::IOobject
 	     (
@@ -109,7 +113,7 @@ const fvMesh& getMeshFromDb(std::string name)
 std::vector<double> foam_getPointCoordinates(std::string name, int label)
   {
 
-    const fvMesh & mesh = runTimes[name]->db().parent().lookupObject<fvMesh>(Foam::fvMesh::defaultRegion); 
+    const fvMesh & mesh = getMeshFromDb(name);
 
     //    const fvMesh & mesh = getMeshFromDb(name);
     const pointField & pp = mesh.points();
@@ -126,7 +130,7 @@ std::vector<double> foam_getPointCoordinates(std::string name, int label)
 std::vector<double> foam_getPointCoordinates(std::string name)
   {
 
-    const fvMesh & mesh = runTimes[name]->db().parent().lookupObject<fvMesh>(Foam::fvMesh::defaultRegion);
+    const fvMesh & mesh = getMeshFromDb(name);
     const pointField & pp = mesh.points();
 
     std::vector<double> retValue(3*pp.size()); 
@@ -145,7 +149,7 @@ std::vector<double> foam_getPointCoordinates(std::string name)
 
 std::vector<int> foam_getFacePoints(std::string name, int label)
 {
-  const fvMesh & mesh = runTimes[name]->db().parent().lookupObject<fvMesh>(Foam::fvMesh::defaultRegion);
+  const fvMesh & mesh = getMeshFromDb(name);
   const faceList & faces = mesh.faces();
   std::vector<int> points(faces[label].size());
   for (std::vector<int>::size_type i=0;i<points.size();i++) points[i] = faces[label][i];
@@ -334,7 +338,7 @@ std::vector<int> get_ordered_points(const fvMesh & mesh, const labelListList &ce
 
 std::vector<int> foam_getCellPoints(std::string name, int label)
 {
-   const fvMesh & mesh = runTimes[name]->db().parent().lookupObject<fvMesh>(Foam::fvMesh::defaultRegion);
+  const fvMesh & mesh = getMeshFromDb(name);
   const labelListList &cellPoints = mesh.cellPoints();
   const cellList &cellFaces = mesh.cells();
   // gives vertices connected to vertex
@@ -350,7 +354,7 @@ std::vector<int> foam_getCellPoints(std::string name, int label)
 std::vector<int> foam_getCellPoints(std::string name)
 {
   
-  const fvMesh & mesh = runTimes[name]->db().parent().lookupObject<fvMesh>(Foam::fvMesh::defaultRegion);
+  const fvMesh & mesh = getMeshFromDb(name);
   const labelListList &cellPoints = mesh.cellPoints();
   const cellList &cellFaces = mesh.cells();
   // gives vertices connected to vertex
@@ -395,8 +399,8 @@ std::vector<int> foam_getCellPoints(std::string name)
 
 std::vector<std::string> foam_getCellDataNames(std::string name)
 {
-  Foam::Time *runTime = runTimes[name];
-  wordList dataNames = runTime->db().names("volScalarField");
+  const fvMesh & mesh = getMeshFromDb(name);
+  wordList dataNames = mesh.names("volScalarField");
   
   std::vector<std::string> names(dataNames.size());
 
@@ -409,8 +413,8 @@ std::vector<std::string> foam_getCellDataNames(std::string name)
 
 std::vector<std::string> foam_getCellVectorDataNames(std::string name)
 {
-  Foam::Time *runTime = runTimes[name];
-  wordList vectorDataNames = runTime->db().names("volVectorField");
+  const fvMesh & mesh = getMeshFromDb(name);
+  wordList vectorDataNames = mesh.names("volVectorField");
   
   std::vector<std::string> names(vectorDataNames.size());
 
@@ -421,14 +425,45 @@ std::vector<std::string> foam_getCellVectorDataNames(std::string name)
   return names;
 }
 
+std::vector<std::string> foam_getCellTensorDataNames(std::string name)
+{
+  const fvMesh & mesh = getMeshFromDb(name);
+  wordList tensorDataNames = mesh.names("volTensorField");
+  
+  std::vector<std::string> names(tensorDataNames.size());
+
+  for (int i=0;i<tensorDataNames.size();i++) {
+    names.push_back(tensorDataNames[i]);
+  }
+
+  return names;
+}
+
 volVectorField& find_vectorData(std::string name,std::string dataname)
 {
-  return const_cast<volVectorField&>(runTimes[name]->db().lookupObject<volVectorField>(word(dataname))); 
+  //    const fvMesh & mesh = getMeshFromDb(name);
+  //    return const_cast<volVectorField&>(mesh.lookupObject<volVectorField>(word(dataname))); 
+    fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
+    volVectorField& vF = find_Data<vector>(mesh,dataname);
+    return const_cast<volVectorField&>(vF);  
+}
+
+volTensorField& find_tensorData(std::string name,std::string dataname)
+{
+    fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
+    volTensorField& vF = find_Data<tensor>(mesh,dataname);
+    return const_cast<volTensorField&>(vF);  
 }
    
 volScalarField& find_scalarData(std::string name,std::string dataname)
 {
-  return const_cast<volScalarField&>(runTimes[name]->db().lookupObject<volScalarField>(word(dataname)));  
+  //    const fvMesh & mesh = getMeshFromDb(name);
+  //    return const_cast<volScalarField&>(mesh.lookupObject<volScalarField>(word(dataname)));  
+    fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
+    volScalarField& vS = find_Data<scalar>(mesh,dataname);
+    return const_cast<volScalarField&>(vS);  
+
+
 }
 
 
@@ -451,9 +486,27 @@ std::vector<double> foam_getCellVectorData(std::string name, int label,std::stri
 
 }
 
+std::vector<double> foam_getCellTensorData(std::string name, int label,std::string dataname)
+{
+  volTensorField& field = find_tensorData(name,dataname);
+
+  std::vector<double> values(9);
+  values[0] = field[label].xx(); 
+  values[1] = field[label].xy(); 
+  values[2] = field[label].xz();
+  values[3] = field[label].yx(); 
+  values[4] = field[label].yy(); 
+  values[5] = field[label].yz();
+  values[6] = field[label].zx(); 
+  values[7] = field[label].zy(); 
+  values[8] = field[label].zz();
+  return values;
+
+}
+
 std::vector<std::string> foam_getBoundaryPatchNames(std::string name)
 {
-  const fvMesh & mesh = runTimes[name]->db().parent().lookupObject<fvMesh>(Foam::fvMesh::defaultRegion);
+  const fvMesh & mesh = getMeshFromDb(name);
       
   wordList patchNames = mesh.boundaryMesh().names();
       
@@ -472,7 +525,7 @@ std::vector<std::string> foam_getBoundaryPatchNames(std::string name)
 
 std::vector<int> foam_getBoundaryPatchFaces(std::string name)
 {
-  const fvMesh & mesh = runTimes[name]->db().parent().lookupObject<fvMesh>(Foam::fvMesh::defaultRegion);
+  const fvMesh & mesh = getMeshFromDb(name);
   int vecsize = 0;
   forAll(mesh.boundary(), patchI)
     {
@@ -505,7 +558,7 @@ std::vector<int> foam_getBoundaryPatchFaces(std::string name)
 
 std::vector<int> foam_getFacePoints(std::string name)
 {
-  const fvMesh & mesh = runTimes[name]->db().parent().lookupObject<fvMesh>(Foam::fvMesh::defaultRegion);
+  const fvMesh & mesh = getMeshFromDb(name);
   const faceList &faces = mesh.faces();
   
   int k=0;
@@ -567,13 +620,13 @@ void foam_updateCellVectorData(std::string name, std::string dataname)
   {
 
     Foam::Time *runTime = runTimes[name];
-    const fvMesh & mesh = runTime->db().parent().lookupObject<fvMesh>(Foam::fvMesh::defaultRegion);
+    const fvMesh & mesh = getMeshFromDb(name);
     word vectorName(dataname);
     IOobject vectorHeader
       (
        vectorName,
        runTime->timeName(),
-       *runTime,
+       mesh,
        IOobject::MUST_READ,
        IOobject::NO_WRITE,
        true                 // this to register object
@@ -587,14 +640,14 @@ void foam_updateCellData(std::string name, std::string dataname)
   {
 
     Foam::Time *runTime = runTimes[name];
-    const fvMesh & mesh = runTime->db().parent().lookupObject<fvMesh>(Foam::fvMesh::defaultRegion);
+    const fvMesh & mesh = getMeshFromDb(name);
     word scalarName(dataname);
     
     IOobject scalarHeader
       (
        scalarName,
        runTime->timeName(),
-       *runTime,
+       mesh,
        IOobject::MUST_READ,
        IOobject::NO_WRITE,
        true                 // this to register object
@@ -652,7 +705,7 @@ void foam_addMesh(std::string name,std::vector<double> points,  std::vector<int>
     cind+=cellpoints[cind]+1;
   }
 
-
+ 
   // create cellshape list
   cellShapeList cellShapes(nOfCells);
     
@@ -836,6 +889,18 @@ void foam_setCellVectorData(std::string name, int label,std::string dataname,std
 
 }
 
+void foam_setCellTensorData(std::string name, int label,std::string dataname,std::vector<double> values)
+{
+  volTensorField& field = find_tensorData(name, dataname);
+  
+  tensor newValues(values[0],values[1],values[2],
+		   values[3],values[4],values[5],
+		   values[6],values[7],values[8]);
+
+  field[label] = newValues;
+
+}
+
 void foam_setCellData(std::string name, std::string dataname, std::vector<double> values) 
   {
 
@@ -858,7 +923,7 @@ void foam_setCellVectorData(std::string name, std::string dataname, std::vector<
 
 void foam_writeMesh(std::string name)
 {
-  const fvMesh & mesh = runTimes[name]->db().parent().lookupObject<fvMesh>(Foam::fvMesh::defaultRegion);
+  const fvMesh & mesh = getMeshFromDb(name);
   mesh.write();
 }
 
@@ -885,46 +950,48 @@ void foam_writeCellVectorData(std::string name,std::string dataname)
 
 int foam_getFaceCount(std::string name)
 {
-  const fvMesh & mesh = runTimes[name]->db().parent().lookupObject<fvMesh>(Foam::fvMesh::defaultRegion);
+  const fvMesh & mesh = getMeshFromDb(name);
   return mesh.faces().size();
 }
 
 int foam_getPointCount(std::string name)
 {
-  const fvMesh & mesh = runTimes[name]->db().parent().lookupObject<fvMesh>(Foam::fvMesh::defaultRegion);
+  const fvMesh & mesh = getMeshFromDb(name);
   return mesh.points().size();
 }
 
 int foam_getCellCount(std::string name)
 {
-  const fvMesh & mesh = runTimes[name]->db().parent().lookupObject<fvMesh>(Foam::fvMesh::defaultRegion);
+  const fvMesh & mesh = getMeshFromDb(name);
   return mesh.cells().size();
 }
 
 void foam_createDefaultFields(std::string name, std::string solver)
 {
-    const fvMesh & mesh = runTimes[name]->db().parent().lookupObject<fvMesh>(Foam::fvMesh::defaultRegion);
+    const fvMesh & mesh = getMeshFromDb(name);
     if(solver=="pimpleFoam"){
         #include "createFieldsPimpleFoam.H"
     }
-
+    if(solver=="driftFluxSimphonyFoam"){
+        #include "createFieldsDriftFluxSimphonyFoam.H"
+    }
     return;
 }
 
-void foam_modifyNumerics(std::string name, std::string fvSch, std::string fvSol, std::string cD)
+void foam_modifyNumerics(std::string name, std::string fvSch, std::string fvSol, std::string cD, std::string TP)
 {
-    fvMesh & mesh = const_cast<fvMesh&>(runTimes[name]->db().parent().lookupObject<fvMesh>(Foam::fvMesh::defaultRegion));
-    runTimes[name]->setTime(0.0,0); // restarting times
+    fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
+    //    runTimes[name]->setTime(0.0,0); // restarting times
     
+
     IStringStream fvSchIS(fvSch.c_str());
     IStringStream fvSolIS(fvSol.c_str());
     IStringStream cDIS(cD.c_str());
-
+    IStringStream TPIS(TP.c_str());
 
     dictionary& fvSchemesDict = const_cast<dictionary&>(mesh.schemesDict());
     dictionary& fvSolutionDict = const_cast<dictionary&>(mesh.solutionDict());
     dictionary& controlDict = const_cast<dictionary&>(runTimes[name]->controlDict());
-
 
     fvSchemesDict.read
     (
@@ -945,11 +1012,20 @@ void foam_modifyNumerics(std::string name, std::string fvSch, std::string fvSol,
         cDIS()
     );
 
+    runTimes[name]->read();
+
+    dictionary& TPDict = const_cast<dictionary&>(mesh.lookupObject<dictionary>(word("transportProperties"))); 
+    TPDict.read
+    (
+        TPIS()
+    );    
 }
 
 
 void foam_setBC(std::string name, std::string fieldname, std::string dict)
 {
+
+      fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
 
 	IStringStream dictIS(dict.c_str());
 
@@ -958,24 +1034,29 @@ void foam_setBC(std::string name, std::string fieldname, std::string dict)
 	IOdictionary IOdict(runTime, dictIS);
 
 	if(fieldname=="U"){
-		volVectorField& vF = find_Data<vector>(runTime,fieldname);
+		volVectorField& vF = find_Data<vector>(mesh,fieldname);
 		vF.boundaryField().readField(vF,IOdict);
 	}
 	
-	if(fieldname=="p"){
-		volScalarField& vS = find_Data<scalar>(runTime,fieldname);
+	if(fieldname=="p" || fieldname=="p_rgh" || fieldname=="alpha.phase1"){
+		volScalarField& vS = find_Data<scalar>(mesh,fieldname);
 		vS.boundaryField().readField(vS,IOdict);
 	}
 
 }
 
 
-double foam_run(std::string name, int nproc){
-	if(nproc<2){
-		Time& runTime = *(runTimes[name]);
-		fvMesh & mesh = const_cast<fvMesh&>(runTime.db().parent().lookupObject<fvMesh>(Foam::fvMesh::defaultRegion));
-    	#include "pimpleFoam.H"
-    	return runTime.timeOutputValue();
+double foam_run(std::string name, int nproc, std::string solver){
+    if(nproc<2){
+        Time& runTime = *(runTimes[name]);
+        fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
+        if(solver=="pimpleFoam"){
+            #include "pimpleFoam.H"
+        }
+        if(solver=="driftFluxSimphonyFoam"){
+            #include "driftFluxSimphonyFoam.H"
+        }
+        return runTime.timeOutputValue();
     }else{
     
         FatalErrorIn("simphonyInterface:run") << "Parallel OpenFOAM Internal Interface not implemented yet" <<exit(FatalError);        

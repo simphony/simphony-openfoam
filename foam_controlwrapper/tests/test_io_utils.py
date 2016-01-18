@@ -9,7 +9,7 @@ import unittest
 import os
 import tempfile
 
-from foam_controlwrapper.foam_controlwrapper import FoamControlWrapper
+from foam_controlwrapper.foam_controlwrapper import Wrapper
 from foam_controlwrapper.blockmesh_utils import create_quad_mesh
 from foam_controlwrapper.io_utils import read_foammesh
 from simphony.core.cuds_item import CUDSItem
@@ -18,7 +18,7 @@ from simphony.core.cuds_item import CUDSItem
 class IOUtilsTestCase(unittest.TestCase):
     """Test case for io_utils"""
     def setUp(self):
-        wrapper = FoamControlWrapper()
+        wrapper = Wrapper()
         self.path = os.path.join(tempfile.mkdtemp())
         self.name = "test_mesh"
         corner_points = [(0.0, 0.0, 0.0), (5.0, 0.0, 0.0),

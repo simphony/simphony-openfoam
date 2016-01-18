@@ -33,7 +33,7 @@ new volScalarField
     (
         "p",
         runTimes[name]->timeName(),
-        *runTimes[name],
+        mesh,
         IOobject::NO_READ,
         IOobject::NO_WRITE
     ),
@@ -48,7 +48,7 @@ volVectorField* U = new volVectorField
     (
         "U",
         runTimes[name]->timeName(),
-        *runTimes[name],
+        mesh,
         IOobject::NO_READ,
         IOobject::NO_WRITE
     ),
@@ -64,10 +64,29 @@ new surfaceScalarField
     (
         "phi",
         runTimes[name]->timeName(),
-        *runTimes[name],
+        mesh,
         IOobject::NO_READ,
         IOobject::NO_WRITE
     ),
     linearInterpolate(*U) & mesh.Sf()
 );
 
+
+IStringStream TP
+    (
+        "transportModel  Newtonian;"
+        "nu              nu [ 0 2 -1 0 0 0 0 ] 0.01;"
+    );
+
+new IOdictionary
+(
+    IOobject
+    (
+        "transportProperties",
+        runTimes[name]->timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    TP()
+);

@@ -293,6 +293,41 @@ class FoamMesh(ABCMesh):
             error_str = "Trying to get an non-existing edge with uuid: {}"
             raise ValueError(error_str.format(uuid))
 
+    def get_face_without_data(self, uuid):
+        """Returns a face with a given uuid without face data
+
+        Returns the face stored in the mesh
+        identified by uuid. If such face do not
+        exists an exception is raised.
+
+        Parameters
+        ----------
+        uuid
+            uuid of the desired face.
+
+        Returns
+        -------
+        Face
+            Face identified by uuid
+
+        Raises
+        ------
+        Exception
+            If the face identified by uuid was not found
+
+        """
+
+        try:
+            pointLabels = foamface.getFacePoints(self.name,
+                                                 self._uuidToFoamLabel[uuid])
+            puids = [self._foamPointLabelToUuid[lbl] for lbl in pointLabels]
+
+            face = Face(puids, uuid)
+            return face
+        except KeyError:
+            error_str = "Trying to get an non-existing edge with uuid: {}"
+            raise ValueError(error_str.format(uuid))
+
     def get_cell(self, uuid):
         """Returns a cell with a given uuid.
 
@@ -399,12 +434,12 @@ class FoamMesh(ABCMesh):
         for cell in cellList:
             for data in cell.data:
                 if data not in dataNameMap:
-                    error_str = "Data named "+data+" not supported"
+                    error_str = "Data named "+data.name+" not supported"
                     raise NotImplementedError(error_str)
                 dataName = dataNameMap[data]
                 if data not in dataNameKeyMap:
                     dataNameKeyMap[dataName] = data
-                if dataName not in dataNames or dataName not in newDataNames:
+                if dataName not in dataNames and dataName not in newDataNames:
                     newDataNames.append(dataName)
         for dataName in newDataNames:
             create_dummy_celldata(self.path, self.name,
@@ -509,7 +544,8 @@ class FoamMesh(ABCMesh):
         if face_uuids is None:
             faceCount = foamface.getFaceCount(self.name)
             for label in range(faceCount):
-                face = self.get_face(self._foamFaceLabelToUuid[label])
+                face = self.get_face_without_data(
+                    self._foamFaceLabelToUuid[label])
                 if label in facePatchMap:
                     face.data[CUBA.LABEL] = facePatchMap[label]
                 yield face

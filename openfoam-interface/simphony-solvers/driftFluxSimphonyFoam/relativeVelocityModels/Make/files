@@ -1,0 +1,6 @@
+relativeVelocityModel/relativeVelocityModel.C
+simple/simple.C
+general/general.C
+fromMesoscale/fromMesoscale.C
+
+LIB = $(FOAM_USER_LIBBIN)/libdriftFluxRelativeVelocityModels

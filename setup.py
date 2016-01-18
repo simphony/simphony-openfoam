@@ -1,4 +1,5 @@
 import os
+import sys
 
 from setuptools import setup, find_packages, Command
 from setuptools.command.install import install
@@ -28,7 +29,10 @@ class CleanCommand(Command):
 class InstallCommand(install):
     """Customized setuptools install command - prints a friendly greeting."""
     def run(self):
-        os.system("./install_foam_interface.sh")
+        if '--user' in sys.argv:
+            os.system("./install_foam_interface.sh --user")
+        else:
+            os.system("./install_foam_interface.sh")
         install.run(self)
 
 

@@ -4,7 +4,7 @@
 
 from simphony.engine import openfoam_file_io
 
-wrapper = openfoam_file_io.FoamControlWrapper()
+wrapper = openfoam_file_io.Wrapper()
 
 name = 'poiseuille'
 path = '.'

@@ -56,12 +56,17 @@ v2WallFunctions = $(wallFunctions)/v2WallFunctions
 $(v2WallFunctions)/v2WallFunction/v2WallFunctionFvPatchScalarField.C
 
 /* Patch fields */
-derivedFvPatchFields/turbulentHeatFluxTemperature/turbulentHeatFluxTemperatureFvPatchScalarField.C
 derivedFvPatchFields/turbulentMixingLengthDissipationRateInlet/turbulentMixingLengthDissipationRateInletFvPatchScalarField.C
 derivedFvPatchFields/turbulentMixingLengthFrequencyInlet/turbulentMixingLengthFrequencyInletFvPatchScalarField.C
-derivedFvPatchFields/atmBoundaryLayerInletEpsilon/atmBoundaryLayerInletEpsilonFvPatchScalarField.C
-derivedFvPatchFields/atmBoundaryLayerInletVelocity/atmBoundaryLayerInletVelocityFvPatchVectorField.C
 
+/* Atmospheric boundary layer */
+/* Include this if OF version > 2.3
+
+derivedFvPatchFields/atmBoundaryLayer/atmBoundaryLayer.C
+derivedFvPatchFields/atmBoundaryLayerInletVelocity/atmBoundaryLayerInletVelocityFvPatchVectorField.C
+derivedFvPatchFields/atmBoundaryLayerInletK/atmBoundaryLayerInletKFvPatchScalarField.C
+derivedFvPatchFields/atmBoundaryLayerInletEpsilon/atmBoundaryLayerInletEpsilonFvPatchScalarField.C
+*/
 backwardsCompatibility/wallFunctions/backwardsCompatibilityWallFunctions.C
 
 LIB = $(FOAM_USER_LIBBIN)/libincompressibleRASModelsSimphony

@@ -1,22 +1,24 @@
 sinclude $(GENERAL_RULES)/mplib$(WM_MPLIB)
 sinclude $(RULES)/mplib$(WM_MPLIB)
-
+DFS_INC = ../../simphony-solvers/driftFluxSimphonyFoam/
 EXE_INC = \
     $(PFLAGS) $(PINC) \
     -I$(LIB_SRC)/finiteVolume/lnInclude \
+    -I$(DFS_INC)//mixtureViscosityModels/lnInclude \
+    -I$(DFS_INC)//relativeVelocityModels/lnInclude \
     -I$(LIB_SRC)/transportModels \
     -I$(LIB_SRC)/transportModels/incompressible/lnInclude \
     -I$(LIB_SRC)/turbulenceModels \
     -I$(LIB_SRC)/transportModels/incompressible/viscosityModels/viscosityModel \
     -I$(FOAM_SOLVERS) \
+    -I$(LIB_SRC)/meshTools/lnInclude \
     -I../libs/incompressibleTurbulenceModel/RAS/lnInclude
 
 LIB_LIBS = \
+    -ldriftFluxTransportModels \
+    -ldriftFluxRelativeVelocityModels \
     -lincompressibleTurbulenceModelSimphony \
     -lincompressibleRASModelsSimphony \
     -lfiniteVolume \
     $(PLIBS) \
 	-L$(FOAM_USER_LIBBIN)
-
-
-
