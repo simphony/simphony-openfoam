@@ -62,7 +62,7 @@ setup(
     description='Implementation of OpenFoam wrappers',
     long_description=README_TEXT,
     packages=find_packages(),
-    install_requires=['simphony >= 0.3.0',
+    install_requires=['simphony >= 0.3.1',
                       'PyFoam == 0.6.4',
                       'simphony[H5IO, CUBAGen]'],
     entry_points={'simphony.engine':
