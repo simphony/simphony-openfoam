@@ -50,7 +50,7 @@ openfoam_file_io.create_quad_mesh(path, name, wrapper, corner_points,
                                   nex, ney, 1)
 mesh_inside_wrapper = wrapper.get_dataset(name)
 
-#initial values
+# initial values
 for cell in mesh_inside_wrapper.iter_cells():
     cell.data[CUBA.VELOCITY] = [0.1, 0, 0]
 
@@ -60,9 +60,11 @@ avg_velo = 0.0
 for cell in mesh_inside_wrapper.iter_cells():
     avg_velo += cell.data[CUBA.VELOCITY][0]
 
-print "Average velocity ",avg_velo/mesh_inside_wrapper.count_of(CUDSItem.CELL)
+print "Average velocity ", avg_velo/mesh_inside_wrapper.count_of(CUDSItem.CELL)
 # Now view the data.
 from mayavi.scripts import mayavi2
+
+
 @mayavi2.standalone
 def view():
     from mayavi.modules.surface import Surface
@@ -76,4 +78,3 @@ def view():
 
 if __name__ == '__main__':
     view()
-
