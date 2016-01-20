@@ -9,6 +9,8 @@ from simphony.engine import openfoam_internal
 from simphony.engine import openfoam_file_io
 from simphony.core.cuds_item import CUDSItem
 
+from mayavi.scripts import mayavi2
+
 wrapper = openfoam_internal.Wrapper()
 CUBAExt = openfoam_internal.CUBAExt
 
@@ -61,10 +63,9 @@ for cell in mesh_inside_wrapper.iter_cells():
     avg_velo += cell.data[CUBA.VELOCITY][0]
 
 print "Average velocity ", avg_velo/mesh_inside_wrapper.count_of(CUDSItem.CELL)
+
+
 # Now view the data.
-from mayavi.scripts import mayavi2
-
-
 @mayavi2.standalone
 def view():
     from mayavi.modules.surface import Surface
