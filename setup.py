@@ -7,7 +7,7 @@ from setuptools.command.install import install
 with open('README.rst', 'r') as readme:
     README_TEXT = readme.read()
 
-VERSION = '0.1.6.dev0'
+VERSION = '0.2.0'
 
 
 class CleanCommand(Command):

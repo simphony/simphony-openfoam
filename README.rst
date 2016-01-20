@@ -21,11 +21,15 @@ Requirements
 Installation
 ------------
 
-Package foam_controlwrapper requires python 2.7.x, OpenFOAM 2.2.2 and pyFoam 0.6.4
+Package foam_controlwrapper requires python 2.7.x, OpenFOAM 2.3.0 or OpenFOAM 2.4.0 and pyFoam 0.6.4
  
 
-Before installing or using simphony-openfoam , make sure the OpenFOAM environment variables are set by the following command:
-    source /opt/openfoam222/etc/bashrc 
+Before installing or using simphony-openfoam , make sure the OpenFOAM environment variables are set by the following command for OpenFOAM 2.3.0
+    source /opt/openfoam230/etc/bashrc 
+or for OpenFOAM 2.4.0
+    source /opt/openfoam240/etc/bashrc 
+
+
 
 Installation is based on setuptools::
 
@@ -47,8 +51,10 @@ Directory structure
 Subpackages:
 
 
-- foam_controlwrapper --  wrapper class and tests for OpenFOAM using IO wrapping 
-- foam_internalwrapper --  wrapper class and tests for OpenFOAM wrapping using internal interfaces
+- foam_controlwrapper --  wrapper class, tests and examples for OpenFOAM using IO wrapping 
+- foam_internalwrapper --  wrapper class, tests and examples for OpenFOAM wrapping using internal interfaces
+- openfoam-interface -- OpenFOAM interface and modified solver codes
+
 
 Cleaning
 -------
