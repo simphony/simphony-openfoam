@@ -75,6 +75,7 @@ std::vector<std::string> foam_getCellVectorDataNames(std::string name);
 std::vector<std::string> foam_getCellTensorDataNames(std::string name);
 // get mesh single cell scalar data named dataname
 double foam_getCellData(std::string name, int label,std::string dataname);
+
 // get mesh cells scalar data named dataname
 std::vector<double> foam_getCellData(std::string name, std::string dataname);
 // get mesh single cell vector data named dataname
@@ -105,8 +106,16 @@ void foam_setCellVectorData(std::string name, int label,std::string dataname,std
 void foam_setCellTensorData(std::string name, int label,std::string dataname,std::vector<double> values);
 // set mesh cell data
 void foam_setCellData(std::string name, std::string dataname, std::vector<double> values);
+// set mesh cell data and writes to  case directory
+void foam_setAndWriteCellData(std::string name, std::string dataname, std::vector<double> values,std::vector<int> dimension);
 // set mesh cell vector data
 void foam_setCellVectorData(std::string name, std::string dataname, std::vector<double> values);
+// set mesh cell tensor data
+void foam_setCellTensorData(std::string name, std::string dataname,std::vector<double> values);
+// set mesh cell vector data and writes to  case directory
+void foam_setAndWriteCellVectorData(std::string name, std::string dataname, std::vector<double> values,std::vector<int> dimension);
+// set mesh cell tensor data and writes to  case directory
+void foam_setAndWriteCellTensorData(std::string name, std::string dataname, std::vector<double> values,std::vector<int> dimension);
 // write cell data 
 void foam_writeCellData(std::string name,std::string dataname);
 // write cell vector data
@@ -129,6 +138,8 @@ void foam_modifyNumerics(std::string name, std::string fvSch, std::string fvSol,
 void foam_setBC(std::string name, std::string fieldname, std::string dict);
 //running the time steps
 double foam_run(std::string name, int nproc, std::string solver);
+// update mesh data for given time from disk
+void foam_update_data(std::string name, double time);
 
 template<class Type> 
 GeometricField<Type, fvPatchField, volMesh> & find_Data(fvMesh& mesh,std::string& dataname)

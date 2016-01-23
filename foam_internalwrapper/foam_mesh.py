@@ -17,7 +17,6 @@ from simphony.cuds.mesh import Point, Face, Cell
 from simphony.core.cuds_item import CUDSItem
 
 import simphony.core.data_container as dc
-
 import simphonyfoaminterface as foamface
 
 from .foam_dicts import (dictionaryMaps, parse_map)
@@ -357,14 +356,14 @@ class FoamMesh(ABCMesh):
                                              dataName)
                 elif dataTypeMap[dataKeyMap[dataName]] == "vector":
                     cell.data[dataKeyMap[dataName]] = \
-                        tuple(foamface.getCellVectorData(self.name,
-                                                         label,
-                                                         dataName))
+                        foamface.getCellVectorData(self.name,
+                                                   label,
+                                                   dataName)
                 elif dataTypeMap[dataKeyMap[dataName]] == "tensor":
                     cell.data[dataKeyMap[dataName]] = \
-                        tuple(foamface.getCellTensorData(self.name,
-                                                         label,
-                                                         dataName))
+                        foamface.getCellTensorData(self.name,
+                                                   label,
+                                                   dataName)
 
             return cell
 

@@ -45,17 +45,17 @@ dataTypeMap = {CUBA.PRESSURE: "scalar",
                CUBA.STRESS_TENSOR: "tensor"
                }
 
-dataDimensionMap = {CUBA.PRESSURE: "[0, 2, -2, 0, 0, 0, 0]",
-                    CUBA.DYNAMIC_PRESSURE: "[0, 2, -2, 0, 0, 0, 0]",
-                    CUBA.VELOCITY: "[0, 1, -1, 0, 0, 0, 0]",
-                    CUBA.VOLUME_FRACTION: "[0, 0, 0, 0, 0, 0, 0]",
-                    CUBA.FLUX: "[1 0 -1 0 0 0 0]",
-                    CUBA.HOMOGENIZED_STRESS_TENSOR: "[1 -1 -2 0 0 0 0]",
-                    CUBA.STRAIN_TENSOR: "[1 -1 -2 0 0 0 0]",
-                    CUBA.RELATIVE_VELOCITY: "[0, 1, -1, 0, 0, 0, 0]",
-                    CUBA.DIFFUSION_VELOCITY: "[0, 1, -1, 0, 0, 0, 0]",
-                    CUBA.VOLUME_FRACTION_GRADIENT: "[0, -1, 0, 0, 0, 0, 0]",
-                    CUBA.STRESS_TENSOR: "[1 -1 -2 0 0 0 0]"
+dataDimensionMap = {CUBA.PRESSURE: [0, 2, -2, 0, 0, 0, 0],
+                    CUBA.DYNAMIC_PRESSURE: [1, -1, -2, 0, 0, 0, 0],
+                    CUBA.VELOCITY: [0, 1, -1, 0, 0, 0, 0],
+                    CUBA.VOLUME_FRACTION: [0, 0, 0, 0, 0, 0, 0],
+                    CUBA.FLUX: [1, 0, -1, 0, 0, 0, 0],
+                    CUBA.HOMOGENIZED_STRESS_TENSOR: [1, -1, -2, 0, 0, 0, 0],
+                    CUBA.STRAIN_TENSOR: [1, -1, -2, 0, 0, 0, 0],
+                    CUBA.RELATIVE_VELOCITY: [0, 1, -1, 0, 0, 0, 0],
+                    CUBA.DIFFUSION_VELOCITY: [0, 1, -1, 0, 0, 0, 0],
+                    CUBA.VOLUME_FRACTION_GRADIENT: [0, -1, 0, 0, 0, 0, 0],
+                    CUBA.STRESS_TENSOR: [1, -1, -2, 0, 0, 0, 0]
                     }
 
 foamTypeMap = {"scalar": "volScalarField",

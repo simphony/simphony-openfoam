@@ -49,14 +49,13 @@ License
 #include "CMULES.H"
 #include "subCycle.H"
 #include "fixedFluxPressureFvPatchScalarField.H"
-
+#include "hashedWordList.H"
 #include <map>
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 
 std::map<std::string,Foam::Time *> runTimes;
-//std::map<std::string,Foam::fvMesh *> meshes;
 
 
 void foam_init(std::string caseName,std::string cD)
@@ -68,7 +67,6 @@ void foam_init(std::string caseName,std::string cD)
         cD
     )());
 
-    Foam::Info<< "Create time\n" << Foam::endl;
     Foam::Time *runTime = new Foam::TimeMod(controlDict_);
     runTimes[caseName] = runTime;
 
@@ -463,45 +461,118 @@ volScalarField& find_scalarData(std::string name,std::string dataname)
     volScalarField& vS = find_Data<scalar>(mesh,dataname);
     return const_cast<volScalarField&>(vS);  
 
-
 }
+
 
 
 
 double foam_getCellData(std::string name, int label,std::string dataname)
 {
-  volScalarField& field = find_scalarData(name,dataname);
-  return field[label];
+    const fvMesh & mesh = getMeshFromDb(name);
+    hashedWordList names(mesh.names());
+    if (names.contains(word(dataname)))
+      {
+	volScalarField& field = find_scalarData(name,dataname);
+	return field[label];
+      }
+    else 
+      {
+    volScalarField field
+      (
+       IOobject
+       (
+        word(dataname),
+        runTimes[name]->timeName(),
+        mesh,
+        IOobject::MUST_READ_IF_MODIFIED,
+        IOobject::NO_WRITE
+	),
+       mesh);
+    return field[label];
+    
+  }
+  
 }
+
 
 std::vector<double> foam_getCellVectorData(std::string name, int label,std::string dataname)
 {
-  volVectorField& field = find_vectorData(name,dataname);
-
-  std::vector<double> values(3);
-  values[0] = field[label].x(); 
-  values[1] = field[label].y(); 
-  values[2] = field[label].z();
-  return values;
-
+  const fvMesh & mesh = getMeshFromDb(name);
+  hashedWordList names(mesh.names());
+  if (names.contains(word(dataname)))
+    {
+      volVectorField& field = find_vectorData(name,dataname);
+      std::vector<double> values(3);
+      values[0] = field[label].x(); 
+      values[1] = field[label].y(); 
+      values[2] = field[label].z();
+      return values;
+    }else
+    { 
+      volVectorField field
+	(       IOobject
+		(
+		 word(dataname),
+		 runTimes[name]->timeName(),
+		 mesh,
+		 IOobject::MUST_READ,
+		 IOobject::NO_WRITE
+		 ),
+		mesh);
+      std::vector<double> values(3);
+      values[0] = field[label].x(); 
+      values[1] = field[label].y(); 
+      values[2] = field[label].z();
+      return values;
+    }
 }
+
 
 std::vector<double> foam_getCellTensorData(std::string name, int label,std::string dataname)
 {
-  volTensorField& field = find_tensorData(name,dataname);
-
-  std::vector<double> values(9);
-  values[0] = field[label].xx(); 
-  values[1] = field[label].xy(); 
-  values[2] = field[label].xz();
-  values[3] = field[label].yx(); 
-  values[4] = field[label].yy(); 
-  values[5] = field[label].yz();
-  values[6] = field[label].zx(); 
-  values[7] = field[label].zy(); 
-  values[8] = field[label].zz();
-  return values;
-
+  const fvMesh & mesh = getMeshFromDb(name);
+  hashedWordList names(mesh.names());
+  if (names.contains(word(dataname)))
+    {
+      volTensorField& field = find_tensorData(name,dataname);
+      
+      std::vector<double> values(9);
+      values[0] = field[label].xx(); 
+      values[1] = field[label].xy(); 
+      values[2] = field[label].xz();
+      values[3] = field[label].yx(); 
+      values[4] = field[label].yy(); 
+      values[5] = field[label].yz();
+      values[6] = field[label].zx(); 
+      values[7] = field[label].zy(); 
+      values[8] = field[label].zz();
+      return values;
+    }else
+    {
+    
+      volTensorField field
+	(
+	 IOobject
+	 (
+	  word(dataname),
+	  runTimes[name]->timeName(),
+	  mesh,
+	  IOobject::MUST_READ,
+	  IOobject::NO_WRITE
+	  ),
+	 mesh);
+      std::vector<double> values(9);
+      values[0] = field[label].xx(); 
+      values[1] = field[label].xy(); 
+      values[2] = field[label].xz();
+      values[3] = field[label].yx(); 
+      values[4] = field[label].yy(); 
+      values[5] = field[label].yz();
+      values[6] = field[label].zx(); 
+      values[7] = field[label].zy(); 
+      values[8] = field[label].zz();
+      return values;
+    }
 }
 
 std::vector<std::string> foam_getBoundaryPatchNames(std::string name)
@@ -627,7 +698,7 @@ void foam_updateCellVectorData(std::string name, std::string dataname)
        vectorName,
        runTime->timeName(),
        mesh,
-       IOobject::MUST_READ,
+       IOobject::MUST_READ_IF_MODIFIED,
        IOobject::NO_WRITE,
        true                 // this to register object
        );
@@ -648,7 +719,7 @@ void foam_updateCellData(std::string name, std::string dataname)
        scalarName,
        runTime->timeName(),
        mesh,
-       IOobject::MUST_READ,
+       IOobject::MUST_READ_IF_MODIFIED,
        IOobject::NO_WRITE,
        true                 // this to register object
        );
@@ -909,17 +980,122 @@ void foam_setCellData(std::string name, std::string dataname, std::vector<double
 
   }
 
+void foam_setAndWriteCellData(std::string name,std::string dataname, std::vector<double> values,std::vector<int> dimension) 
+  {
 
-
+    const fvMesh & mesh = getMeshFromDb(name);
+    hashedWordList names(mesh.names());
+    if (names.contains(word(dataname)))
+      {
+	volScalarField& field = find_scalarData(name,dataname);
+	field.internalField() = Field<scalar>(UList<scalar>(&(values[0]),values.size()));
+	field.write();
+      }
+    else
+      {
+	volScalarField field
+	(
+	 IOobject
+	 (
+	  word(dataname),
+	  runTimes[name]->timeName(),
+	  mesh,
+	  IOobject::NO_READ,
+	  IOobject::NO_WRITE
+	  ),
+	 mesh,
+	 dimensionedScalar(word(dataname), dimensionSet(dimension[0], dimension[1], dimension[2], dimension[3], dimension[4], dimension[5], dimension[6]), 0)
+	 );
+	field.internalField() = Field<scalar>(UList<scalar>(&(values[0]),values.size()));
+	field.write();
+ 
+      }
+  }
 
 void foam_setCellVectorData(std::string name, std::string dataname, std::vector<double> values) 
   {
-
     volVectorField& field = find_vectorData(name,dataname);
-
     field.internalField() = Field<vector>(UList<vector>((vector*)&(values[0]),values.size()/3));
 
   }
+
+
+void foam_setAndWriteCellVectorData(std::string name, std::string dataname, std::vector<double> values,std::vector<int> dimension) 
+  {
+  const fvMesh & mesh = getMeshFromDb(name);
+  hashedWordList names(mesh.names());
+  if (names.contains(word(dataname)))
+    {
+      volVectorField& field = find_vectorData(name,dataname);
+      field.internalField() = Field<vector>(UList<vector>((vector*)&(values[0]),values.size()/3));
+      field.write();
+    }
+  else
+    {
+      volVectorField field
+	(
+	 IOobject
+	 (
+	  word(dataname),
+	  runTimes[name]->timeName(),
+	  mesh,
+	  IOobject::NO_READ,
+	  IOobject::NO_WRITE
+	  ),
+	 mesh,
+	 dimensionedVector(word(dataname), dimensionSet(dimension[0], dimension[1], dimension[2], dimension[3], dimension[4], dimension[5], dimension[6]), vector::zero)
+);
+      field.internalField() = Field<vector>(UList<vector>((vector*)&(values[0]),values.size()/3));
+      field.write();
+      
+    }
+
+  }
+
+void foam_setCellTensorData(std::string name, std::string dataname, std::vector<double> values) 
+  {
+    volTensorField& field = find_tensorData(name,dataname);
+    field.internalField() = Field<tensor>(UList<tensor>((tensor*)&(values[0]),values.size()/9));
+
+  }
+
+
+
+void foam_setAndWriteCellTensorData(std::string name,  std::string dataname, std::vector<double> values,std::vector<int> dimension) 
+  {
+  const fvMesh & mesh = getMeshFromDb(name);
+  hashedWordList names(mesh.names());
+  if (names.contains(word(dataname)))
+    {
+      volTensorField& field = find_tensorData(name,dataname);
+      field.internalField() = Field<tensor>(UList<tensor>((tensor*)&(values[0]),values.size()/9));
+      field.write();
+    }
+  else
+    {
+      volTensorField field
+	(
+	 IOobject
+	 (
+	  word(dataname),
+	  runTimes[name]->timeName(),
+	  mesh,
+	  IOobject::NO_READ,
+	  IOobject::NO_WRITE
+	  ),
+	 mesh,
+	 dimensionedTensor(word(dataname), dimensionSet(dimension[0], dimension[1], dimension[2], dimension[3], dimension[4], dimension[5], dimension[6]), tensor::zero)
+);
+      field.internalField() = Field<tensor>(UList<tensor>((tensor*)&(values[0]),values.size()/9));
+      field.write();
+
+    }
+
+  }
+
+
+
+
 
 void foam_writeMesh(std::string name)
 {
@@ -1063,6 +1239,15 @@ double foam_run(std::string name, int nproc, std::string solver){
 
         return 0.0;         
     }
+
 }
+
+void foam_update_data(std::string name, double time){
+    runTimes[name]->setTime(time,0);
+    runTimes[name]->read();
+ 
+}
+
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

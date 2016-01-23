@@ -7,6 +7,7 @@ Managment of OpenFOAM dicts and Fields
 import simphonyfoaminterface as foamface
 from simphony.core.cuba import CUBA
 from foam_controlwrapper.cuba_extension import CUBAExt
+from foam_controlwrapper.foam_variables import (dataDimensionMap, dataKeyMap)
 
 dictionaryMaps = \
     {'pimpleFoam':
@@ -412,6 +413,7 @@ def modifyNumerics(mesh, SP, SPExt, solver='pimpleFoam'):
     mapContent['controlDict']['startTime'] = str(mesh._time)
     mapContent['controlDict']['deltaT'] = str(deltaT)
     mapContent['controlDict']['endTime'] = str(endTime)
+    mapContent['controlDict']['maxDeltaT'] = str(deltaT)
 
     controlDict = parse_map(mapContent['controlDict'])
 
@@ -506,7 +508,7 @@ def modifyFields(mesh, BC, solver='pimpleFoam'):
     if solver == 'driftFluxSimphonyFoam':
         alpha_values = [0.0 for item in range(nCells)]
         vdj_values = [[0.0, 0.0, 0.0] for item in range(nCells)]
-        mu_sigma_values = [[0.0, 0.0, 0.0, 0.0, 0.0,
+        sigma_mu_values = [[0.0, 0.0, 0.0, 0.0, 0.0,
                             0.0, 0.0, 0.0, 0.0] for item in range(nCells)]
     for cell in mesh.iter_cells():
         p_values[mesh._uuidToFoamLabel[cell.uid]] = \
@@ -518,14 +520,19 @@ def modifyFields(mesh, BC, solver='pimpleFoam'):
                 cell.data[CUBA.VOLUME_FRACTION]
             vdj_values[mesh._uuidToFoamLabel[cell.uid]] = \
                 cell.data[CUBA.RELATIVE_VELOCITY]
-            mu_sigma_values[mesh._uuidToFoamLabel[cell.uid]] = \
+            sigma_mu_values[mesh._uuidToFoamLabel[cell.uid]] = \
                 cell.data[CUBA.HOMOGENIZED_STRESS_TENSOR]
-    foamface.setAllCellData(mesh.name, name_pressure, p_values)
-    foamface.setAllCellVectorData(mesh.name, "U", U_values)
+    foamface.setAllCellData(mesh.name, name_pressure, 0, p_values,
+                            dataDimensionMap[dataKeyMap[name_pressure]])
+    foamface.setAllCellVectorData(mesh.name, "U", 0, U_values,
+                                  dataDimensionMap[dataKeyMap["U"]])
     if solver == 'driftFluxSimphonyFoam':
-        foamface.setAllCellData(mesh.name, "alpha.phase1", alpha_values)
+        foamface.setAllCellData(mesh.name, "alpha.phase1", 0, alpha_values,
+                                dataDimensionMap[dataKeyMap["alpha.phase1"]])
+        foamface.setAllCellTensorData(mesh.name, "Sigma", 0, sigma_mu_values,
+                                      dataDimensionMap[dataKeyMap["Sigma"]])
 
-#       Refresh boundary conditions
+    # Refresh boundary conditions
     velocityBCs = BC[CUBA.VELOCITY]
     myDict = ""
 

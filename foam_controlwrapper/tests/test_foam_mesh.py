@@ -65,7 +65,7 @@ class FoamMeshTestCase(unittest.TestCase):
 
         self.cells = [
             Cell(puids,
-                 data=DataContainer({CUBA.VELOCITY: (1, 0, 0),
+                 data=DataContainer({CUBA.VELOCITY: [1, 0, 0],
                                      CUBA.PRESSURE: 4.0}))
         ]
 
@@ -187,7 +187,7 @@ class FoamMeshTestCase(unittest.TestCase):
 
         foam_mesh = FoamMesh('test_mesh', {}, self.mesh)
         cell = self.cells[0]
-        cell.data[CUBA.VELOCITY] = (2, 1, 3)
+        cell.data[CUBA.VELOCITY] = [2, 1, 3]
         foam_mesh.update_cells(self.cells)
         cell_f = foam_mesh.get_cell(cell.uid)
         self.assertIsInstance(cell_f.data, DataContainer)
