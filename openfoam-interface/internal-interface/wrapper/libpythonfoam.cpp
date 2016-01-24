@@ -1081,6 +1081,7 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
     }
     if (!write)
       {
+
 	try
 	  {
 	    PyObject * strObj;
@@ -1118,7 +1119,7 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
 	  PyObject * strObj;
 	  int ncells = PyList_Size(values);
 	  
-	  std::vector<double> vals(ncells*3);
+	  std::vector<double> vals(ncells*9);
 	  
 	  for (int i=0;i<ncells;i++) {
 	    strObj = PyList_GetItem(values, i);

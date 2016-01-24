@@ -470,6 +470,7 @@ double foam_getCellData(std::string name, int label,std::string dataname)
 {
     const fvMesh & mesh = getMeshFromDb(name);
     hashedWordList names(mesh.names());
+
     if (names.contains(word(dataname)))
       {
 	volScalarField& field = find_scalarData(name,dataname);
@@ -1065,6 +1066,7 @@ void foam_setAndWriteCellTensorData(std::string name,  std::string dataname, std
   {
   const fvMesh & mesh = getMeshFromDb(name);
   hashedWordList names(mesh.names());
+
   if (names.contains(word(dataname)))
     {
       volTensorField& field = find_tensorData(name,dataname);
