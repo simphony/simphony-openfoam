@@ -18,10 +18,11 @@ from simphony.core.cuds_item import CUDSItem
 import simphony.core.data_container as dc
 import simphonyfoaminterface as foamface
 
-from .foam_files import (
-    set_cells_data, write_default_files, get_cell_data_names, get_cell_data)
-from .mesh_utils import create_dummy_celldata
-from .foam_variables import (dataNameMap, dataKeyMap, dataDimensionMap)
+from .foam_files import (write_default_files, get_cell_data_names)
+from foam_internalwrapper.mesh_utils import set_cells_data
+from foam_internalwrapper.mesh_utils import create_dummy_celldata
+from .foam_variables import (dataNameMap, dataKeyMap)
+from .foam_variables import dataTypeMap
 
 
 class FoamMesh(ABCMesh):
@@ -148,14 +149,17 @@ class FoamMesh(ABCMesh):
                 raise ValueError(error_str.format(mesh.name))
 
             patchTypes = []
-            if CUBA.PRESSURE in BC.keys():
-                pressureBCs = BC[CUBA.PRESSURE]
+            if CUBA.PRESSURE in BC.keys() or\
+                    CUBA.DYNAMIC_PRESSURE in BC.keys():
+                if CUBA.PRESSURE in BC.keys():
+                    pressureBCs = BC[CUBA.PRESSURE]
+                else:
+                    pressureBCs = BC[CUBA.DYNAMIC_PRESSURE]
                 for boundary in patchNameFacesMap:
                     if pressureBCs[boundary] == "empty":
                         patchTypes.append("empty")
                     else:
                         patchTypes.append("patch")
-
             else:
                 for i in range(len(patchNames)):
                     patchTypes.append("patch")
@@ -358,16 +362,25 @@ class FoamMesh(ABCMesh):
                                                  self._uuidToFoamLabel[uuid])
             puids = [self._foamPointLabelToUuid[lbl] for lbl in pointLabels]
             cell = Cell(puids, uuid)
+            label = self._uuidToFoamLabel[uuid]
 
             dataNames = get_cell_data_names(self.path, self._time)
             for dataName in dataNames:
-                if dataName not in dataKeyMap:
-                    error_str = "Data named "+dataName+" not supported"
-                    raise NotImplementedError(error_str)
-                cell.data[dataKeyMap[dataName]] = \
-                    get_cell_data(
-                    self.path, self._time, dataName,
-                    self._uuidToFoamLabel[uuid])
+                if dataTypeMap[dataKeyMap[dataName]] == "scalar":
+                    cell.data[dataKeyMap[dataName]] = \
+                        foamface.getCellData(self.name,
+                                             label,
+                                             dataName)
+                elif dataTypeMap[dataKeyMap[dataName]] == "vector":
+                    cell.data[dataKeyMap[dataName]] = \
+                        foamface.getCellVectorData(self.name,
+                                                   label,
+                                                   dataName)
+                elif dataTypeMap[dataKeyMap[dataName]] == "tensor":
+                    cell.data[dataKeyMap[dataName]] = \
+                        foamface.getCellTensorData(self.name,
+                                                   label,
+                                                   dataName)
 
             return cell
 
@@ -439,12 +452,10 @@ class FoamMesh(ABCMesh):
                 dataName = dataNameMap[data]
                 if data not in dataNameKeyMap:
                     dataNameKeyMap[dataName] = data
-                if dataName not in dataNames and dataName not in newDataNames:
+                if dataName not in dataNames or dataName not in newDataNames:
                     newDataNames.append(dataName)
         for dataName in newDataNames:
-            create_dummy_celldata(self.path, self.name,
-                                  self._time, dataName,
-                                  dataDimensionMap[dataNameKeyMap[dataName]])
+            create_dummy_celldata(self.name, dataName, True)
 
         for cell in cellList:
             if cell.uid not in self._uuidToFoamLabel:
@@ -460,8 +471,8 @@ class FoamMesh(ABCMesh):
             if set(puids) != set(cell.points):
                 raise Warning("Cell points can't be updated")
 
-        set_cells_data(self.path, self._time, cellList, self._uuidToFoamLabel,
-                       dataNameKeyMap)
+        set_cells_data(self.name, cellList, self._uuidToFoamLabel,
+                       dataNameKeyMap, True)
 
     def iter_points(self, point_uuids=None):
         """Returns an iterator over the selected points.

@@ -91,6 +91,8 @@ class Wrapper(ABCModelingEngine):
 
         # save timestep to mesh
         mesh._time = runner.get_last_time()
+        # update time and data to Foam objectRegistry
+        simphonyfoaminterface.update_data(name, float(mesh._time))
 
     def add_dataset(self, mesh, name=None):
         """Add a mesh to the OpenFoam modeling engine.

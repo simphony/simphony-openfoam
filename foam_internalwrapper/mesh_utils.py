@@ -4,11 +4,13 @@
 import simphonyfoaminterface as foamface
 
 from foam_controlwrapper.foam_variables import (dataTypeMap, dataKeyMap)
+from foam_controlwrapper.foam_variables import dataDimensionMap
 from foam_controlwrapper.foam_variables import cellDataTypes
 
 
-def create_dummy_celldata(name, data_name):
-    """Created dummy cell data to OpenFoams objectRegistry
+def create_dummy_celldata(name, data_name, io=False):
+    """Creates dummy cell data to OpenFoams objectRegistry and
+    writes to case directory if path defined
 
     Parameters
     ----------
@@ -16,26 +18,48 @@ def create_dummy_celldata(name, data_name):
         Name of mesh
     data_name : str
         Name of data to be created
-    dimensionset : list
-        Data dimensionset
+    io : boolean
+        if True write data to disk
 
     """
 
     nCells = foamface.getCellCount(name)
-    if dataTypeMap[dataKeyMap[data_name]] in cellDataTypes:
-        if dataTypeMap[dataKeyMap[data_name]] == 'vector':
-            values = [[0.0, 0.0, 0.0] for itemVector in range(nCells)]
-            foamface.setAllCellVectorData(name,
-                                          data_name,
-                                          list(values))
-        elif dataTypeMap[dataKeyMap[data_name]] == 'scalar':
-            values = [0.0 for itemScalar in range(nCells)]
-            foamface.setAllCellData(name,
-                                    data_name,
-                                    list(values))
+    if io:
+        if dataTypeMap[dataKeyMap[data_name]] in cellDataTypes:
+            dimension = dataDimensionMap[dataKeyMap[data_name]]
+            if dataTypeMap[dataKeyMap[data_name]] == 'vector':
+                values = [[0.0, 0.0, 0.0] for item in range(nCells)]
+                foamface.setAllCellVectorData(name, data_name, 1, values,
+                                              dimension)
+            elif dataTypeMap[dataKeyMap[data_name]] == 'scalar':
+                values = [0.0 for item in range(nCells)]
+                foamface.setAllCellData(name, data_name, 1, values,
+                                        dimension)
+            elif dataTypeMap[dataKeyMap[data_name]] == 'tensor':
+                values = [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+                          for item in range(nCells)]
+                foamface.setAllCellTensorData(name, data_name, 1, values,
+                                              dimension)
+
+    else:
+        if dataTypeMap[dataKeyMap[data_name]] in cellDataTypes:
+            dimension = dataDimensionMap[dataKeyMap[data_name]]
+            if dataTypeMap[dataKeyMap[data_name]] == 'vector':
+                values = [[0.0, 0.0, 0.0] for item in range(nCells)]
+                foamface.setAllCellVectorData(name, data_name, 0, values,
+                                              dimension)
+            elif dataTypeMap[dataKeyMap[data_name]] == 'scalar':
+                values = [0.0 for item in range(nCells)]
+                foamface.setAllCellData(name, data_name, 0, values,
+                                        dimension)
+            elif dataTypeMap[dataKeyMap[data_name]] == 'tensor':
+                values = [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+                          for item in range(nCells)]
+                foamface.setAllCellTensorData(name, data_name, 0, values,
+                                              dimension)
 
 
-def set_cells_data(name, cells, uuidToFoamLabel, dataNameKeyMap):
+def set_cells_data(name, cells, uuidToFoamLabel, dataNameKeyMap, io=False):
     """Set data to specific cells
 
    Parameters
@@ -44,26 +68,40 @@ def set_cells_data(name, cells, uuidToFoamLabel, dataNameKeyMap):
         name of mesh
     cells : iterator Cell
         set of Cells
+    io : boolean
+        if True write data to disk
+
     """
 
     for dataName in dataNameKeyMap:
 
         dataKey = dataNameKeyMap[dataName]
-        if dataTypeMap[dataKey] in cellDataTypes:
-            if dataTypeMap[dataKey] == "scalar":
+        dimension = dataDimensionMap[dataKey]
+        if io:
+            if dataTypeMap[dataKey] in cellDataTypes:
+                data = []
                 for cell in cells:
-                    foamface.setCellData(name,
-                                         uuidToFoamLabel[cell.uid],
-                                         dataName, cell.data[dataKey])
-            elif dataTypeMap[dataKey] == "vector":
+                    data.append(cell.data[dataKey])
+                if dataTypeMap[dataKey] == "scalar":
+                    foamface.setAllCellData(name, dataName, 1,
+                                            data, dimension)
+                elif dataTypeMap[dataKey] == "vector":
+                    foamface.setAllCellVectorData(name, dataName, 1,
+                                                  data, dimension)
+                elif dataTypeMap[dataKey] == "tensor":
+                    foamface.setAllCellTensorData(name, dataName, 1,
+                                                  data, dimension)
+        else:
+            if dataTypeMap[dataKey] in cellDataTypes:
+                data = []
                 for cell in cells:
-                    foamface.setCellVectorData(name,
-                                               uuidToFoamLabel[cell.uid],
-                                               dataName,
-                                               list(cell.data[dataKey]))
-            elif dataTypeMap[dataKey] == "tensor":
-                for cell in cells:
-                    foamface.setCellTensorData(name,
-                                               uuidToFoamLabel[cell.uid],
-                                               dataName,
-                                               list(cell.data[dataKey]))
+                    data.append(cell.data[dataKey])
+                if dataTypeMap[dataKey] == "scalar":
+                    foamface.setAllCellData(name, dataName, 0,
+                                            data, dimension)
+                elif dataTypeMap[dataKey] == "vector":
+                    foamface.setAllCellVectorData(name, dataName, 0,
+                                                  data, dimension)
+                elif dataTypeMap[dataKey] == "tensor":
+                    foamface.setAllCellTensorData(name, dataName, 0,
+                                                  data, dimension)

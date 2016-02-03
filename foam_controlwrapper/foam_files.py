@@ -160,6 +160,7 @@ def modify_files(case, startTime, SP, BC, solver, SPExt, CMExt):
     control["startTime"] = startTime
     control["endTime"] = endTime
     control["deltaT"] = deltaT
+    control['maxDeltaT'] = deltaT
     control["writeInterval"] = writeInterval
     control.writeFile()
 
