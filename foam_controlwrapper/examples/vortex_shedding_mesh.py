@@ -64,12 +64,6 @@ edges
    arc 13 14(0 -1 1)
 );
 
-// inlet    boundary0
-// outlet   boundary1
-// top      boundary2
-// bottom   boundary3
-// cylinder boundary4
-// sides    boundary5
 
 boundary
 (

@@ -21,23 +21,23 @@ wrapper.SP[CUBA.DENSITY] = 1.0
 wrapper.SP[CUBA.DYNAMIC_VISCOSITY] = 1.0
 
 # this is just an example. It is not enough for general setting of BC's
-wrapper.BC[CUBA.VELOCITY] = {'boundary0': ('fixedValue', (0.1, 0, 0)),
-                             'boundary1': 'zeroGradient',
-                             'boundary2': ('fixedValue', (0, 0, 0)),
-                             'boundary3': 'empty'}
-wrapper.BC[CUBA.PRESSURE] = {'boundary0': 'zeroGradient',
-                             'boundary1': ('fixedValue', 0),
-                             'boundary2': 'zeroGradient',
-                             'boundary3': 'empty'}
+wrapper.BC[CUBA.VELOCITY] = {'inlet': ('fixedValue', (0.1, 0, 0)),
+                             'outlet': 'zeroGradient',
+                             'walls': ('fixedValue', (0, 0, 0)),
+                             'frontAndBack': 'empty'}
+wrapper.BC[CUBA.PRESSURE] = {'inlet': 'zeroGradient',
+                             'outlet': ('fixedValue', 0),
+                             'walls': 'zeroGradient',
+                             'frontAndBack': 'empty'}
 
 corner_points = [(0.0, 0.0, 0.0), (20.0e-3, 0.0, 0.0),
                  (20.0e-3, 1.0e-3, 0.0), (0.0, 1.0e-3, 0.0),
                  (0.0, 0.0, 0.1), (20.0e-3, 0.0, 0.1),
                  (20.0e-3, 1.0e-3, 0.1), (0.0, 1.0e-3, 0.1)]
 # elements in x -direction
-nex = 50
+nex = 8
 # elements in y -direction
-ney = 6
+ney = 4
 openfoam_file_io.create_quad_mesh(tempfile.mkdtemp(), name, wrapper,
                                   corner_points, nex, ney, 1)
 

@@ -8,10 +8,7 @@ import uuid
 import tempfile
 import os
 
-from collections import OrderedDict
-
 from simphony.cuds.abc_mesh import ABCMesh
-from simphony.core.cuba import CUBA
 from simphony.cuds.mesh import Point, Face, Cell
 from simphony.core.cuds_item import CUDSItem
 
@@ -57,6 +54,8 @@ class FoamMesh(ABCMesh):
         Mapping from  OpenFoam edge label number to uuid
     _foamPointLabelToUuid : dictionary
         Mapping from  OpenFoam point label number to uuid
+    _boundaries : dictionary
+        Mapping from boundary name to list of boundary faces
 
     """
 
@@ -70,6 +69,7 @@ class FoamMesh(ABCMesh):
         self._foamFaceLabelToUuid = {}
         self._foamEdgeLabelToUuid = {}
         self._foamPointLabelToUuid = {}
+        self._boundaries = {}
 
         if path:
             self.path = path
@@ -78,93 +78,80 @@ class FoamMesh(ABCMesh):
         if mesh:
             # generate uuid mapping
             label = 0
+            pointCoordinates = []
+            pointMap = {}
             for point in mesh.iter_points():
-                uid = point.uid
+                pointMap[point.uid] = label
+                uid = self._generate_uuid()
                 self._uuidToFoamLabel[uid] = label
                 self._foamPointLabelToUuid[label] = uid
+                for coord in point.coordinates:
+                    pointCoordinates.append(coord)
                 label += 1
 
             label = 0
             for edge in mesh.iter_edges():
-                uid = edge.uid
+                uid = self._generate_uuid()
                 self._uuidToFoamLabel[uid] = label
                 self._foamEdgeLabelToUuid[label] = uid
                 label += 1
 
             label = 0
+            facePoints = []
+            faceMap = {}
             for face in mesh.iter_faces():
-                uid = face.uid
+                faceMap[face.uid] = label
+                uid = self._generate_uuid()
                 self._uuidToFoamLabel[uid] = label
                 self._foamFaceLabelToUuid[label] = uid
-                label += 1
-
-            label = 0
-            for cell in mesh.iter_cells():
-                uid = cell.uid
-                self._uuidToFoamLabel[uid] = label
-                self._foamCellLabelToUuid[label] = uid
-                label += 1
-
-            # find out boundary patches
-            patchNameFacesMap = OrderedDict()
-            facePoints = []
-            for face in mesh.iter_faces():
-                if CUBA.LABEL in face.data:
-                    boundary = 'boundary' + str(face.data[CUBA.LABEL])
-                    if boundary not in patchNameFacesMap:
-                        patchNameFacesMap[boundary] = []
-                    patchNameFacesMap[boundary].append(
-                        self._uuidToFoamLabel[face.uid])
-
                 # make compressed list of faces points
                 facePoints.append(len(face.points))
                 for puid in face.points:
-                    facePoints.append(self._uuidToFoamLabel[puid])
+                    facePoints.append(pointMap[puid])
+                label += 1
 
-            # make points coordinate list
-            pointCoordinates = []
-            for point in mesh.iter_points():
-                for coord in point.coordinates:
-                    pointCoordinates.append(coord)
-
-            # make compressed list of cells points
+            label = 0
             cellPoints = []
             for cell in mesh.iter_cells():
+                uid = self._generate_uuid()
+                self._uuidToFoamLabel[uid] = label
+                self._foamCellLabelToUuid[label] = uid
                 cellPoints.append(len(cell.points))
                 for puid in cell.points:
-                    cellPoints.append(self._uuidToFoamLabel[puid])
+                    cellPoints.append(pointMap[puid])
+                label += 1
+
+            pointMap.clear()
 
             # make patch information
             patchNames = []
             patchFaces = []
-            for patchName in patchNameFacesMap:
-                patchNames.append(patchName)
-                patchFaces.append(len(patchNameFacesMap[patchName]))
-                for face in patchNameFacesMap[patchName]:
-                    patchFaces.append(face)
+            if hasattr(mesh, '_boundaries'):
+                for patchName in mesh._boundaries:
+                    patchNames.append(patchName)
+                    self._boundaries[patchName] = []
+                    patchFaces.append(len(mesh._boundaries[patchName]))
+                    for fuid in mesh._boundaries[patchName]:
+                        flabel = faceMap[fuid]
+                        new_fuid = self._foamFaceLabelToUuid[flabel]
+                        self._boundaries[patchName].append(new_fuid)
+                        patchFaces.append(flabel)
 
-            if not patchNames:
-                error_str = 'Could not initialize with mesh  {}. '
-                error_str += 'Mesh has not boundary face definitions.'
-                raise ValueError(error_str.format(mesh.name))
+            faceMap.clear()
 
             patchTypes = []
-            if CUBA.PRESSURE in BC.keys() or\
-                    CUBA.DYNAMIC_PRESSURE in BC.keys():
-                if CUBA.PRESSURE in BC.keys():
-                    pressureBCs = BC[CUBA.PRESSURE]
-                else:
-                    pressureBCs = BC[CUBA.DYNAMIC_PRESSURE]
-                for boundary in patchNameFacesMap:
-                    if pressureBCs[boundary] == "empty":
+            for patchName in patchNames:
+                if BC:
+                    first_key = BC.keys()[0]
+                    if BC[first_key][patchName] == "empty":
                         patchTypes.append("empty")
                     else:
                         patchTypes.append("patch")
-            else:
-                for i in range(len(patchNames)):
+                else:
                     patchTypes.append("patch")
 
             # this to have controlDict file for mesh definition
+
             write_default_files(self.path, 'simpleFoam',
                                 self._time, False)
             # init objectRegistry and map to mesh name
@@ -177,7 +164,7 @@ class FoamMesh(ABCMesh):
             foamface.writeMesh(name)
 
             # write possible cell data to time directory
-            self.update_cells(mesh.iter_cells())
+            self.copy_cells(mesh.iter_cells())
 
     def get_point(self, uuid):
         """Returns a point with a given uuid.
@@ -240,65 +227,6 @@ class FoamMesh(ABCMesh):
 
     def get_face(self, uuid):
         """Returns a face with a given uuid.
-
-        Returns the face stored in the mesh
-        identified by uuid. If such face do not
-        exists an exception is raised. Only CUBA.LABEL
-        data marking boundary faces is returned.
-
-        Parameters
-        ----------
-        uuid
-            uuid of the desired face.
-
-        Returns
-        -------
-        Face
-            Face identified by uuid
-
-        Raises
-        ------
-        Exception
-            If the face identified by uuid was not found
-
-        """
-
-        try:
-            pointLabels = foamface.getFacePoints(self.name,
-                                                 self._uuidToFoamLabel[uuid])
-            puids = [self._foamPointLabelToUuid[lbl] for lbl in pointLabels]
-
-            # create patch data
-            patchNames = foamface.getBoundaryPatchNames(self.name)
-            patchFaces = foamface.getBoundaryPatchFaces(self.name)
-            i = 0
-            k = 0
-            facePatchMap = {}
-            while i < len(patchFaces):
-                start = i+1
-                end = start+patchFaces[i]
-                i += 1
-                for j in range(start, end):
-                    # here we assume that the boundaries are named
-                    # as boundary0,...
-                    # this to overcome limitation in tableextensio.pyx
-                    # at a moment
-                    facePatchMap[patchFaces[j]] = \
-                        int(patchNames[k].replace('boundary', ''))
-                    i += 1
-                k += 1
-
-            face = Face(puids, uuid)
-            if self._uuidToFoamLabel[uuid] in facePatchMap:
-                face.data[CUBA.LABEL] =\
-                    facePatchMap[self._uuidToFoamLabel[uuid]]
-            return face
-        except KeyError:
-            error_str = "Trying to get an non-existing edge with uuid: {}"
-            raise ValueError(error_str.format(uuid))
-
-    def get_face_without_data(self, uuid):
-        """Returns a face with a given uuid without face data
 
         Returns the face stored in the mesh
         identified by uuid. If such face do not
@@ -450,9 +378,9 @@ class FoamMesh(ABCMesh):
                     error_str = "Data named "+data.name+" not supported"
                     raise NotImplementedError(error_str)
                 dataName = dataNameMap[data]
-                if data not in dataNameKeyMap:
+                if dataName not in dataNameKeyMap:
                     dataNameKeyMap[dataName] = data
-                if dataName not in dataNames or dataName not in newDataNames:
+                if dataName not in dataNames and dataName not in newDataNames:
                     newDataNames.append(dataName)
         for dataName in newDataNames:
             create_dummy_celldata(self.name, dataName, True)
@@ -471,8 +399,47 @@ class FoamMesh(ABCMesh):
             if set(puids) != set(cell.points):
                 raise Warning("Cell points can't be updated")
 
-        set_cells_data(self.name, cellList, self._uuidToFoamLabel,
-                       dataNameKeyMap, True)
+        set_cells_data(self.name, cellList, dataNameKeyMap, True)
+
+    def copy_cells(self, cells):
+        """ Copy the information of a set of cells.
+
+        Gets the mesh cell and copy its data
+        with the one provided with the new cell. Cell points
+        are not copied.
+
+        Parameters
+        ----------
+        cells : iterable of Cell
+            Cell set to be updated
+
+        Raises
+        ------
+
+        TypeError
+            If the object provided is not an iterable of Cell objects
+
+        """
+
+        dataNames = get_cell_data_names(self.path, self._time)
+        # if cell data does not exists in the mesh at all, initialize it
+        newDataNames = []
+        dataNameKeyMap = {}
+        cellList = list(cells)
+        for cell in cellList:
+            for data in cell.data:
+                if data not in dataNameMap:
+                    error_str = "Data named "+data.name+" not supported"
+                    raise NotImplementedError(error_str)
+                dataName = dataNameMap[data]
+                if dataName not in dataNameKeyMap:
+                    dataNameKeyMap[dataName] = data
+                if dataName not in dataNames and dataName not in newDataNames:
+                    newDataNames.append(dataName)
+        for dataName in newDataNames:
+            create_dummy_celldata(self.name, dataName, True)
+
+        set_cells_data(self.name, cellList, dataNameKeyMap, True)
 
     def iter_points(self, point_uuids=None):
         """Returns an iterator over the selected points.
@@ -534,38 +501,15 @@ class FoamMesh(ABCMesh):
 
         """
 
-        # create patch data
-        patchNames = foamface.getBoundaryPatchNames(self.name)
-        patchFaces = foamface.getBoundaryPatchFaces(self.name)
-        i = 0
-        k = 0
-        facePatchMap = {}
-        while i < len(patchFaces):
-            start = i+1
-            end = start+patchFaces[i]
-            i += 1
-            for j in range(start, end):
-                # here we assume that the boundaries are named as boundary0,...
-                # this to overcome limitation in tableextensio.pyx at a moment
-                facePatchMap[patchFaces[j]] = \
-                    int(patchNames[k].replace('boundary', ''))
-                i += 1
-            k += 1
-
         if face_uuids is None:
             faceCount = foamface.getFaceCount(self.name)
             for label in range(faceCount):
-                face = self.get_face_without_data(
+                face = self.get_face(
                     self._foamFaceLabelToUuid[label])
-                if label in facePatchMap:
-                    face.data[CUBA.LABEL] = facePatchMap[label]
                 yield face
         else:
             for uid in face_uuids:
                 face = self.get_face(uid)
-                label = self._uuidToFoamLabel[uid]
-                if label in facePatchMap:
-                    face.data[CUBA.LABEL] = facePatchMap[label]
                 yield face
 
     def iter_cells(self, cell_uuids=None):
@@ -704,3 +648,19 @@ class FoamMesh(ABCMesh):
         """
 
         return uuid.uuid4()
+
+    def add_boundaries(self, boundaries):
+        """adds boundaries to boundary mapping
+
+        """
+
+        for bname, blist in boundaries:
+            if bname not in self._boundaries:
+                self.boundaries[bname] = blist
+
+    def get_boundaries(self):
+        """ get boundaries
+
+        """
+
+        return self._boundaries

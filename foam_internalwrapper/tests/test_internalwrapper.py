@@ -19,10 +19,18 @@ from foam_controlwrapper.cuba_extension import CUBAExt
 from foam_controlwrapper.blockmesh_utils import create_quad_mesh
 
 
+class TestMesh(Mesh):
+    """ Test mesh class to containing definition of boundaries
+    """
+    def __init__(self, name):
+        Mesh.__init__(self, name)
+        self._boundaries = {}
+
+
 class WrapperTestCase(unittest.TestCase):
     """Test case for Wrapper class"""
     def setUp(self):
-        self.mesh = Mesh(name="mesh1")
+        self.mesh = TestMesh(name="mesh1")
         self.GE = (CUBAExt.INCOMPRESSIBLE, CUBAExt.LAMINAR_MODEL)
         self.points = [
             Point(
@@ -30,13 +38,13 @@ class WrapperTestCase(unittest.TestCase):
             Point(
                 (1.0, 0.0, 0.0)),
             Point(
-                (1.0, 1.0, 0.0)),
-            Point(
-                (0.0, 1.0, 0.0)),
+                (1.0, 0.0, 1.0)),
             Point(
                 (0.0, 0.0, 1.0)),
             Point(
-                (1.0, 0.0, 1.0)),
+                (0.0, 1.0, 0.0)),
+            Point(
+                (1.0, 1.0, 0.0)),
             Point(
                 (1.0, 1.0, 1.0)),
             Point(
@@ -61,15 +69,21 @@ class WrapperTestCase(unittest.TestCase):
 
         ]
 
-        self.mesh.add_faces(self.faces)
+        self.fuids = self.mesh.add_faces(self.faces)
 
         self.cells = [
-            Cell(puids)
+            Cell(puids,
+                 data=DataContainer({CUBA.VELOCITY: [1, 0, 0],
+                                     CUBA.PRESSURE: 4.0}))
         ]
 
         self.puids = puids
 
         self.mesh.add_cells(self.cells)
+
+        self.boundaries = {"boundary"+str(i): [self.fuids[i]]
+                           for i in range(6)}
+        self.mesh._boundaries = self.boundaries
 
     def test_add_dataset(self):
         """Test add_dataset method
@@ -104,19 +118,22 @@ class WrapperTestCase(unittest.TestCase):
         mesh_inside_wrapper = wrapper.get_dataset(self.mesh.name)
         self.assertEqual(self.mesh.name, mesh_inside_wrapper.name)
 
+        label = 0
         for point in self.mesh.iter_points():
-            point_w = mesh_inside_wrapper.get_point(point.uid)
-            self.assertEqual(point.uid, point_w.uid)
-            self.assertEqual(point.coordinates, point_w.coordinates)
+            puid = mesh_inside_wrapper._foamPointLabelToUuid[label]
+            point_f = mesh_inside_wrapper.get_point(puid)
+            self.assertEqual(point.coordinates, point_f.coordinates)
+            label += 1
 
-        for face in self.mesh.iter_faces():
-            face_w = mesh_inside_wrapper.get_face(face.uid)
-            self.assertEqual(face.uid, face_w.uid)
-
+        label = 0
         for cell in self.mesh.iter_cells():
-            cell_w = mesh_inside_wrapper.get_cell(cell.uid)
-            self.assertEqual(cell.uid, cell_w.uid)
-            self.assertEqual(set(cell.points), set(cell_w.points))
+            cuid = mesh_inside_wrapper._foamCellLabelToUuid[label]
+            cell_f = mesh_inside_wrapper.get_cell(cuid)
+            self.assertEqual(cell.data[CUBA.PRESSURE],
+                             cell_f.data[CUBA.PRESSURE])
+            self.assertEqual(cell.data[CUBA.VELOCITY],
+                             cell_f.data[CUBA.VELOCITY])
+            label += 1
 
     def test_iter_datasets(self):
         """Test iter_datasets method
@@ -163,14 +180,14 @@ class WrapperRunTestCase(unittest.TestCase):
         wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 3
         wrapper.SP[CUBA.DENSITY] = 1.0
         wrapper.SP[CUBA.DYNAMIC_VISCOSITY] = 1.0
-        wrapper.BC[CUBA.VELOCITY] = {'boundary0': ('fixedValue', (0.1, 0, 0)),
-                                     'boundary1': 'zeroGradient',
-                                     'boundary2': ('fixedValue', (0, 0, 0)),
-                                     'boundary3': 'empty'}
-        wrapper.BC[CUBA.PRESSURE] = {'boundary0': 'zeroGradient',
-                                     'boundary1': ('fixedValue', 0),
-                                     'boundary2': 'zeroGradient',
-                                     'boundary3': 'empty'}
+        wrapper.BC[CUBA.VELOCITY] = {'inlet': ('fixedValue', (0.1, 0, 0)),
+                                     'outlet': 'zeroGradient',
+                                     'walls': ('fixedValue', (0, 0, 0)),
+                                     'frontAndBack': 'empty'}
+        wrapper.BC[CUBA.PRESSURE] = {'inlet': 'zeroGradient',
+                                     'outlet': ('fixedValue', 0),
+                                     'walls': 'zeroGradient',
+                                     'frontAndBack': 'empty'}
         self.wrapper = wrapper
 
         corner_points = [(0.0, 0.0, 0.0), (5.0, 0.0, 0.0),

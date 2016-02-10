@@ -52,7 +52,7 @@ edges
 
 boundary
 (
-    boundary0
+    inlet
     {
         type patch;
         faces
@@ -61,7 +61,7 @@ boundary
             (3 9 11 5)
         );
     }
-    boundary1
+    outlet
     {
         type patch;
         faces
@@ -69,7 +69,7 @@ boundary
             (1 2 8 7)
         );
     }
-    boundary2
+    bottomWall
     {
         type wall;
         faces
@@ -77,7 +77,7 @@ boundary
             (0 1 7 6)
         );
     }
-    boundary3
+    endWall
     {
         type wall;
         faces
@@ -85,7 +85,7 @@ boundary
             (2 4 10 8)
         );
     }
-    boundary4
+    top
     {
         type patch;
         faces
@@ -93,7 +93,7 @@ boundary
             (5 11 10 4)
         );
     }
-    boundary5
+    frontAndBack
     {
         type empty;
         faces

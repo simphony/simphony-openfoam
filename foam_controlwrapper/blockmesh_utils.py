@@ -76,7 +76,6 @@ def create_quad_mesh(path, name, mesh_engine, corner_points,
     runner.run()
 
     foam_mesh = read_foammesh(name, path)
-
     # add mesh to engine
     mesh_engine.add_dataset(foam_mesh)
 

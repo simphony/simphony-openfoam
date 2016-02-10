@@ -155,183 +155,23 @@ std::vector<int> foam_getFacePoints(std::string name, int label)
 }
 
 
-
-std::vector<int> order_cellPoints(int i, const fvMesh & mesh, const labelListList &cellPoints, const cellList &cellFaces, const faceList &facePoints, const labelListList &pointFaces,const labelListList &pointPoints)
+std::vector<int> get_cell_points_in_order(const fvMesh & mesh, int label)
 {
-  int nfaces = cellFaces[i].size();
-  int nnodes = cellPoints[i].size();
-
-  int k=0;
-  std::vector<int> retValue(nnodes);
-  std::string type="";
-  if (nfaces==6)
-    {
-      if (nnodes==8)
-	type="hex";
-      else
-	type="wedge";
-    }
-  else if (nfaces==5)
-    {
-      if (nnodes==5)
-	type="pyr";
-      else
-	type="prism";
-    }
-  else if (nfaces==4)
-    {
-      if (nnodes==4)
-	type="tet";
-      else
-	type="tetWedge";
-    }
   
-  
-  if (type == "tet") {
-    
-    for (int j=0;j<nnodes;j++) {
-      
-      retValue[k]=cellPoints[i][j];
-    }
-    
-  }
-  else if (type == "hex" ) {
-    
-    // add first face points
-    label fl = cellFaces[i][0];
-    labelList fp = facePoints[fl];
-    
-    // face point ordering is clockwise, must be reversed    
-    for (int j=fp.size()-1;j>-1;j--) {
-      retValue[k]=fp[j];
-      k++;
-    }
-    
-    // find opposite points
-    
-    // opposite side has same number of points
-    
-    for (int l=fp.size()-1;l>-1;l--) {
-      
-      labelList conPoints = pointPoints[fp[l]];
-      
-      for (int j=0;j<conPoints.size();j++) {
-	// point must be in current cell
-	if (findIndex(cellPoints[i],conPoints[j]) > -1) {
-	  labelList ff = pointFaces[conPoints[j]];
-	  
-	  // if first face not on list the point is on opposite side
-	  // 
-	  label ffl = findIndex(ff,fl);
-	  
-	  if (ffl == -1) {
-	    retValue[k]=conPoints[j];
-	    k++;
-	    break;
-	  }
-	}
-      }
-    }
-  }else if (type == "prism") {
-    
-    // find face which has three nodes
-    label fl=-1;
-    for (int j=0;j<nfaces;j++) {
-      if (facePoints[cellFaces[i][j]].size() == 3) {
-	fl = cellFaces[i][j];
-	break;
-      }
-    }
-    
-    labelList fp = facePoints[fl];
-    
-    // add first face points (reversed order)
-    for (int j=fp.size()-1;j>-1;j--) {
-      retValue[k]=fp[j];
-      k++;
-    }
-    
-    // find opposite points
-    
-    // opposite side has same number of points
-    
-    for (int l=fp.size()-1;l>-1;l--) {
-      
-      labelList conPoints = pointPoints[fp[l]];
-      
-      for (int j=0;j<conPoints.size();j++) {
-	// point must be in current cell
-	if (findIndex(cellPoints[i],conPoints[j]) > -1) {
-	  labelList ff = pointFaces[conPoints[j]];
-	  
-	  // if first face not on list the point is on opposite side
-	  // 
-	  label ffl = findIndex(ff,fl);
-	  
-	  if (ffl == -1) {
-	    retValue[k]=conPoints[j];
-	    k++;
-	    break;
-	  }
-	}
-      }
-    }
-    
-  }else {
-    
-    std::string except = "Cell type "+type+" not supported yet";
-    FatalErrorIn("simphonyInterface:foam_getCellPoints()") << except <<exit(FatalError);
-    throw;
-  }
-  return retValue;
-  
-}
+  const cellShapeList& cellShapes = mesh.cellShapes();
+  const labelList& cellPoints = cellShapes[label];
 
+  std::vector<int> points(cellPoints.size()); 
 
-
-
-std::vector<int> get_ordered_points(const fvMesh & mesh, const labelListList &cellPoints, const cellList &cellFaces, int label)
-{
-  int nfaces = cellFaces[label].size();
-  int nnodes = cellPoints[label].size();
-
-  std::string type="";
-
-  if (nfaces==6)
-    {
-      if (nnodes==8)
-	type="hex";
-      else
-	type="wedge";
-    }
-  else if (nfaces==5)
-    {
-      if (nnodes==5)
-	type="pyr";
-      else
-	type="prism";
-    }
-  else if (nfaces==4)
-    {
-      if (nnodes==4)
-	type="tet";
-      else
-	type="tetWedge";
-    }
-  
-
-  const cellModel& cellModel = *(cellModeller::lookup(type));
-
-  cellShape cShape = cellShape(cellModel,cellPoints[label]);
-
-  std::vector<int> points(cShape.nPoints()); 
-
-  for (std::vector<int>::size_type i=0;i<points.size();i++) points[i] = cShape[i];
+  for (std::vector<int>::size_type i=0;i<points.size();i++) points[i] = cellPoints[i];
 
   return points;
 
  
 }
+
+
+
 
 
 std::vector<int> foam_getCellPoints(std::string name, int label)
@@ -344,8 +184,7 @@ std::vector<int> foam_getCellPoints(std::string name, int label)
   const labelListList &pointFaces = mesh.pointFaces();
   const faceList &facePoints = mesh.faces();
 
-  return order_cellPoints(label, mesh, cellPoints, cellFaces, facePoints, pointFaces, pointPoints);
-
+  return get_cell_points_in_order(mesh, label);
 }
 
 
@@ -378,12 +217,9 @@ std::vector<int> foam_getCellPoints(std::string name)
       retValue[k]=nnodes;
       k++;
 
-      std::vector<int> points =  order_cellPoints(i, mesh, cellPoints, cellFaces, facePoints, pointFaces, pointPoints);
-  //      std::vector<int> points = get_ordered_points(mesh, cellPoints, cellFaces, i);
-
-      for (std::vector<int>::size_type i=0;i<points.size();i++) {
-
-	retValue[k] = points[i];
+      std::vector<int> points = get_cell_points_in_order(mesh, i);
+      for (std::vector<int>::size_type ii=0;ii<points.size();ii++) {
+	retValue[k] = points[ii];
 	k++;
 
       }
@@ -789,7 +625,6 @@ void foam_addMesh(std::string name,std::vector<double> points,  std::vector<int>
   cind = 0;
   int icell = 0;
   while (cind < cellpoints.size()) {
-    
     labelList labels(cellpoints[cind]);
     int np = cellpoints[cind];
     for (int i=0;i<np;i++) 
@@ -936,8 +771,6 @@ void foam_addMesh(std::string name,std::vector<double> points,  std::vector<int>
       defaultFacesName,
       defaultFacesType
       );
-
-
 }
 
 

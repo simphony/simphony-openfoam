@@ -6,7 +6,9 @@ from mayavi.scripts import mayavi2
 from simphony.core.cuba import CUBA
 from simphony.engine import openfoam_file_io
 import vortex_shedding_mesh
+
 import tempfile
+import math
 
 wrapper = openfoam_file_io.Wrapper()
 CUBAExt = openfoam_file_io.CUBAExt
@@ -18,7 +20,7 @@ wrapper.CM[CUBA.NAME] = name
 wrapper.CM_extensions[CUBAExt.GE] = (CUBAExt.INCOMPRESSIBLE,
                                      CUBAExt.LAMINAR_MODEL)
 wrapper.SP[CUBA.TIME_STEP] = 0.025
-wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 600
+wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 6000
 wrapper.SP[CUBA.DENSITY] = 1.0
 wrapper.SP[CUBA.DYNAMIC_VISCOSITY] = 2.0e-2
 
@@ -46,17 +48,26 @@ print "Case directory ", mesh_inside_wrapper.path
 
 wrapper.run()
 
+# compute velocity magnitude (volume fraction here)
+updated_cells = []
+for cell in mesh_inside_wrapper.iter_cells():
+    velo = cell.data[CUBA.VELOCITY]
+    cell.data[CUBA.VOLUME_FRACTION] = math.sqrt(sum(velo[i]*velo[i]
+                                                    for i in range(3)))
+    updated_cells.append(cell)
+mesh_inside_wrapper.update_cells(updated_cells)
+
 
 @mayavi2.standalone
-def view():
+def view(dataset):
     from mayavi.modules.surface import Surface
     from simphony_mayavi.sources.api import CUDSSource
 
     mayavi.new_scene()  # noqa
-    src = CUDSSource(cuds=mesh_inside_wrapper)
+    src = CUDSSource(cuds=dataset)
     mayavi.add_source(src)  # noqa
     s = Surface()
     mayavi.add_module(s)  # noqa
 
 if __name__ == '__main__':
-    view()
+    view(mesh_inside_wrapper)

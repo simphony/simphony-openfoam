@@ -1,7 +1,12 @@
 Simphony-OpenFOAM CHANGELOG
 ======================
 
+Release 0.2.0dev0
+-----------------
 
+* File I/O wrapper changed  to use native interface for data transfer
+* Change boundaries treatment from face LABEL to list of faces
+ 
 Release 0.2.0
 -------------
 

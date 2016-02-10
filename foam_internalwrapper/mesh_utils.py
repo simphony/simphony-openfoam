@@ -59,7 +59,7 @@ def create_dummy_celldata(name, data_name, io=False):
                                               dimension)
 
 
-def set_cells_data(name, cells, uuidToFoamLabel, dataNameKeyMap, io=False):
+def set_cells_data(name, cells, dataNameKeyMap, io=False):
     """Set data to specific cells
 
    Parameters
