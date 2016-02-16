@@ -187,8 +187,6 @@ tmp<surfaceScalarField> tphiAlphaCorr0;
 
 Info<< "\nStarting time loop\n" << endl;
 
-//Info<< alpha1 << endl;
-//Info<< U << endl;
 U.storePrevIter();
 p_rgh.storePrevIter();
 alpha1.storePrevIter();
@@ -206,6 +204,7 @@ while (runTime.run())
 
     Info<< "Time = " << runTime.timeName() << nl << endl;
 
+    #include "modelingMicroScale.H"
 
     // --- Pressure-velocity PIMPLE corrector loop
     while (pimple.loop())
@@ -237,119 +236,9 @@ while (runTime.run())
         << "  ClockTime = " << runTime.elapsedClockTime() << " s"
         << nl << endl;
 
-    #include "modelingMicroScale.H"
 }
 
 Info<< "End\n" << endl;
 
-/*
-while (runTime.run())
-{
-    #include "readTimeControls.H"
-    #include "CourantNo.H"
-    #include "setDeltaT.H"
-
-    runTime++;
-
-    Info<< "Time = " << runTime.timeName() << nl << endl;
-
-    // --- Pressure-velocity PIMPLE corrector loop
-    while (pimple.loop())
-    {
-        // Solve the Momentum equation
-
-        tmp<fvVectorMatrix> UEqn
-        (
-            fvm::ddt(U)
-          + fvm::div(phi, U)
-          + turbulence->divDevReff(U)
-        // ==
-        //    fvOptions(U)
-        );
-
-        UEqn().relax();
-
-        //fvOptions.constrain(UEqn());
-
-        volScalarField rAU(1.0/UEqn().A());
-
-        if (pimple.momentumPredictor())
-        {
-            solve(UEqn() == -fvc::grad(p));
-
-            //fvOptions.correct(U);
-        }
-
-        // --- Pressure corrector loop
-        while (pimple.correct())
-        {
-            surfaceScalarField rAUf("rAUf", fvc::interpolate(rAU));
-            
-            volVectorField HbyA("HbyA", U);
-            HbyA = rAU*UEqn().H();
-            
-            if (pimple.nCorrPISO() <= 1)
-            {
-                UEqn.clear();
-            }
-
-            surfaceScalarField phiHbyA
-            (
-                "phiHbyA",
-                (fvc::interpolate(HbyA) & mesh.Sf())
-              + rAUf*fvc::ddtCorr(U, phi)
-            );
-
-            adjustPhi(phiHbyA, U, p);
-
-            //fvOptions.relativeFlux(phiHbyA);
-
-            // Non-orthogonal pressure corrector loop
-            while (pimple.correctNonOrthogonal())
-            {
-                // Pressure corrector
-                fvScalarMatrix pEqn
-                (
-                    fvm::laplacian(rAUf, p) == fvc::div(phiHbyA)
-                );
-            
-                pEqn.setReference(pRefCell, pRefValue);
-            
-                pEqn.solve(mesh.solver(p.select(pimple.finalInnerIter())));
-            
-                if (pimple.finalNonOrthogonalIter())
-                {
-                    phi = phiHbyA - pEqn.flux();
-                }
-            }
-
-            #include "continuityErrs.H"
-
-            // Explicitly relax pressure for momentum corrector
-            p.relax();
-            
-            U = HbyA - rAU*fvc::grad(p);
-            U.correctBoundaryConditions();
-
-
-            //fvOptions.correct(U);
-        }
-
-        if (pimple.turbCorr())
-        {
-            turbulence->correct();
-        }
-    }
-
-    //runTime.write();
-
-    Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
-        << "  ClockTime = " << runTime.elapsedClockTime() << " s"
-        << nl << endl;
-}
-
-Info<< "End\n" << endl;
-
-*/
 
 // ************************************************************************* //

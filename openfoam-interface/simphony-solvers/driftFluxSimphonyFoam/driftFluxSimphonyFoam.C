@@ -76,6 +76,7 @@ int main(int argc, char *argv[])
 
         Info<< "Time = " << runTime.timeName() << nl << endl;
 
+        #include "modelingMicroScale.H"
         // --- Pressure-velocity PIMPLE corrector loop
         while (pimple.loop())
         {
@@ -105,7 +106,6 @@ int main(int argc, char *argv[])
             << "  ClockTime = " << runTime.elapsedClockTime() << " s"
             << nl << endl;
 
-        #include "modelingMicroScale.H"
     }
 
     Info<< "End\n" << endl;

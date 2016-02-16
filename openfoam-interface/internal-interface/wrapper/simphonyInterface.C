@@ -113,7 +113,6 @@ std::vector<double> foam_getPointCoordinates(std::string name, int label)
 
     const fvMesh & mesh = getMeshFromDb(name);
 
-    //    const fvMesh & mesh = getMeshFromDb(name);
     const pointField & pp = mesh.points();
 
     std::vector<double> coordinates(3); 
@@ -275,8 +274,6 @@ std::vector<std::string> foam_getCellTensorDataNames(std::string name)
 
 volVectorField& find_vectorData(std::string name,std::string dataname)
 {
-  //    const fvMesh & mesh = getMeshFromDb(name);
-  //    return const_cast<volVectorField&>(mesh.lookupObject<volVectorField>(word(dataname))); 
     fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
     volVectorField& vF = find_Data<vector>(mesh,dataname);
     return const_cast<volVectorField&>(vF);  
@@ -291,8 +288,6 @@ volTensorField& find_tensorData(std::string name,std::string dataname)
    
 volScalarField& find_scalarData(std::string name,std::string dataname)
 {
-  //    const fvMesh & mesh = getMeshFromDb(name);
-  //    return const_cast<volScalarField&>(mesh.lookupObject<volScalarField>(word(dataname)));  
     fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
     volScalarField& vS = find_Data<scalar>(mesh,dataname);
     return const_cast<volScalarField&>(vS);  
@@ -314,20 +309,21 @@ double foam_getCellData(std::string name, int label,std::string dataname)
       }
     else 
       {
-    volScalarField field
-      (
-       IOobject
-       (
-        word(dataname),
-        runTimes[name]->timeName(),
-        mesh,
-        IOobject::MUST_READ_IF_MODIFIED,
-        IOobject::NO_WRITE
-	),
-       mesh);
-    return field[label];
-    
-  }
+	new volScalarField
+	  (
+	   IOobject
+	   (
+	    word(dataname),
+	    runTimes[name]->timeName(),
+	    mesh,
+	    IOobject::MUST_READ_IF_MODIFIED,
+	    //        IOobject::MUST_READ,
+	    IOobject::NO_WRITE
+	    ),
+	   mesh);
+	volScalarField& field = find_scalarData(name,dataname);
+	return field[label];	
+      }
   
 }
 
@@ -346,7 +342,7 @@ std::vector<double> foam_getCellVectorData(std::string name, int label,std::stri
       return values;
     }else
     { 
-      volVectorField field
+      new volVectorField
 	(       IOobject
 		(
 		 word(dataname),
@@ -356,6 +352,7 @@ std::vector<double> foam_getCellVectorData(std::string name, int label,std::stri
 		 IOobject::NO_WRITE
 		 ),
 		mesh);
+      volVectorField& field = find_vectorData(name,dataname);
       std::vector<double> values(3);
       values[0] = field[label].x(); 
       values[1] = field[label].y(); 
@@ -387,7 +384,7 @@ std::vector<double> foam_getCellTensorData(std::string name, int label,std::stri
     }else
     {
     
-      volTensorField field
+      new volTensorField
 	(
 	 IOobject
 	 (
@@ -398,6 +395,7 @@ std::vector<double> foam_getCellTensorData(std::string name, int label,std::stri
 	  IOobject::NO_WRITE
 	  ),
 	 mesh);
+      volTensorField& field = find_tensorData(name,dataname);
       std::vector<double> values(9);
       values[0] = field[label].xx(); 
       values[1] = field[label].xy(); 
@@ -994,7 +992,6 @@ void foam_modifyNumerics(std::string name, std::string fvSch, std::string fvSol,
     fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
     //    runTimes[name]->setTime(0.0,0); // restarting times
     
-
     IStringStream fvSchIS(fvSch.c_str());
     IStringStream fvSolIS(fvSol.c_str());
     IStringStream cDIS(cD.c_str());

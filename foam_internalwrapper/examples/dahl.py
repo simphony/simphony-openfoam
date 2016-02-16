@@ -4,6 +4,9 @@
 from simphony.core.cuba import CUBA
 from simphony.engine import openfoam_internal
 from simphony.engine import openfoam_file_io
+
+from mayavi.scripts import mayavi2
+
 import dahl_mesh
 import tempfile
 
@@ -80,7 +83,23 @@ wrapper.run()
 
 print "Run ended"
 
-name = 'dahl_out'
-wrapper_io = openfoam_file_io.Wrapper()
-wrapper_io.add_dataset(mesh_inside_wrapper, name)
-print "Result directory: ", wrapper_io.get_dataset(name).path
+
+@mayavi2.standalone
+def view():
+    from mayavi.modules.surface import Surface
+    from simphony_mayavi.sources.api import CUDSSource
+
+    mayavi.new_scene()  # noqa
+    src = CUDSSource(cuds=mesh_inside_wrapper)
+    mayavi.add_source(src)  # noqa
+    s = Surface()
+    mayavi.add_module(s)  # noqa
+
+if __name__ == '__main__':
+    view()
+
+
+# name = 'dahl_out'
+# wrapper_io = openfoam_file_io.Wrapper()
+# wrapper_io.add_dataset(mesh_inside_wrapper, name)
+# print "Result directory: ", wrapper_io.get_dataset(name).path

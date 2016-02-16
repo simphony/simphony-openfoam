@@ -5,6 +5,8 @@ from simphony.core.cuba import CUBA
 
 from simphony.engine import openfoam_file_io
 
+from mayavi.scripts import mayavi2
+
 import dahl_mesh
 import tempfile
 
@@ -23,7 +25,7 @@ wrapper.CM_extensions[CUBAExt.GE] = (CUBAExt.INCOMPRESSIBLE,
 wrapper.CM_extensions[CUBAExt.NUMBER_OF_CORES] = 1
 
 wrapper.SP[CUBA.TIME_STEP] = 0.1
-wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 1
+wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 64000
 
 wrapper.SP_extensions[CUBAExt.PHASE_LIST] = ('sludge', 'water')
 wrapper.SP[CUBA.DENSITY] = {'sludge': 1900.0, 'water': 1000.0}
@@ -76,7 +78,20 @@ for cell in mesh_inside_wrapper.iter_cells():
     cell.data[CUBA.VELOCITY] = [0.0191, 0.0, 0.0]
     updated_cells.append(cell)
 
-print "to update"
 mesh_inside_wrapper.update_cells(updated_cells)
-print "from update"
 wrapper.run()
+
+
+@mayavi2.standalone
+def view():
+    from mayavi.modules.surface import Surface
+    from simphony_mayavi.sources.api import CUDSSource
+
+    mayavi.new_scene()  # noqa
+    src = CUDSSource(cuds=mesh_inside_wrapper)
+    mayavi.add_source(src)  # noqa
+    s = Surface()
+    mayavi.add_module(s)  # noqa
+
+if __name__ == '__main__':
+    view()

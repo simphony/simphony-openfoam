@@ -61,7 +61,7 @@ dictionaryMaps = \
                 {'g': '( 0 0 0)',
                  'phases': '(phase1 phase2)',
                  'phase1':
-                     {'transportModel': 'dummyViscosity',
+                     {'transportModel': 'BinghamPlastic',
                       'BinghamPlasticCoeffs':
                           {'coeff': '0.00023143',
                            'exponent': '179.26',
