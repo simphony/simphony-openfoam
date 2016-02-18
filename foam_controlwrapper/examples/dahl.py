@@ -10,7 +10,6 @@ from mayavi.scripts import mayavi2
 import dahl_mesh
 import tempfile
 
-
 wrapper = openfoam_file_io.Wrapper()
 CUBAExt = openfoam_file_io.CUBAExt
 
@@ -23,19 +22,20 @@ wrapper.CM_extensions[CUBAExt.GE] = (CUBAExt.INCOMPRESSIBLE,
                                      CUBAExt.MIXTURE_MODEL)
 
 wrapper.CM_extensions[CUBAExt.NUMBER_OF_CORES] = 1
-
 wrapper.SP[CUBA.TIME_STEP] = 0.1
-wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 64000
+wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 6400
 
 wrapper.SP_extensions[CUBAExt.PHASE_LIST] = ('sludge', 'water')
 wrapper.SP[CUBA.DENSITY] = {'sludge': 1900.0, 'water': 1000.0}
 wrapper.SP[CUBA.DYNAMIC_VISCOSITY] = {'sludge': 0.01, 'water': 1e-3}
+
 wrapper.SP_extensions[CUBAExt.VISCOSITY_MODEL] =\
     {'sludge': 'BinghamPlastic', 'water': 'Newtonian'}
 wrapper.SP_extensions[CUBAExt.VISCOSITY_MODEL_COEFFS] =\
     {'BinghamPlastic': {'coeff': 0.00023143, 'exponent': 179.26,
                         'BinghamCoeff': 0.0005966, 'BinghamExponent': 1050.8,
                         'BinghamOffset': 0, 'muMax': 10}}
+
 wrapper.SP_extensions[CUBAExt.STRESS_MODEL] = 'standard'
 wrapper.SP_extensions[CUBAExt.RELATIVE_VELOCITY_MODEL] = 'simple'
 wrapper.SP_extensions[CUBAExt.RELATIVE_VELOCITY_MODEL_COEFFS] =\
@@ -62,6 +62,7 @@ wrapper.BC[CUBA.VOLUME_FRACTION] = {'inlet': ('fixedValue', 0.001),
                                     'endWall': 'zeroGradient',
                                     'top': 'zeroGradient',
                                     'frontAndBack': 'empty'}
+
 
 # create mesh
 openfoam_file_io.create_block_mesh(tempfile.mkdtemp(), name, wrapper,

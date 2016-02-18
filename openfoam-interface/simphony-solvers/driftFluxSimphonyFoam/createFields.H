@@ -26,27 +26,12 @@
         mesh
     );
 
-    Info<< "Reading field Vdj\n" << endl;
-    volVectorField Vdj
+    Info<< "Reading field Sigma_mu" << endl;
+    volTensorField Sigma_mu
     (
         IOobject
         (
-            "Vdj",
-            runTime.timeName(),
-            mesh,
-            IOobject::MUST_READ,
-            IOobject::AUTO_WRITE
-        ),
-        mesh
-    );
-
-
-    Info<< "Reading field Sigma" << endl;
-    volTensorField Sigma
-    (
-        IOobject
-        (
-            "Sigma",
+            "Sigma_mu",
             runTime.timeName(),
             mesh,
             IOobject::MUST_READ,
@@ -93,18 +78,18 @@
         )
     );
 
-    Info<< "Creating field tauPrime\n" << endl;
-    volTensorField tauPrime
+    Info<< "Creating field SigmaPrime\n" << endl;
+    volTensorField SigmaPrime
     (
         IOobject
         (
-            "tauPrime",
+            "SigmaPrime",
             runTime.timeName(),
             mesh,
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
         ),
-        Sigma - (mixture.mu()*fvc::grad(U) + mixture.mu()*T(fvc::grad(U)))
+        Sigma_mu - (mixture.mu()*fvc::grad(U) + mixture.mu()*T(fvc::grad(U)))
     );
 
 

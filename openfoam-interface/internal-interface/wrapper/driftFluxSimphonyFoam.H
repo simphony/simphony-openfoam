@@ -36,14 +36,14 @@ std::string p_rghName = "p_rgh";
 std::string UName = "U";
 //std::string alphaName = "alpha1";
 std::string alphaName = "alpha.phase1";
-//std::string Sigma_muName = "Sigma_mu";
-std::string Sigma_muName = "Sigma";
+std::string Sigma_muName = "Sigma_mu";
 std::string SName = "S";
 std::string gradAlpha1Name = "gradAlpha1";
 std::string StressName = "Stress";
 
 volScalarField& p_rgh = find_Data<scalar>(mesh,p_rghName);
-volScalarField& alpha1 = find_Data<scalar>(mesh,alphaName);
+
+//volScalarField& alpha1 = find_Data<scalar>(mesh,alphaName);
 volVectorField& U = find_Data<vector>(mesh,UName);
 volTensorField& Sigma_mu = find_Data<tensor>(mesh,Sigma_muName);
 volTensorField& S = find_Data<tensor>(mesh,SName);
@@ -55,6 +55,7 @@ phi = linearInterpolate(U) & mesh.Sf();
 
 
 IOdictionary& transportProperties = const_cast<IOdictionary&>(mesh.lookupObject<IOdictionary>(word("transportProperties"))); 
+
 
 incompressibleTwoPhaseInteractingMixture mixture(U, phi, transportProperties);
 // Relative Velocity
@@ -74,8 +75,7 @@ relativeVelocityModel& UdmModel(UdmModelPtr());
 word stressModelType(transportProperties.lookup("stressModel"));
 Info<< "Stressmodel is "<< stressModelType<<"\n" << endl;
 
-
-//volScalarField& alpha1(mixture.alpha1());
+volScalarField& alpha1(mixture.alpha1());
 volScalarField& alpha2(mixture.alpha2());
 
 const dimensionedScalar& rho1 = mixture.rhod();
@@ -193,7 +193,6 @@ alpha1.storePrevIter();
 
 scalar cumulativeContErr = 0;
 
-
 while (runTime.run())
 {
     #include "readTimeControls.H"
@@ -218,7 +217,6 @@ while (runTime.run())
         mixture.correct();
 
         #include "UEqn.H"
-
 
         // --- Pressure corrector loop
         while (pimple.correct())

@@ -53,7 +53,7 @@ dictionaryMaps = \
                  'writeCompression': 'no',
                  'timeFormat': 'general',
                  'runTimeModifiable': 'yes',
-                 'adjustTimeStep':  'on',
+                 'adjustTimeStep':  'off',
                  'maxCo': '5',
                  'maxDeltaT': '1'
                  },
@@ -61,7 +61,7 @@ dictionaryMaps = \
                 {'g': '( 0 0 0)',
                  'phases': '(phase1 phase2)',
                  'phase1':
-                     {'transportModel': 'BinghamPlastic',
+                     {'transportModel': 'dummyViscosity',
                       'BinghamPlasticCoeffs':
                           {'coeff': '0.00023143',
                            'exponent': '179.26',
@@ -76,12 +76,11 @@ dictionaryMaps = \
                            'BinghamExponent': '1050.8',
                            'BinghamOffset': '0',
                            'muMax': '10'},
-                      'nu': '1e-4',
-                      'rho': '1996'},
+                      'rho': '1900'},
                  'phase2':
                      {'transportModel': 'Newtonian',
-                      'nu': '1.7871e-06',
-                      'rho': '996'},
+                      'nu': '1e-06',
+                      'rho': '1000'},
                  'stressModel': 'standard',
                  'relativeVelocityModel': 'simple',
                  'simpleCoeffs':
@@ -226,17 +225,38 @@ phases (phase1 phase2);
 
 phase1
 {
-    transportModel  dummyViscosity;
-    nu              1e-04;
-    rho             1996;
+    transportModel  BinghamPlastic;
+    BinghamPlasticCoeffs
+    {
+        coeff       0.00023143;
+        exponent    179.26;
+
+        BinghamCoeff    0.0005966;
+        BinghamExponent 1050.8;
+        BinghamOffset   0;
+
+        muMax       10;
+    }
+    plasticCoeffs
+    {
+        coeff       0.00023143;
+        exponent    179.26;
+
+        BinghamCoeff    0.0005966;
+        BinghamExponent 1050.8;
+        BinghamOffset   0;
+
+        muMax       10;
+    }
+    rho             1000;
 }
 
 phase2
 {
     transportModel  Newtonian;
 
-    nu              1.7871e-06;
-    rho             996;
+    nu              1e-06;
+    rho             1000;
 }
 
 stressModel standard;
@@ -244,7 +264,7 @@ relativeVelocityModel simple;
 
 "(simple|general)Coeffs"
 {
-    V0              (0 -0.002198 0);
+    V0              (0 0 0);
     a               285.84;
     a1              0.1;
     residualAlpha   0;
@@ -529,8 +549,9 @@ def modifyFields(mesh, BC, solver='pimpleFoam'):
     if solver == 'driftFluxSimphonyFoam':
         foamface.setAllCellData(mesh.name, "alpha.phase1", 0, alpha_values,
                                 dataDimensionMap[dataKeyMap["alpha.phase1"]])
-        foamface.setAllCellTensorData(mesh.name, "Sigma", 0, sigma_mu_values,
-                                      dataDimensionMap[dataKeyMap["Sigma"]])
+        foamface.setAllCellTensorData(mesh.name, "Sigma_mu", 0,
+                                      sigma_mu_values,
+                                      dataDimensionMap[dataKeyMap["Sigma_mu"]])
 
     # Refresh boundary conditions
     velocityBCs = BC[CUBA.VELOCITY]

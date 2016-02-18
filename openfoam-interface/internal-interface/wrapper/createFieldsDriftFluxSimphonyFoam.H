@@ -25,8 +25,7 @@ License
 
 
 \*---------------------------------------------------------------------------*/
-//std::string Sigma_muName = "Sigma_mu";
-std::string Sigma_muName = "Sigma";
+std::string Sigma_muName = "Sigma_mu";
 
 Info<< "Creating field p_rgh\n" << endl;
 new volScalarField

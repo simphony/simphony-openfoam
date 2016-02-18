@@ -1026,7 +1026,7 @@ void foam_modifyNumerics(std::string name, std::string fvSch, std::string fvSol,
     TPDict.read
     (
         TPIS()
-    );    
+    );
 }
 
 

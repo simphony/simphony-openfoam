@@ -11,7 +11,7 @@
         (fvc::interpolate(HbyA) & mesh.Sf())
       + fvc::interpolate(rho*rAU)*fvc::ddtCorr(U, phi)
     );
-    //    fvOptions.makeRelative(phiHbyA);
+    //fvOptions.makeRelative(phiHbyA);
     adjustPhi(phiHbyA, U, p_rgh);
 
     surfaceScalarField phig
@@ -21,10 +21,7 @@
         )*rAUf*mesh.magSf()
     );
 
-
     phiHbyA += phig;
-
-
 
     // Update the fixedFluxPressure BCs to ensure flux consistency
     setSnGrad<fixedFluxPressureFvPatchScalarField>
@@ -32,10 +29,10 @@
         p_rgh.boundaryField(),
         (
             phiHbyA.boundaryField()
-	    // - fvOptions.relative(mesh.Sf().boundaryField() & U.boundaryField())
+          //- fvOptions.relative(mesh.Sf().boundaryField() & U.boundaryField())
+	    - (mesh.Sf().boundaryField() & U.boundaryField())
         )/(mesh.magSf().boundaryField()*rAUf.boundaryField())
     );
-
 
     while (pimple.correctNonOrthogonal())
     {
@@ -56,7 +53,7 @@
 
             U = HbyA + rAU*fvc::reconstruct((phig - p_rghEqn.flux())/rAUf);
             U.correctBoundaryConditions();
-	    //            fvOptions.correct(U);
+	    //fvOptions.correct(U);
         }
     }
 

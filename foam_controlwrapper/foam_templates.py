@@ -679,8 +679,8 @@ phase1
 phase2
 {
     transportModel  Newtonian;
-    nu              1.48e-05;
-    rho             1;
+    nu              1e-06;
+    rho             1000;
  }
 
 stressModel standard;
@@ -747,7 +747,7 @@ timePrecision   6;
 
 runTimeModifiable yes;
 
-adjustTimeStep  on;
+adjustTimeStep  off;
 
 maxCo           5;
 
@@ -851,8 +851,8 @@ gradSchemes
 
 divSchemes
 {
-    default             none;
-    div(tauPrime)       Gauss linear;
+    default             Gauss linear;
+    div(SigmaPrime)       Gauss linear;
     div((mu*dev(T(grad(U))))) Gauss linear;
     div(rhoPhi,U)       Gauss linearUpwind grad(U);
     div(tauDm)          Gauss linear;
@@ -995,7 +995,7 @@ boundaryField
 {
 
 }
-                    """, 'Sigma': """
+                    """, 'Sigma_mu': """
 dimensions [1 -1 -2 0 0 0 0];
 
 internalField uniform (0 0 0 0 0 0 0 0 0);

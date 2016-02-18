@@ -4,11 +4,10 @@
 from simphony.core.cuba import CUBA
 from simphony.engine import openfoam_internal
 from simphony.engine import openfoam_file_io
-
-from mayavi.scripts import mayavi2
-
 import dahl_mesh
 import tempfile
+
+from mayavi.scripts import mayavi2
 
 wrapper = openfoam_internal.Wrapper()
 CUBAExt = openfoam_internal.CUBAExt
@@ -21,9 +20,9 @@ wrapper.CM_extensions[CUBAExt.GE] = (CUBAExt.INCOMPRESSIBLE,
                                      CUBAExt.LAMINAR_MODEL,
                                      CUBAExt.MIXTURE_MODEL)
 
-
+wrapper.CM_extensions[CUBAExt.NUMBER_OF_CORES] = 1
 wrapper.SP[CUBA.TIME_STEP] = 0.1
-wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 64000
+wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 6400
 
 wrapper.SP_extensions[CUBAExt.PHASE_LIST] = ('sludge', 'water')
 wrapper.SP[CUBA.DENSITY] = {'sludge': 1900.0, 'water': 1000.0}
@@ -35,6 +34,7 @@ wrapper.SP_extensions[CUBAExt.VISCOSITY_MODEL_COEFFS] =\
     {'BinghamPlastic': {'coeff': 0.00023143, 'exponent': 179.26,
                         'BinghamCoeff': 0.0005966, 'BinghamExponent': 1050.8,
                         'BinghamOffset': 0, 'muMax': 10}}
+
 wrapper.SP_extensions[CUBAExt.STRESS_MODEL] = 'standard'
 wrapper.SP_extensions[CUBAExt.RELATIVE_VELOCITY_MODEL] = 'simple'
 wrapper.SP_extensions[CUBAExt.RELATIVE_VELOCITY_MODEL_COEFFS] =\
@@ -81,8 +81,6 @@ for cell in mesh_inside_wrapper.iter_cells():
 mesh_inside_wrapper.update_cells(updated_cells)
 wrapper.run()
 
-print "Run ended"
-
 
 @mayavi2.standalone
 def view():
@@ -97,7 +95,6 @@ def view():
 
 if __name__ == '__main__':
     view()
-
 
 # name = 'dahl_out'
 # wrapper_io = openfoam_file_io.Wrapper()

@@ -398,7 +398,7 @@ def modify_files(case, startTime, SP, BC, solver, SPExt, CMExt):
         # take boundaries from volumefractions BC's
         volumeFractionBCs = BC[CUBA.VOLUME_FRACTION]
         # parse startTime/Sigma -file in case directory
-        parFile = os.path.join(case, str(startTime), 'Sigma')
+        parFile = os.path.join(case, str(startTime), 'Sigma_mu')
         control = ParsedParameterFile(parFile)
         for boundary in volumeFractionBCs:
             control["boundaryField"][boundary] = {}
