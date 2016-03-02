@@ -221,6 +221,7 @@ fluxRequired
                        'driftFluxSimphonyFoam':
                        {'transportProperties':
                         """
+
 phases (phase1 phase2);
 
 phase1
@@ -254,7 +255,6 @@ phase1
 phase2
 {
     transportModel  Newtonian;
-
     nu              1e-06;
     rho             1000;
 }

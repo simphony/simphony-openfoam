@@ -27,7 +27,7 @@ License
 \*---------------------------------------------------------------------------*/
 std::string Sigma_muName = "Sigma_mu";
 
-Info<< "Creating field p_rgh\n" << endl;
+Info<< "Creating field p_rgh\n"<< endl;
 new volScalarField
 (
     IOobject
@@ -91,6 +91,7 @@ new volTensorField
 
 Info<< "Calculating face flux field phi\n" << endl;
 
+surfaceScalarField* phi = 
 new surfaceScalarField
 (
     IOobject
@@ -105,7 +106,7 @@ new surfaceScalarField
 );
 
 Info<< "Creating field alpha.phase1\n" << endl;
-new volScalarField
+volScalarField* alpha1 = new volScalarField
 (
     IOobject
     (
@@ -188,6 +189,7 @@ IStringStream TP
     "g (0 0 0);\n"
     );
 
+IOdictionary *transportProperties = 
 new IOdictionary
 (
     IOobject
@@ -200,3 +202,4 @@ new IOdictionary
     ),
     TP()
 );
+

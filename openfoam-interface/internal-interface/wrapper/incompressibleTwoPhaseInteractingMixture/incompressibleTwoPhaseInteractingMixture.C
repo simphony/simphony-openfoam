@@ -194,7 +194,7 @@ incompressibleTwoPhaseInteractingMixture
     (
         dict
     ),
-    twoPhaseMixture(U.mesh(), *this, true),
+    twoPhaseMixture(U.mesh(), *this),
 
     muModel_
     (

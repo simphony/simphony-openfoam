@@ -648,7 +648,6 @@ fluxRequired
 
 phases (phase1 phase2);
 
-
 phase1
 {
     transportModel  BinghamPlastic;
@@ -674,14 +673,15 @@ phase1
 
         muMax       10;
     }
-     rho             1000;
- }
+    rho             1000;
+}
+
 phase2
 {
     transportModel  Newtonian;
     nu              1e-06;
     rho             1000;
- }
+}
 
 stressModel standard;
 relativeVelocityModel simple;

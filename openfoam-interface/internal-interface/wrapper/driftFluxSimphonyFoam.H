@@ -26,6 +26,8 @@ License
 
 \*---------------------------------------------------------------------------*/
 
+#include <stdio.h>
+
 pimpleControl pimple(mesh);
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -53,12 +55,13 @@ volTensorField& Stress = find_Data<tensor>(mesh,StressName);
 surfaceScalarField& phi = const_cast<surfaceScalarField&>(mesh.lookupObject<surfaceScalarField>(word("phi"))); 
 phi = linearInterpolate(U) & mesh.Sf();
 
-
 IOdictionary& transportProperties = const_cast<IOdictionary&>(mesh.lookupObject<IOdictionary>(word("transportProperties"))); 
 
-
+//incompressibleTwoPhaseInteractingMixture mixture(U, phi, transportProperties, true);
 incompressibleTwoPhaseInteractingMixture mixture(U, phi, transportProperties);
+
 // Relative Velocity
+
 autoPtr<relativeVelocityModel> UdmModelPtr
 (
     relativeVelocityModel::New
@@ -70,8 +73,6 @@ autoPtr<relativeVelocityModel> UdmModelPtr
 
 relativeVelocityModel& UdmModel(UdmModelPtr());
 
-
-
 word stressModelType(transportProperties.lookup("stressModel"));
 Info<< "Stressmodel is "<< stressModelType<<"\n" << endl;
 
@@ -80,7 +81,6 @@ volScalarField& alpha2(mixture.alpha2());
 
 const dimensionedScalar& rho1 = mixture.rhod();
 const dimensionedScalar& rho2 = mixture.rhoc();
-
 
 Info<< "Creating field SigmaPrime\n" << endl;
 volTensorField SigmaPrime
@@ -170,6 +170,7 @@ setRefCell
     pRefCell,
     pRefValue
 );
+
 
 if (p_rgh.needReference())
 {

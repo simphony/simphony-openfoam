@@ -977,7 +977,7 @@ int foam_getCellCount(std::string name)
 
 void foam_createDefaultFields(std::string name, std::string solver)
 {
-    const fvMesh & mesh = getMeshFromDb(name);
+    fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
     if(solver=="pimpleFoam"){
         #include "createFieldsPimpleFoam.H"
     }
@@ -1021,6 +1021,9 @@ void foam_modifyNumerics(std::string name, std::string fvSch, std::string fvSol,
     );
 
     runTimes[name]->read();
+
+    //Info << fvSchemesDict <<endl;
+    //Info << controlDict <<endl;
 
     dictionary& TPDict = const_cast<dictionary&>(mesh.lookupObject<dictionary>(word("transportProperties"))); 
     TPDict.read
