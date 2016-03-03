@@ -16,7 +16,6 @@ from simphony.core.data_container import DataContainer
 from foam_controlwrapper.foam_controlwrapper import Wrapper
 from foam_controlwrapper.cuba_extension import CUBAExt
 from foam_controlwrapper.blockmesh_utils import create_quad_mesh
-from foam_controlwrapper import foam_files
 
 
 class TestMesh(Mesh):
@@ -77,9 +76,6 @@ class WrapperTestCase(unittest.TestCase):
         self.boundaries = {"boundary"+str(i): [self.fuids[i]]
                            for i in range(6)}
         self.mesh._boundaries = self.boundaries
-
-    def tearDown(self):
-        foam_files.remove_parser_files(os.getcwd())
 
     def test_add_dataset(self):
         """Test add_dataset method
