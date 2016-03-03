@@ -14,7 +14,6 @@ from simphony.core.data_container import DataContainer
 from simphony.core.cuds_item import CUDSItem
 
 from foam_controlwrapper.foam_mesh import FoamMesh
-from foam_controlwrapper import foam_files
 
 
 class TestMesh(Mesh):
@@ -78,9 +77,6 @@ class FoamMeshTestCase(unittest.TestCase):
         self.boundaries = {"boundary"+str(i): [self.fuids[i]]
                            for i in range(6)}
         self.mesh._boundaries = self.boundaries
-
-    def tearDown(self):
-        foam_files.remove_parser_files(os.getcwd())
 
     def test_get_point(self):
         """Test get_point method
