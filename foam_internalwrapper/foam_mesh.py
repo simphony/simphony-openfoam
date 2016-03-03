@@ -164,7 +164,7 @@ class FoamMesh(ABCMesh):
             foamface.addMesh(name, pointCoordinates, cellPoints,
                              facePoints, patchNames, patchFaces, patchTypes)
 
-            foamface.createDefaultFields(name, solver)
+            foamface.createDefaultFields(name, solver, False)
 
             # write possible cell data to time directory
             self.copy_cells(mesh.iter_cells())

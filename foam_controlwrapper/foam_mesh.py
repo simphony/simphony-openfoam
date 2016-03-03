@@ -15,11 +15,11 @@ from simphony.core.cuds_item import CUDSItem
 import simphony.core.data_container as dc
 import simphonyfoaminterface as foamface
 
-from .foam_files import (write_default_files, get_cell_data_names)
 from foam_internalwrapper.mesh_utils import set_cells_data
 from foam_internalwrapper.mesh_utils import create_dummy_celldata
 from .foam_variables import (dataNameMap, dataKeyMap)
 from .foam_variables import dataTypeMap
+from foam_internalwrapper.foam_dicts import (dictionaryMaps, parse_map)
 
 
 class FoamMesh(ABCMesh):
@@ -42,7 +42,7 @@ class FoamMesh(ABCMesh):
         name of mesh
     data : DataContainer
         DataContainer to store mesh global data (midpoint, ...).
-    _time : str
+    _time : int
         current time step
     _uuidToFoamLabel : dictionary
         Mapping from uuid to OpenFoam label number
@@ -59,11 +59,11 @@ class FoamMesh(ABCMesh):
 
     """
 
-    def __init__(self, name, BC=None, mesh=None, path=None):
+    def __init__(self, name, BC, solver, mesh=None, path=None):
         super(FoamMesh, self).__init__()
         self.name = name
         self.data = dc.DataContainer()
-        self._time = str(0)
+        self._time = 0
         self._uuidToFoamLabel = {}
         self._foamCellLabelToUuid = {}
         self._foamFaceLabelToUuid = {}
@@ -150,21 +150,24 @@ class FoamMesh(ABCMesh):
                 else:
                     patchTypes.append("patch")
 
-            # this to have controlDict file for mesh definition
+            mapContent = dictionaryMaps[solver]
+            controlDict = parse_map(mapContent['controlDict'])
 
-            write_default_files(self.path, 'simpleFoam',
-                                self._time, False)
             # init objectRegistry and map to mesh name
-            foamface.init_IO(name, os.path.abspath(os.path.join(self.path,
-                                                                os.pardir)))
+            foamface.init_IO(name, os.path.abspath(
+                os.path.join(self.path, os.pardir)), controlDict)
+
             # add mesh to objectRegisty
             foamface.addMesh(name, pointCoordinates, cellPoints, facePoints,
                              patchNames, patchFaces, patchTypes)
+
+            foamface.createDefaultFields(name, solver, True)
             # write mesh to disk
             foamface.writeMesh(name)
 
             # write possible cell data to time directory
             self.copy_cells(mesh.iter_cells())
+            foamface.writeFields(name)
 
     def get_point(self, uuid):
         """Returns a point with a given uuid.
@@ -292,8 +295,10 @@ class FoamMesh(ABCMesh):
             cell = Cell(puids, uuid)
             label = self._uuidToFoamLabel[uuid]
 
-            dataNames = get_cell_data_names(self.path, self._time)
-            for dataName in dataNames:
+            dataNames = foamface.getCellDataNames(self.name)
+            dataNames += foamface.getCellVectorDataNames(self.name)
+            dataNames += foamface.getCellTensorDataNames(self.name)
+            for dataName in set(dataKeyMap.keys()).intersection(dataNames):
                 if dataTypeMap[dataKeyMap[dataName]] == "scalar":
                     cell.data[dataKeyMap[dataName]] = \
                         foamface.getCellData(self.name,
@@ -367,7 +372,10 @@ class FoamMesh(ABCMesh):
 
         """
 
-        dataNames = get_cell_data_names(self.path, self._time)
+        dataNames = foamface.getCellDataNames(self.name)
+        dataNames += foamface.getCellVectorDataNames(self.name)
+        dataNames += foamface.getCellTensorDataNames(self.name)
+
         # if cell data does not exists in the mesh at all, initialize it
         newDataNames = []
         dataNameKeyMap = {}
@@ -421,7 +429,10 @@ class FoamMesh(ABCMesh):
 
         """
 
-        dataNames = get_cell_data_names(self.path, self._time)
+        dataNames = foamface.getCellDataNames(self.name)
+        dataNames += foamface.getCellVectorDataNames(self.name)
+        dataNames += foamface.getCellTensorDataNames(self.name)
+
         # if cell data does not exists in the mesh at all, initialize it
         newDataNames = []
         dataNameKeyMap = {}

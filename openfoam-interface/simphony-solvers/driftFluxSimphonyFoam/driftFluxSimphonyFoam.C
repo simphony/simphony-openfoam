@@ -83,12 +83,12 @@ int main(int argc, char *argv[])
             #include "alphaControls.H"
 
             UdmModel.correct();
+
             #include "alphaEqnSubCycle.H"
 
             mixture.correct();
 
             #include "UEqn.H"
-
 
             // --- Pressure corrector loop
             while (pimple.correct())

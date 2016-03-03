@@ -1,8 +1,9 @@
 """ foam_dicts
 
-Managment of OpenFOAM dicts and Fields
+Management of OpenFOAM dicts and Fields
 
 """
+import os
 
 import simphonyfoaminterface as foamface
 from simphony.core.cuba import CUBA
@@ -13,105 +14,181 @@ dictionaryMaps = \
     {'pimpleFoam':
         {'transportProperties':
             {'transportModel': 'Newtonian',
-             'nu nu     [ 0 2 -1 0 0 0 0 ]': '0.0',
-             'g': '( 0 0 0)'},
+             'nu nu     [ 0 2 -1 0 0 0 0 ]': '0.0'},
          'turbulenceProperties':
-            {'simulationType': 'laminar'},
+             {'simulationType': 'laminar'},
          'RASProperties':
-            {'RASModel': 'laminar',
-             'turbulence': 'off',
-             'printCoeffs': 'on'},
+             {'RASModel': 'laminar',
+              'turbulence': 'off',
+              'printCoeffs': 'on'},
          'controlDict':
-            {'application': 'pimpleFoam',
-             'startFrom': 'startTime',
-             'startTime': '0',
-             'stopAt': 'endTime',
-             'endTime': '1',
-             'deltaT': '1',
-             'writeControl': 'timeStep',
-             'writeInterval': '10000',
-             'purgeWrite': '0',
-             'writeFormat': 'ascii',
-             'writePrecision': '6',
-             'writeCompression': 'no',
-             'timeFormat': 'general',
-             'runTimeModifiable': 'yes'}},
+             {'application': 'pimpleFoam',
+              'startFrom': 'startTime',
+              'startTime': '0',
+              'stopAt': 'endTime',
+              'endTime': '1',
+              'deltaT': '1',
+              'writeControl': 'timeStep',
+              'writeInterval': '10000',
+              'purgeWrite': '0',
+              'writeFormat': 'ascii',
+              'writePrecision': '6',
+              'writeCompression': 'no',
+              'timeFormat': 'general',
+              'runTimeModifiable': 'yes'}
+         },
+     'interFoam':
+         {'transportProperties':
+             {'phases': '(phase1 phase2)',
+              'phase1':
+                  {'transportModel': 'Newtonian',
+                   'nu              nu [ 0 2 -1 0 0 0 0 ]': '0.0',
+                   'rho             rho [ 1 -3 0 0 0 0 0 ]': '0.0'
+                   },
+              'phase2':
+                  {'transportModel': 'Newtonian',
+                   'nu              nu [ 0 2 -1 0 0 0 0 ]': '0.0',
+                   'rho             rho [ 1 -3 0 0 0 0 0 ]': '0.0'
+                   },
+              'sigma           sigma [ 1 0 -2 0 0 0 0 ]': '0.0'
+              },
+          'turbulenceProperties':
+              {'simulationType': 'laminar'},
+          'RASProperties':
+              {'RASModel': 'laminar',
+               'turbulence': 'off',
+               'printCoeffs': 'on'},
+          'controlDict':
+              {'application': 'interFoam',
+               'startFrom': 'startTime',
+               'startTime': '0',
+               'stopAt': 'endTime',
+               'endTime': '1',
+               'deltaT': '1',
+               'writeControl': 'adjustableRunTime',
+               'writeInterval': '1',
+               'purgeWrite': '0',
+               'writeFormat': 'ascii',
+               'writePrecision': '6',
+               'writeCompression': 'no',
+               'timeFormat': 'general',
+               'runTimeModifiable': 'yes',
+               'adjustTimeStep': 'on',
+               'maxCo': '1',
+               'maxAlphaCo': '1',
+               'maxDeltaT': '1'
+               },
+          'g':
+              {'dimensions': '[0 1 -2 0 0 0 0]',
+               'value':  '( 0 0 0 )'
+               }
+          },
      'driftFluxSimphonyFoam':
-         {
-            'controlDict':
-                {'application': 'driftFluxSimphonyFoam',
-                 'startFrom': 'startTime',
-                 'startTime': '0',
-                 'stopAt': 'endTime',
-                 'endTime': '0.1',
-                 'deltaT': '0.1',
-                 'writeControl': 'timeStep',
-                 'writeInterval': '10000',
-                 'purgeWrite': '0',
-                 'writeFormat': 'ascii',
-                 'writePrecision': '6',
-                 'writeCompression': 'no',
-                 'timeFormat': 'general',
-                 'runTimeModifiable': 'yes',
-                 'adjustTimeStep':  'on',
-                 'maxCo': '5',
-                 'maxDeltaT': '1'
-                 },
-            'transportProperties':
-                {'g': '( 0 0 0)',
-                 'phases': '(phase1 phase2)',
-                 'phase1':
-                     {'transportModel': 'BinghamPlastic',
-                      'BinghamPlasticCoeffs':
-                          {'coeff': '0.00023143',
-                           'exponent': '179.26',
-                           'BinghamCoeff': '0.0005966',
-                           'BinghamExponent': '1050.8',
-                           'BinghamOffset': '0',
-                           'muMax': '10'},
-                      'plasticCoeffs':
-                          {'coeff': '0.00023143',
-                           'exponent': '179.26',
-                           'BinghamCoeff': '0.0005966',
-                           'BinghamExponent': '1050.8',
-                           'BinghamOffset': '0',
-                           'muMax': '10'},
-                      'nu': '1e-4',
-                      'rho': '1996'},
-                 'phase2':
-                     {'transportModel': 'Newtonian',
-                      'nu': '1.7871e-06',
-                      'rho': '996'},
-                 'stressModel': 'standard',
-                 'relativeVelocityModel': 'simple',
-                 'simpleCoeffs':
-                     {'V0': '(0 -0.002198 0)',
-                      'a': '285.84',
-                      'a1': '0.1',
-                      'residualAlpha': '0'},
-                 'generalCoeffs':
-                     {'V0': '(0 -0.002198 0)',
-                      'a': '285.84',
-                      'a1': '0.1',
-                      'residualAlpha': '0'},
-                 'fromMesoscaleCoeffs':
-                     {}
-                 }}}
+         {'controlDict':
+              {'application': 'driftFluxSimphonyFoam',
+               'startFrom': 'startTime',
+               'startTime': '0',
+               'stopAt': 'endTime',
+               'endTime': '0.1',
+               'deltaT': '0.1',
+               'writeControl': 'timeStep',
+               'writeInterval': '10000',
+               'purgeWrite': '0',
+               'writeFormat': 'ascii',
+               'writePrecision': '6',
+               'writeCompression': 'no',
+               'timeFormat': 'general',
+               'runTimeModifiable': 'yes',
+               'adjustTimeStep':  'on',
+               'maxCo': '1',
+               'maxDeltaT': '1'
+               },
+          'transportProperties':
+              {'phases': '(phase1 phase2)',
+               'phase1':
+                   {'transportModel': 'dummyViscosity',
+                    'BinghamPlasticCoeffs':
+                        {'coeff': '0.0',
+                         'exponent': '0.0',
+                         'BinghamCoeff': '0.0',
+                         'BinghamExponent': '0.0',
+                         'BinghamOffset': '0',
+                         'muMax': '0'},
+                    'plasticCoeffs':
+                        {'coeff': '0.0',
+                         'exponent': '0.0',
+                         'BinghamCoeff': '0.0',
+                         'BinghamExponent': '0.0',
+                         'BinghamOffset': '0',
+                         'muMax': '0'},
+                    'nu': '0.0',
+                    'rho': '0.0'},
+               'phase2':
+                   {'transportModel': 'Newtonian',
+                    'nu': '0.0',
+                    'rho': '0.0'},
+               'stressModel': 'standard',
+               'relativeVelocityModel': 'simple',
+               'simpleCoeffs':
+                   {'V0': '(0 0.0 0)',
+                    'a': '0.0',
+                    'a1': '0.0',
+                    'residualAlpha': '0'},
+               'generalCoeffs':
+                   {'V0': '(0 0.0 0)',
+                    'a': '0.0',
+                    'a1': '0.0',
+                    'residualAlpha': '0'},
+               'fromMesoscaleCoeffs':
+                   {}
+               },
+          'g':
+              {'dimensions': '[0 1 -2 0 0 0 0]',
+               'value':  '( 0 0 0 )'
+               }
+          },
+     'blockMesh':
+         {'blockMeshDict':
+              {'convertToMeters': 1,
+               'vertices': (),
+               'blocks': (),
+               'edges': (),
+               'boundary': (),
+               'mergePatchPairs': ()},
+          'controlDict':
+              {'application': 'blockMesh',
+               'startFrom': 'startTime',
+               'startTime': '0',
+               'stopAt': 'endTime',
+               'endTime': '1',
+               'deltaT': '1',
+               'writeControl': 'timeStep',
+               'writeInterval': '1'
+               },
+          'fvSchemes':
+              {'divSchemes': {'default': 'none'},
+               'gradSchemes': {'default': 'Gauss linear'},
+               'laplacianSchemes': {'default': 'none'}
+               },
+          'fvSolution':
+              {}
+          }
+     }
 
 dictionaryTemplates = {'pimpleFoam':
                        {'transportProperties':
-                        """
+                           """
 transportModel Newtonian;
 
 nu nu     [ 0 2 -1 0 0 0 0 ]     0.0 ;
 
                         """,
-                        'turbulenceProperties':
-                        """
+                           'turbulenceProperties':
+                               """
 simulationType laminar;
                         """,
-                        'RASProperties':
-                        """
+                           'RASProperties':
+                               """
 RASModel            laminar;
 
 turbulence          off;
@@ -119,8 +196,7 @@ turbulence          off;
 printCoeffs         on;
                         """,
                         'fvSolution':
-                        """
-
+                            """
 solvers
 {
     p
@@ -164,8 +240,8 @@ PIMPLE
     nCorrectors         2;
 }
                         """,
-                        'fvSchemes':
-                        """
+                            'fvSchemes':
+                                """
 ddtSchemes
 {
     default         Euler;
@@ -219,39 +295,211 @@ fluxRequired
 }
 
                         """},
+                       'interFoam':
+                       {'transportProperties':
+                            """
+phases (phase1 phase2);
+
+
+phase1
+{
+    transportModel  Newtonian;
+    nu              nu [ 0 2 -1 0 0 0 0 ] 0.0;
+    rho             rho [ 1 -3 0 0 0 0 0 ] 0.0;
+ }
+phase2
+{
+    transportModel  Newtonian;
+    nu              nu [ 0 2 -1 0 0 0 0 ] 0.0;
+    rho             rho [ 1 -3 0 0 0 0 0 ] 0.0;
+ }
+sigma           sigma [ 1 0 -2 0 0 0 0 ] 0.0;
+
+                        """,
+                        'g':
+                        """
+dimensions      [0 1 -2 0 0 0 0];
+value           ( 0 0 0 );
+                        """,
+                        'fvSolution':
+                        """
+
+solvers
+{
+    "alpha.*"
+    {
+        nAlphaCorr      2;
+        nAlphaSubCycles 1;
+        cAlpha          1;
+
+        MULESCorr       yes;
+        nLimiterIter    3;
+
+        solver          smoothSolver;
+        smoother        symGaussSeidel;
+        tolerance       1e-8;
+        relTol          0;
+    }
+
+    pcorr
+    {
+        solver          PCG;
+        preconditioner  DIC;
+        tolerance       1e-5;
+        relTol          0;
+    }
+
+    p_rgh
+    {
+        solver          PCG;
+        preconditioner  DIC;
+        tolerance       1e-07;
+        relTol          0.05;
+    }
+
+    p_rghFinal
+    {
+        $p_rgh;
+        relTol          0;
+    }
+
+    U
+    {
+        solver          smoothSolver;
+        smoother        symGaussSeidel;
+        tolerance       1e-06;
+        relTol          0;
+    }
+}
+
+PIMPLE
+{
+    momentumPredictor   no;
+    nOuterCorrectors    1;
+    nCorrectors         3;
+    nNonOrthogonalCorrectors 0;
+}
+
+relaxationFactors
+{
+    fields
+    {
+    }
+    equations
+    {
+        ".*" 1;
+    }
+}
+
+                        """,
+                        'fvSchemes':
+                        """
+ddtSchemes
+{
+    default         Euler;
+}
+
+gradSchemes
+{
+    default         Gauss linear;
+}
+
+divSchemes
+{
+    div(rhoPhi,U)  Gauss linearUpwind grad(U);
+    div(phi,alpha)  Gauss vanLeer;
+    div(phirb,alpha) Gauss linear;
+    div((muEff*dev(T(grad(U))))) Gauss linear;
+}
+
+laplacianSchemes
+{
+    default         Gauss linear corrected;
+}
+
+interpolationSchemes
+{
+    default         linear;
+}
+
+snGradSchemes
+{
+    default         corrected;
+}
+
+fluxRequired
+{
+    default         no;
+    p_rgh;
+    pcorr;
+    alpha.phase1;
+}
+
+
+                        """},
                        'driftFluxSimphonyFoam':
                        {'transportProperties':
-                        """
+                            """
 phases (phase1 phase2);
 
 phase1
 {
     transportModel  dummyViscosity;
-    nu              1e-04;
-    rho             1996;
+    nu              0.0;
+    rho             0.0;
+    BinghamPlasticCoeffs
+    {
+        coeff       0.0;
+        exponent    0.0;
+
+        BinghamCoeff    0.0;
+        BinghamExponent 0.0;
+        BinghamOffset   0;
+
+        muMax       0;
+    }
+    plasticCoeffs
+    {
+        coeff       0.0;
+        exponent    0.0;
+
+        BinghamCoeff    0.0;
+        BinghamExponent 0.0;
+        BinghamOffset   0;
+
+        muMax       0;
+    }
+
 }
 
 phase2
 {
     transportModel  Newtonian;
 
-    nu              1.7871e-06;
-    rho             996;
+    nu              0.0;
+    rho             0.0;
 }
 
 stressModel standard;
 relativeVelocityModel simple;
 
-"(simple|general)Coeffs"
+simpleCoeffs
 {
-    V0              (0 -0.002198 0);
-    a               285.84;
-    a1              0.1;
+    V0              (0 0 0);
+    a               0.0;
+    a1              0.0;
     residualAlpha   0;
 }
-                        """,
+generalCoeffs
+{
+    V0              (0 0 0);
+    a               0.0;
+    a1              0.0;
+    residualAlpha   0;
+}
+                         """,
                         'fvSolution':
-                        """
+                            """
 solvers
 {
     "alpha.*"
@@ -330,7 +578,7 @@ relaxationFactors
 }
                         """,
                         'fvSchemes':
-                        """
+                            """
 ddtSchemes
 {
     default         Euler;
@@ -377,7 +625,109 @@ fluxRequired
     p_rgh;
     "alpha.*";
 }
-                        """}}
+                        """},
+                       'blockMesh':
+                       {'blockMeshDict':
+                            """
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.2.1                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+convertToMeters 1;
+
+vertices
+(
+    (0 0 0)
+    (30 0 0)
+    (30 5 0)
+    (0 5 0)
+    (0 0 0.1)
+    (30 0 0.1)
+    (30 5 0.1)
+    (0 5 0.1)
+);
+
+blocks
+(
+    hex (0 1 2 3 4 5 6 7) (500 20 1) simpleGrading (1 1 1)
+);
+
+edges
+(
+);
+
+boundary
+(
+    walls
+    {
+        type patch;
+        faces
+        (
+            (3 7 6 2)
+            (1 5 4 0)
+        );
+    }
+    inlet
+    {
+        type patch;
+        faces
+        (
+            (0 4 7 3)
+        );
+    }
+    outlet
+    {
+        type patch;
+        faces
+        (
+            (2 6 5 1)
+        );
+    }
+    frontAndBack
+    {
+        type empty;
+        faces
+        (
+            (0 3 2 1)
+            (4 5 6 7)
+        );
+    }
+);
+
+mergePatchPairs
+(
+);
+
+// ************************************************************************* //
+
+
+"""}}
+
+head = \
+    """
+FoamFile
+{{
+    version     {version};
+    format      ascii;
+    class       {foamclass};
+    location    {location};
+    object      {foamobject};
+}}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+    """
 
 
 def parse_map(mapContent):
@@ -396,9 +746,24 @@ def parse_map(mapContent):
     return result
 
 
-def modifyNumerics(mesh, SP, SPExt, solver='pimpleFoam'):
+def modifyNumerics(mesh, SP, SPExt, solver='pimpleFoam', io=False):
     """ Modifies the numerical parameters of the simulation
+
+        Parameters
+        ----------
+        mesh : FoamMesh
+            mesh to be added.
+        SP : DataContainer
+            System Parameters
+        SPExt : dictionary
+            Extension to System Parameters
+        solver : str
+            solver name
+        io : bool
+            whether or not to write dictionaries to disk
+
     """
+
     fileContent = dictionaryTemplates[solver]
     mapContent = dictionaryMaps[solver]
 
@@ -408,12 +773,16 @@ def modifyNumerics(mesh, SP, SPExt, solver='pimpleFoam'):
 
     nOfTimeSteps = SP[CUBA.NUMBER_OF_TIME_STEPS]
     deltaT = SP[CUBA.TIME_STEP]
-    endTime = nOfTimeSteps*deltaT + mesh._time
+    interval = nOfTimeSteps*deltaT
+    endTime = interval + mesh._time
 
     mapContent['controlDict']['startTime'] = str(mesh._time)
     mapContent['controlDict']['deltaT'] = str(deltaT)
     mapContent['controlDict']['endTime'] = str(endTime)
     mapContent['controlDict']['maxDeltaT'] = str(deltaT)
+    if io:
+        mapContent['controlDict']['writeControl'] = 'adjustableRunTime'
+        mapContent['controlDict']['writeInterval'] = str(interval)
 
     controlDict = parse_map(mapContent['controlDict'])
 
@@ -421,6 +790,37 @@ def modifyNumerics(mesh, SP, SPExt, solver='pimpleFoam'):
         control = mapContent['transportProperties']
         control['nu nu     [ 0 2 -1 0 0 0 0 ]'] = \
             SP[CUBA.DYNAMIC_VISCOSITY]/SP[CUBA.DENSITY]
+        transportPropertiesDict = parse_map(control)
+    elif solver == 'interFoam':
+        density = SP[CUBA.DENSITY]
+        viscosity = SP[CUBA.DYNAMIC_VISCOSITY]
+        control = mapContent['transportProperties']
+        control['phase1']['nu              nu [ 0 2 -1 0 0 0 0 ]'] = \
+            viscosity[SPExt[CUBAExt.PHASE_LIST][0]] / \
+            density[SPExt[CUBAExt.PHASE_LIST][0]]
+        control['phase1']['rho             rho [ 1 -3 0 0 0 0 0 ]'] = \
+            density[SPExt[CUBAExt.PHASE_LIST][0]]
+        control['phase2']['nu              nu [ 0 2 -1 0 0 0 0 ]'] = \
+            viscosity[SPExt[CUBAExt.PHASE_LIST][1]] / \
+            density[SPExt[CUBAExt.PHASE_LIST][1]]
+        control['phase2']['rho             rho [ 1 -3 0 0 0 0 0 ]'] = \
+            density[SPExt[CUBAExt.PHASE_LIST][1]]
+        phases = SPExt[CUBAExt.PHASE_LIST]
+        if CUBAExt.SURFACE_TENSION in SPExt:
+            if phases in SPExt[CUBAExt.SURFACE_TENSION]:
+                control['sigma           sigma [ 1 0 -2 0 0 0 0 ]'] = \
+                    SPExt[CUBAExt.SURFACE_TENSION][phases]
+            else:
+                phases = SPExt[CUBAExt.PHASE_LIST]
+                if phases in SPExt[CUBAExt.SURFACE_TENSION]:
+                    control['sigma           sigma [ 1 0 -2 0 0 0 0 ]'] = \
+                        SPExt[CUBAExt.SURFACE_TENSION][phases]
+                else:
+                    error_str = "Surface tension not specified"
+                    raise ValueError(error_str)
+        else:
+            error_str = "Surface tension not specified"
+            raise ValueError(error_str)
         transportPropertiesDict = parse_map(control)
     elif solver == 'driftFluxSimphonyFoam':
         control = mapContent['transportProperties']
@@ -480,33 +880,60 @@ def modifyNumerics(mesh, SP, SPExt, solver='pimpleFoam'):
                 control[relVelModelCoeffs]["a1"] = coeffs["a1"]
                 control[relVelModelCoeffs]["residualAlpha"] =\
                     coeffs["residualAlpha"]
-            if CUBAExt.EXTERNAL_BODY_FORCE_MODEL in SPExt:
-                if SPExt[CUBAExt.EXTERNAL_BODY_FORCE_MODEL] == 'gravitation':
-                    g = SPExt[CUBAExt.EXTERNAL_BODY_FORCE_MODEL_COEFFS]["g"]
-                    control["g"] =\
-                        "( " \
-                        + str(g[0]) + " " + str(g[1]) + " " + str(g[2]) + " )"
 
         transportPropertiesDict = parse_map(control)
     foamface.modifyNumerics(mesh.name, fvSchemesDict, fvSolutionDict,
-                            controlDict, transportPropertiesDict)
+                            controlDict, transportPropertiesDict, int(io))
+    if io:
+        # write numerics to case directory
+        foamface.writeNumerics(mesh.name)
+
+    if solver == 'driftFluxSimphonyFoam' or solver == 'interFoam':
+        if io:
+            control = mapContent['g']
+            if CUBAExt.EXTERNAL_BODY_FORCE_MODEL in SPExt:
+                if SPExt[CUBAExt.EXTERNAL_BODY_FORCE_MODEL] == 'gravitation':
+                    g = SPExt[CUBAExt.EXTERNAL_BODY_FORCE_MODEL_COEFFS]['g']
+                    control['value'] =\
+                        "( " \
+                        + str(g[0]) + " " + str(g[1]) + " " + str(g[2]) + " )"
+                    gravityDict = parse_map(control)
+                    foamface.modifyDictionary(mesh.name, 'g', gravityDict)
+                    foamface.writeDictionary(mesh.name, 'g', True)
+        else:
+            if CUBAExt.EXTERNAL_BODY_FORCE_MODEL in SPExt:
+                if SPExt[CUBAExt.EXTERNAL_BODY_FORCE_MODEL] == 'gravitation':
+                    g = SPExt[CUBAExt.EXTERNAL_BODY_FORCE_MODEL_COEFFS]['g']
+                    foamface.modifyUniformVectorField(mesh.name, 'g', list(g))
 
 
 def modifyFields(mesh, BC, solver='pimpleFoam'):
     """ Modifies the internal fields and boundary conditions
+
+        Parameters
+        ----------
+        mesh : FoamMesh
+            mesh to be added.
+        BC : DataContainer
+            Boundary Conditions
+        solver : str
+            solver name
+
     """
+
     if solver == 'pimpleFoam':
         name_pressure = 'p'
         ID_pressure = CUBA.PRESSURE
-    elif solver == 'driftFluxSimphonyFoam':
+    elif solver == 'driftFluxSimphonyFoam' or solver == 'interFoam':
         name_pressure = 'p_rgh'
         ID_pressure = CUBA.DYNAMIC_PRESSURE
 
     nCells = foamface.getCellCount(mesh.name)
     p_values = [0.0 for item in range(nCells)]
     U_values = [[0.0, 0.0, 0.0] for item in range(nCells)]
-    if solver == 'driftFluxSimphonyFoam':
+    if solver == 'driftFluxSimphonyFoam' or solver == 'interFoam':
         alpha_values = [0.0 for item in range(nCells)]
+    if solver == 'driftFluxSimphonyFoam':
         vdj_values = [[0.0, 0.0, 0.0] for item in range(nCells)]
         sigma_mu_values = [[0.0, 0.0, 0.0, 0.0, 0.0,
                             0.0, 0.0, 0.0, 0.0] for item in range(nCells)]
@@ -515,9 +942,10 @@ def modifyFields(mesh, BC, solver='pimpleFoam'):
             cell.data[ID_pressure]
         U_values[mesh._uuidToFoamLabel[cell.uid]] = \
             list(cell.data[CUBA.VELOCITY])
-        if solver == 'driftFluxSimphonyFoam':
+        if solver == 'driftFluxSimphonyFoam' or solver == 'interFoam':
             alpha_values[mesh._uuidToFoamLabel[cell.uid]] = \
                 cell.data[CUBA.VOLUME_FRACTION]
+        if solver == 'driftFluxSimphonyFoam':
             vdj_values[mesh._uuidToFoamLabel[cell.uid]] = \
                 cell.data[CUBA.RELATIVE_VELOCITY]
             sigma_mu_values[mesh._uuidToFoamLabel[cell.uid]] = \
@@ -526,9 +954,10 @@ def modifyFields(mesh, BC, solver='pimpleFoam'):
                             dataDimensionMap[dataKeyMap[name_pressure]])
     foamface.setAllCellVectorData(mesh.name, "U", 0, U_values,
                                   dataDimensionMap[dataKeyMap["U"]])
-    if solver == 'driftFluxSimphonyFoam':
+    if solver == 'driftFluxSimphonyFoam' or solver == 'interFoam':
         foamface.setAllCellData(mesh.name, "alpha.phase1", 0, alpha_values,
                                 dataDimensionMap[dataKeyMap["alpha.phase1"]])
+    if solver == 'driftFluxSimphonyFoam':
         foamface.setAllCellTensorData(mesh.name, "Sigma", 0, sigma_mu_values,
                                       dataDimensionMap[dataKeyMap["Sigma"]])
 
@@ -583,7 +1012,7 @@ def modifyFields(mesh, BC, solver='pimpleFoam'):
 
     foamface.setBC(mesh.name, name_pressure, myDict)
 
-    if solver == 'driftFluxSimphonyFoam':
+    if solver == 'driftFluxSimphonyFoam' or solver == 'interFoam':
         volumeFractionBCs = BC[CUBA.VOLUME_FRACTION]
         myDict = ""
         for boundary in volumeFractionBCs:
@@ -605,3 +1034,66 @@ def modifyFields(mesh, BC, solver='pimpleFoam'):
             myDict = myDict + "}\n"
 
         foamface.setBC(mesh.name, "alpha.phase1", myDict)
+
+
+def get_foam_solver(CM):
+    """ gives the name of the solver
+
+        Parameters
+        ----------
+        CM : DataContainer
+            Computational Methods
+
+    """
+
+    GE = CM[CUBAExt.GE]
+    solver = "pimpleFoam"
+    if CUBAExt.LAMINAR_MODEL in GE:
+        if CUBAExt.VOF_MODEL in GE:
+            solver = "interFoam"
+        elif CUBAExt.MIXTURE_MODEL in GE:
+            solver = "driftFluxSimphonyFoam"
+        else:
+            solver = "pimpleFoam"
+        return solver
+    else:
+        error_str = "GE does not define supported solver: GE = {}"
+        raise NotImplementedError(error_str.format(GE))
+
+
+def write_dictionary(path, dictionary_name, dictionary_content):
+    """write dictionary to file
+
+        Parameters
+        ----------
+        path : str
+            path to the file directory
+        dictionary_name : str
+            name of the dictionary
+        dictionary_content : str
+            content of the dictionary
+
+    """
+
+    heading = head.format(version='2.4', foamclass='dictionary',
+                          location='system', foamobject=dictionary_name)
+    foamface.writePathDictionary(path, dictionary_name, heading,
+                                 dictionary_content)
+
+
+def create_directories(case_directory):
+    """Create default directories
+
+    Parameters
+    ----------
+    case_directory : str
+        directory to create directories on.
+
+    """
+
+    directories = ('constant', 'system', '0',
+                   os.path.join('constant', 'polyMesh'))
+    for dir in directories:
+        directory = os.path.join(case_directory, dir)
+        if not os.path.exists(directory):
+            os.makedirs(directory)

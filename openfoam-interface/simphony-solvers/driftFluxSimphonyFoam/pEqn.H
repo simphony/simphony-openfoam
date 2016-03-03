@@ -33,6 +33,7 @@
         (
             phiHbyA.boundaryField()
 	    // - fvOptions.relative(mesh.Sf().boundaryField() & U.boundaryField())
+	    - (mesh.Sf().boundaryField() & U.boundaryField())
         )/(mesh.magSf().boundaryField()*rAUf.boundaryField())
     );
 

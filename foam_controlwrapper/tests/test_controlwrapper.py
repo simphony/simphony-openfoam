@@ -8,7 +8,6 @@ foam_controlwrapper module functionalities
 import unittest
 import os
 import re
-import shutil
 
 from simphony.cuds.mesh import Mesh, Face, Point, Cell
 from simphony.core.cuba import CUBA
@@ -205,11 +204,11 @@ class WrapperRunTestCase(unittest.TestCase):
         create_quad_mesh(self.path, name, self.wrapper, corner_points, 5, 5, 5)
         self.mesh_inside_wrapper = self.wrapper.get_dataset(name)
 
-    def tearDown(self):
-        if os.path.exists(self.mesh_inside_wrapper.path):
-            shutil.rmtree(self.mesh_inside_wrapper.path)
-        if os.path.exists(self.path):
-            shutil.rmtree(self.path)
+#    def tearDown(self):
+#        if os.path.exists(self.mesh_inside_wrapper.path):
+#            shutil.rmtree(self.mesh_inside_wrapper.path)
+#        if os.path.exists(self.path):
+#            shutil.rmtree(self.path)
 
     def test_run_time(self):
         """Test that field variable value is changed after
@@ -217,6 +216,7 @@ class WrapperRunTestCase(unittest.TestCase):
 
         """
         self.wrapper.SP[CUBA.TIME_STEP] = 1
+        self.wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 2
 
         self.wrapper.run()
 
@@ -239,7 +239,7 @@ class WrapperRunTestCase(unittest.TestCase):
 
         """
         self.wrapper.SP[CUBA.TIME_STEP] = 3
-        self.wrapper.CM_extensions[CUBAExt.NUMBER_OF_CORES] = 2
+        self.wrapper.CM_extensions[CUBAExt.NUMBER_OF_CORES] = 4
 
         self.wrapper.run()
 

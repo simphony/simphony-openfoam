@@ -45,7 +45,8 @@ using namespace Foam;
 // init dictionary for II wrapper
 void foam_init(std::string name, std::string cD);
 // init Foam mesh name (case name)  and rootPath for IO wrapper
-void foam_init_IO(std::string name, std::string rootPath);
+//void foam_init_IO(std::string name, std::string rootPath);
+void foam_init_IO(std::string name, std::string rootPath,std::string cD);
 // read Foam mesh from case named name to wrapper
 void foam_readMesh(std::string name);
 // get mesh single point coordinates 
@@ -131,15 +132,28 @@ void foam_setMesh(std::string name);
 
 
 // create default files
-void foam_createDefaultFields(std::string name, std::string solver);
+void foam_createDefaultFields(std::string name, std::string solver,bool io);
 // modifying numerics fvSolution and fvSchemes
-void foam_modifyNumerics(std::string name, std::string fvSch, std::string fvSol, std::string cD, std::string TP);
-//modifying boundary conditions
+void foam_modifyNumerics(std::string name, std::string fvSch, std::string fvSol, std::string cD, std::string TP, bool io);
+// modifying dictionary
+void foam_modifyDictionary(std::string name, std::string dictionaryName, std::string dictionaryContent);
+// modify uniform vector field
+void foam_modifyUniformDimensionedVectorField(std::string name, std::string fieldName, std::vector<double> value);
+///modifying boundary conditions
 void foam_setBC(std::string name, std::string fieldname, std::string dict);
 //running the time steps
 double foam_run(std::string name, int nproc, std::string solver);
 // update mesh data for given time from disk
-void foam_update_data(std::string name, double time);
+void foam_updateData(std::string name, double time);
+// write numerics to disk
+void foam_writeNumerics(std::string name);
+// write dictionary to disk to constant or system directory
+void foam_writeDictionary(std::string name, std::string dictionaryName, bool constant);
+// write dictionary to disk to path directory
+void foam_writePathDictionary(std::string path, std::string dictionaryName, std::string head, std::string dictionaryContent);
+
+// write fields to disk
+void foam_writeFields(std::string name);
 
 template<class Type> 
 GeometricField<Type, fvPatchField, volMesh> & find_Data(fvMesh& mesh,std::string& dataname)

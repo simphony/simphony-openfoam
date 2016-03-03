@@ -98,8 +98,8 @@ incompressibleTwoPhaseInteractingMixture
         IOobject
         (
             "mu",
-            U_.time().timeName(),
-            U_.db()
+            U_.mesh().time().timeName(),
+            U_.mesh()
         ),
         U_.mesh(),
         dimensionedScalar("mu", dimensionSet(1, -1, -1, 0, 0), 0),
@@ -122,8 +122,8 @@ incompressibleTwoPhaseInteractingMixture
         IOobject
         (
             "transportProperties",
-            U.time().constant(),
-            U.db(),
+            U_.mesh().time().timeName(),
+            U_.mesh(),
             IOobject::MUST_READ_IF_MODIFIED,
             IOobject::NO_WRITE
         ),
@@ -171,8 +171,8 @@ incompressibleTwoPhaseInteractingMixture
         IOobject
         (
             "mu",
-            U_.time().timeName(),
-            U_.db()
+            U_.mesh().time().timeName(),
+            U_.mesh()
         ),
         U_.mesh(),
         dimensionedScalar("mu", dimensionSet(1, -1, -1, 0, 0), 0),
@@ -194,7 +194,7 @@ incompressibleTwoPhaseInteractingMixture
     (
         dict
     ),
-    twoPhaseMixture(U.mesh(), *this, true),
+    twoPhaseMixture(U.mesh(), *this),
 
     muModel_
     (
@@ -236,8 +236,8 @@ incompressibleTwoPhaseInteractingMixture
         IOobject
         (
             "mu",
-            U_.time().timeName(),
-            U_.db()
+            U_.mesh().time().timeName(),
+            U_.mesh()
         ),
         U_.mesh(),
         dimensionedScalar("mu", dimensionSet(1, -1, -1, 0, 0), 0),

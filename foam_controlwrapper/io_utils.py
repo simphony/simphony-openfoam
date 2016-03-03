@@ -4,6 +4,7 @@
 import simphonyfoaminterface as foamface
 
 from .foam_mesh import FoamMesh
+from foam_internalwrapper.foam_dicts import (dictionaryMaps, parse_map)
 
 
 def read_foammesh(name, path):
@@ -22,13 +23,15 @@ def read_foammesh(name, path):
 
     """
 
-    foamface.init_IO(name, path)
+    mapContent = dictionaryMaps['pimpleFoam']
+    controlDict = parse_map(mapContent['controlDict'])
+    foamface.init_IO(name, path, controlDict)
     foamface.readMesh(name)
     nPoints = foamface.getPointCount(name)
     nCells = foamface.getCellCount(name)
     nFaces = foamface.getFaceCount(name)
     nEdges = 0
-    foamMesh = FoamMesh(name)
+    foamMesh = FoamMesh(name, {}, 'pimpleFoam')
     foamMesh.generate_uuidmapping(nPoints, nEdges, nFaces, nCells)
     patchNames = foamface.getBoundaryPatchNames(name)
     patchFaces = foamface.getBoundaryPatchFaces(name)

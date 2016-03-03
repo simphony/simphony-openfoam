@@ -22,18 +22,18 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::fromMesoscale
+    Foam::general
 
 Description
-    fromMesoscale relative velocity model
+    General relative velocity model
 
 SourceFiles
-    fromMesoscale.C
+    general.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef fromMesoscale_H
-#define fromMesoscale_H
+#ifndef general_H
+#define general_H
 
 #include "relativeVelocityModel.H"
 
@@ -45,44 +45,46 @@ namespace relativeVelocityModels
 {
 
 /*---------------------------------------------------------------------------*\
-                         Class fromMesoscale Declaration
+                         Class general Declaration
 \*---------------------------------------------------------------------------*/
 
-class fromMesoscale
+class general
 :
     public relativeVelocityModel
 {
     // Private data
 
-        //- Relative velocity
-	volVectorField Vr_;
+        //- a coefficient
+        dimensionedScalar a_;
+
+        //- a1 coefficient
+        dimensionedScalar a1_;
+
+        //- Drift velocity
+        dimensionedVector V0_;
+
+        //- Residual phase fraction
+        dimensionedScalar residualAlpha_;
 
 
 public:
 
     //- Runtime type information
-    TypeName("fromMesoscale");
+    TypeName("general");
 
 
     // Constructors
 
         //- Construct from components
-        fromMesoscale
+        general
         (
             const dictionary& dict,
             const incompressibleTwoPhaseInteractingMixture& mixture
         );
 
-        //- Construct from components
-        fromMesoscale
-        (
-            const dictionary& dict,
-            const incompressibleTwoPhaseInteractingMixture& mixture,
-			const volVectorField& Vr
-        );
 
     //- Destructor
-    ~fromMesoscale();
+    ~general();
 
 
     // Member Functions

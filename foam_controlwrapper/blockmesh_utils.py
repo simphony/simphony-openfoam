@@ -5,10 +5,9 @@
 import os
 import shutil
 
-from PyFoam.RunDictionary.ParsedParameterFile import ParsedParameterFile
-
-from .foam_files import write_default_files, remove_parser_files
-from .foam_templates import blockMeshDict
+from foam_internalwrapper.foam_dicts import (dictionaryMaps, parse_map,
+                                             write_dictionary,
+                                             create_directories)
 from .foam_runner import FoamRunner
 from .io_utils import read_foammesh
 
@@ -35,44 +34,102 @@ def create_quad_mesh(path, name, mesh_engine, corner_points,
         number of elements in z -direction
 
     """
-    file_name = 'blockMeshDict'
+
     case = os.path.join(path, name)
-    templateName = 'simpleFoam'
-    write_default_files(case, templateName, '0', False)
-    full_name = os.path.join(os.path.join(
-        os.path.join(case, 'constant'), 'polyMesh'), file_name)
-    with open(full_name, 'w') as f:
-        f.write(blockMeshDict)
 
-    blockMesh = ParsedParameterFile(full_name)
+    create_directories(case)
 
+    solver = 'blockMesh'
+    dictionary_name = 'controlDict'
+    full_path = os.path.join(case, 'system')
+
+    map_content = dictionaryMaps[solver]
+
+    controlDict = parse_map(map_content[dictionary_name])
+    write_dictionary(full_path, dictionary_name, controlDict)
+
+    dictionary_name = 'fvSchemes'
+    controlDict = parse_map(map_content[dictionary_name])
+    write_dictionary(full_path, dictionary_name, controlDict)
+
+    dictionary_name = 'fvSolution'
+    controlDict = parse_map(map_content[dictionary_name])
+    write_dictionary(full_path, dictionary_name, controlDict)
+
+    dictionary_name = 'blockMeshDict'
+    control = map_content[dictionary_name]
+
+    dictionary_path = os.path.join('constant', 'polyMesh')
+    full_name = os.path.join(os.path.join(case, dictionary_path),
+                             dictionary_name)
+
+    corners = "("
     for i in range(8):
-        corner_points[i] = str(corner_points[i]).replace(',', ' ')
+        corners += str(corner_points[i]).replace(',', ' ')
+    corners += ")"
 
-    blockMesh["vertices"] = corner_points
+    control['vertices'] = corners
 
-    blockLines = [""]
-    blockLines[0] = 'hex (0 1 2 3 4 5 6 7) (%i %i %i) simpleGrading (1 1 1)'\
+    control['blocks'] =\
+        '(hex (0 1 2 3 4 5 6 7) (%i %i %i) simpleGrading (1 1 1))'\
         % (nex, ney, nez)
-    blockMesh["blocks"] = blockLines
 
-    blockMesh.writeFile()
-    # remove PyFoam parser files
-    remove_parser_files(os.getcwd())
+    control['boundary'] =\
+        """
+    (
+    walls
+    {
+        type patch;
+        faces
+        (
+            (3 7 6 2)
+            (1 5 4 0)
+        );
+    }
+    inlet
+    {
+        type patch;
+        faces
+        (
+            (0 4 7 3)
+        );
+    }
+    outlet
+    {
+        type patch;
+        faces
+        (
+            (2 6 5 1)
+        );
+    }
+    frontAndBack
+    {
+        type empty;
+        faces
+        (
+            (0 3 2 1)
+            (4 5 6 7)
+        );
+    }
+)
+"""
+
+    blockMeshDict = parse_map(control)
+    write_dictionary(os.path.join(case, dictionary_path),
+                     dictionary_name, blockMeshDict)
 
     # this to overcome bug in blockMesh case attribute
     # blockMesh searches blockMeshDict -file from doubled case directory
     # copy file to that directory
-    blockMesh_file_name =\
-        os.path.join(case, 'constant', 'polyMesh', file_name)
-    blockMesh_file_name = case + os.sep + blockMesh_file_name
+    blockMesh_file_name = case + os.sep + full_name
+
     if not os.path.exists(os.path.dirname(blockMesh_file_name)):
         os.makedirs(os.path.dirname(blockMesh_file_name))
     shutil.copy(full_name, blockMesh_file_name)
 
     ncores = 1
     solver = 'blockMesh'
-    runner = FoamRunner(solver, case, ncores)
+    runner = FoamRunner(solver, name, case, ncores)
     runner.run()
 
     foam_mesh = read_foammesh(name, path)
@@ -95,21 +152,40 @@ def create_block_mesh(path, name, mesh_engine, block_mesh_dict):
         blockMeshDict -file as a string
 
     """
-    file_name = 'blockMeshDict'
+
     case = os.path.join(path, name)
-    templateName = 'simpleFoam'
-    write_default_files(case, templateName, '0', False)
-    full_name = os.path.join(os.path.join(
-        os.path.join(case, 'constant'), 'polyMesh'), file_name)
-    with open(full_name, 'w') as f:
-        f.write(block_mesh_dict)
+
+    create_directories(case)
+
+    solver = 'blockMesh'
+    dictionary_name = 'controlDict'
+    full_path = os.path.join(case, 'system')
+
+    map_content = dictionaryMaps[solver]
+
+    controlDict = parse_map(map_content[dictionary_name])
+    write_dictionary(full_path, dictionary_name, controlDict)
+
+    dictionary_name = 'fvSchemes'
+    controlDict = parse_map(map_content[dictionary_name])
+    write_dictionary(full_path, dictionary_name, controlDict)
+
+    dictionary_name = 'fvSolution'
+    controlDict = parse_map(map_content[dictionary_name])
+    write_dictionary(full_path, dictionary_name, controlDict)
+
+    dictionary_name = 'blockMeshDict'
+    dictionary_path = os.path.join('constant', 'polyMesh')
+    full_name = os.path.join(os.path.join(case, dictionary_path),
+                             dictionary_name)
+
+    write_dictionary(os.path.join(case, dictionary_path),
+                     dictionary_name, block_mesh_dict)
 
     # this to overcome bug in blockMesh case attribute
     # blockMesh searches blockMeshDict -file from doubled case directory
     # copy file to that directory
-    blockMesh_file_name =\
-        os.path.join(case, 'constant', 'polyMesh', file_name)
-    blockMesh_file_name = case + os.sep + blockMesh_file_name
+    blockMesh_file_name = case + os.sep + full_name
 
     if not os.path.exists(os.path.dirname(blockMesh_file_name)):
         os.makedirs(os.path.dirname(blockMesh_file_name))
@@ -117,7 +193,7 @@ def create_block_mesh(path, name, mesh_engine, block_mesh_dict):
 
     ncores = 1
     solver = 'blockMesh'
-    runner = FoamRunner(solver, case, ncores)
+    runner = FoamRunner(solver, name, case, ncores)
     runner.run()
 
     foam_mesh = read_foammesh(name, path)

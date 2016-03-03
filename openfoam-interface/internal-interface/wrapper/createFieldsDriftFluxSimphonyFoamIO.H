@@ -28,7 +28,6 @@ License
 //std::string Sigma_muName = "Sigma_mu";
 std::string Sigma_muName = "Sigma";
 
-Info<< "Creating field p_rgh\n" << endl;
 new volScalarField
 (
     IOobject
@@ -36,29 +35,27 @@ new volScalarField
         "p_rgh",
         runTimes[name]->timeName(),
         mesh,
-        IOobject::NO_READ,
-        IOobject::NO_WRITE
+        IOobject::READ_IF_PRESENT,
+        IOobject::AUTO_WRITE
     ),
     mesh,
     dimensionedScalar("p_rgh", dimensionSet(1, -1, -2, 0, 0, 0, 0), 0)
 );
 
-Info<< "Creating field U\n" << endl;
-volVectorField* U = new volVectorField
+new volVectorField
 (
     IOobject
     (
         "U",
         runTimes[name]->timeName(),
         mesh,
-        IOobject::NO_READ,
-        IOobject::NO_WRITE
+        IOobject::READ_IF_PRESENT,
+        IOobject::AUTO_WRITE
     ),
     mesh,
     dimensionedVector("U", dimensionSet(0, 1, -1, 0, 0, 0, 0), vector::zero)
 );
 
-Info<< "Creating field Vr\n" << endl;
 new volVectorField
 (
     IOobject
@@ -66,8 +63,8 @@ new volVectorField
         "Vr",
         runTimes[name]->timeName(),
         mesh,
-        IOobject::NO_READ,
-        IOobject::NO_WRITE
+        IOobject::READ_IF_PRESENT,
+        IOobject::AUTO_WRITE
     ),
     mesh,
     dimensionedVector("Vr", dimensionSet(0, 1, -1, 0, 0, 0, 0), vector::zero)
@@ -75,7 +72,6 @@ new volVectorField
 
 
 
-Info<< "Creating field Sigma" << endl;
 new volTensorField
 (
     IOobject
@@ -83,29 +79,14 @@ new volTensorField
         Sigma_muName,
         runTimes[name]->timeName(),
         mesh,
-        IOobject::NO_READ,
-        IOobject::NO_WRITE
+        IOobject::READ_IF_PRESENT,
+        IOobject::AUTO_WRITE
     ),
     mesh,
     dimensionedTensor(Sigma_muName, dimensionSet(1, -1, -2, 0, 0, 0, 0), tensor::zero)
 );
 
-Info<< "Calculating face flux field phi\n" << endl;
 
-surfaceScalarField* phi = new surfaceScalarField
-(
-    IOobject
-    (
-        "phi",
-        runTimes[name]->timeName(),
-        mesh,
-        IOobject::NO_READ,
-        IOobject::NO_WRITE
-    ),
-    linearInterpolate(*U) & mesh.Sf()
-);
-
-Info<< "Creating field alpha.phase1\n" << endl;
 new volScalarField
 (
     IOobject
@@ -113,8 +94,8 @@ new volScalarField
         "alpha.phase1",
         runTimes[name]->timeName(),
         mesh,
-        IOobject::NO_READ,
-        IOobject::NO_WRITE
+        IOobject::READ_IF_PRESENT,
+        IOobject::AUTO_WRITE
     ),
     mesh,
     dimensionedScalar("alpha.phase1", dimensionSet(0, 0, 0, 0, 0, 0, 0), 0)
@@ -127,8 +108,8 @@ new volTensorField
         "S",
         runTimes[name]->timeName(),
         mesh,
-        IOobject::NO_READ,
-        IOobject::NO_WRITE
+        IOobject::READ_IF_PRESENT,
+        IOobject::AUTO_WRITE
     ),
     mesh,
     dimensionedTensor("S", dimensionSet(0, 0, -1, 0, 0, 0, 0), tensor::zero)
@@ -141,7 +122,7 @@ new volVectorField
   "gradAlpha1",
   runTimes[name]->timeName(),
   mesh,
-  IOobject::NO_READ,
+  IOobject::READ_IF_PRESENT,
   IOobject::AUTO_WRITE
   ),
  mesh,
@@ -155,14 +136,13 @@ new volTensorField
   "Stress",
   runTimes[name]->timeName(),
   mesh,
-  IOobject::NO_READ,
+  IOobject::READ_IF_PRESENT,
   IOobject::AUTO_WRITE
   ),
  mesh,
  dimensionedTensor("Stress", dimensionSet(1, -1, -2, 0, 0, 0, 0), tensor::zero)
  );
 
-Info<< "Creating transportProperties\n" << endl;
 IStringStream TP
     (
     "phases (phase1 phase2);\n"
@@ -193,36 +173,92 @@ IStringStream TP
     "    a1              0.0;\n"
     "    residualAlpha   0;\n"
     "}\n"
-    );
+     );
 
 new IOdictionary
 (
     IOobject
     (
         "transportProperties",
-        runTimes[name]->timeName(),
+        runTimes[name]->constant(),
         mesh,
         IOobject::NO_READ,
-        IOobject::NO_WRITE
+        IOobject::AUTO_WRITE
     ),
     TP()
 );
-/*
+
+IStringStream TuP
+    (
+     "simulationType laminar;"
+    );
+
+new IOdictionary
+(
+    IOobject
+    (
+        "turbulenceProperties",
+        runTimes[name]->constant(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::AUTO_WRITE
+    ),
+    TuP()
+);
+
+IStringStream RaP
+    (
+     "RASModel            laminar;"
+    );
+
+new IOdictionary
+(
+    IOobject
+    (
+        "RASProperties",
+        runTimes[name]->constant(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::AUTO_WRITE
+    ),
+    RaP()
+);
+
+IStringStream deC
+    (
+     "numberOfSubdomains 2;"
+     "method          scotch;"
+    );
+
+new IOdictionary
+(
+    IOobject
+    (
+        "decomposeParDict",
+        runTimes[name]->system(),
+        mesh,
+        IOobject::READ_IF_PRESENT,
+        IOobject::AUTO_WRITE
+    ),
+    deC()
+);
+
 IStringStream grav
     (
-     "dimensions      [0 1 -2 0 0 0 0];\n"
-     "value           ( 0 0 0 );\n"
+     "dimensions      [0 1 -2 0 0 0 0];"
+     "value           ( 0 0 0 );"
     );
-*/
-new uniformDimensionedVectorField
+
+
+new IOdictionary
 (
- IOobject
- (
-  "g",
-  runTimes[name]->constant(),
-  mesh,
-  IOobject::NO_READ,
-  IOobject::NO_WRITE
-  ),
- dimensionedVector("g", dimensionSet(0, 1, -2, 0, 0, 0, 0), vector::zero)
- );
+    IOobject
+    (
+        "g",
+        runTimes[name]->constant(),
+        mesh,
+        IOobject::READ_IF_PRESENT,
+        IOobject::AUTO_WRITE
+    ),
+    grav()
+);

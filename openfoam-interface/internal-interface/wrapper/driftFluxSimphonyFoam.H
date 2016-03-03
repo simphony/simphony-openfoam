@@ -34,27 +34,29 @@ Info<< "\nStarting time loop\n" << endl;
 
 std::string p_rghName = "p_rgh";
 std::string UName = "U";
-//std::string alphaName = "alpha1";
-std::string alphaName = "alpha.phase1";
-//std::string Sigma_muName = "Sigma_mu";
 std::string Sigma_muName = "Sigma";
 std::string SName = "S";
 std::string gradAlpha1Name = "gradAlpha1";
 std::string StressName = "Stress";
+std::string VrName = "Vr";
+std::string alphaName = "alpha.phase1";
 
 volScalarField& p_rgh = find_Data<scalar>(mesh,p_rghName);
-volScalarField& alpha1 = find_Data<scalar>(mesh,alphaName);
 volVectorField& U = find_Data<vector>(mesh,UName);
 volTensorField& Sigma_mu = find_Data<tensor>(mesh,Sigma_muName);
 volTensorField& S = find_Data<tensor>(mesh,SName);
 volVectorField& gradAlpha1 = find_Data<vector>(mesh,gradAlpha1Name);
 volTensorField& Stress = find_Data<tensor>(mesh,StressName);
+volVectorField& Vr = find_Data<vector>(mesh,VrName);
+
+volScalarField& alpha1 = find_Data<scalar>(mesh,alphaName);
 
 surfaceScalarField& phi = const_cast<surfaceScalarField&>(mesh.lookupObject<surfaceScalarField>(word("phi"))); 
 phi = linearInterpolate(U) & mesh.Sf();
 
 
 IOdictionary& transportProperties = const_cast<IOdictionary&>(mesh.lookupObject<IOdictionary>(word("transportProperties"))); 
+
 
 incompressibleTwoPhaseInteractingMixture mixture(U, phi, transportProperties);
 // Relative Velocity
@@ -69,18 +71,19 @@ autoPtr<relativeVelocityModel> UdmModelPtr
 
 relativeVelocityModel& UdmModel(UdmModelPtr());
 
-
-
 word stressModelType(transportProperties.lookup("stressModel"));
 Info<< "Stressmodel is "<< stressModelType<<"\n" << endl;
 
 
 //volScalarField& alpha1(mixture.alpha1());
+
 volScalarField& alpha2(mixture.alpha2());
 
 const dimensionedScalar& rho1 = mixture.rhod();
 const dimensionedScalar& rho2 = mixture.rhoc();
 
+Info<<"Density phase 1 "<<rho1<<endl;
+Info<<"Density phase 2 "<<rho2<<endl;
 
 Info<< "Creating field SigmaPrime\n" << endl;
 volTensorField SigmaPrime
@@ -124,25 +127,10 @@ surfaceScalarField rhoPhi
     fvc::interpolate(rho)*phi
 );
 
-// g from transportproperties
+// g 
+uniformDimensionedVectorField& g = const_cast<uniformDimensionedVectorField&>(mesh.lookupObject<uniformDimensionedVectorField>(word("g"))); 
 
-
-Info<< "\nCreating g " <<endl;
-uniformDimensionedVectorField g
-(
-    IOobject
-    (
-        "g",
-        runTimes[name]->timeName(),
-        mesh,
-        IOobject::NO_READ,
-        IOobject::NO_WRITE
-    ),
-    dimensionedVector("g", dimensionSet(0, 1, -2, 0, 0, 0, 0), vector(transportProperties.lookup("g")))
-);
-
-Info<< "\nGravitational vector: " <<vector(transportProperties.lookup("g"))<<endl;
-
+Info<<"g "<<g<<endl; 
 Info<< "Calculating field (g.h)f\n" << endl;
 volScalarField gh("gh", g & mesh.C());
 surfaceScalarField ghf("gh", g & mesh.Cf());
@@ -203,6 +191,7 @@ while (runTime.run())
     runTime++;
 
     Info<< "Time = " << runTime.timeName() << nl << endl;
+
 
     #include "modelingMicroScale.H"
 

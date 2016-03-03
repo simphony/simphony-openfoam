@@ -26,12 +26,12 @@
         mesh
     );
 
-    Info<< "Reading field Vdj\n" << endl;
-    volVectorField Vdj
+    Info<< "Reading field Vr\n" << endl;
+    volVectorField Vr
     (
         IOobject
         (
-            "Vdj",
+            "Vr",
             runTime.timeName(),
             mesh,
             IOobject::MUST_READ,
@@ -93,12 +93,12 @@
         )
     );
 
-    Info<< "Creating field tauPrime\n" << endl;
-    volTensorField tauPrime
+    Info<< "Creating field SigmaPrime\n" << endl;
+    volTensorField SigmaPrime
     (
         IOobject
         (
-            "tauPrime",
+            "SigmaPrime",
             runTime.timeName(),
             mesh,
                 IOobject::NO_READ,

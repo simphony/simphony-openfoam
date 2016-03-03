@@ -16,6 +16,9 @@ rm -rf incompressibleTurbulenceModel
 popd
 pushd .
 cd openfoam-interface/internal-interface/wrapper
+cd relativeVelocityModels
+wclean
+cd ..
 python setup.py clean
 wclean
 wclean mixtureViscosityModels

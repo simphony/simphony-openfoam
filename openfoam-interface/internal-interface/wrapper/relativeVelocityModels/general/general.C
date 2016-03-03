@@ -23,7 +23,7 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "fromMesoscale.H"
+#include "general.H"
 #include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -32,65 +32,45 @@ namespace Foam
 {
 namespace relativeVelocityModels
 {
-    defineTypeNameAndDebug(fromMesoscale, 0);
-    addToRunTimeSelectionTable(relativeVelocityModel, fromMesoscale, dictionary);
+    defineTypeNameAndDebug(general, 0);
+    addToRunTimeSelectionTable(relativeVelocityModel, general, dictionary);
 }
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::relativeVelocityModels::fromMesoscale::fromMesoscale
+Foam::relativeVelocityModels::general::general
 (
     const dictionary& dict,
     const incompressibleTwoPhaseInteractingMixture& mixture
 )
 :
-  relativeVelocityModel(dict, mixture),
-  Vr_(const_cast< GeometricField < vector, fvPatchField, volMesh > &>(mixture.U().mesh().lookupObject< GeometricField <vector, fvPatchField, volMesh> >(word("Vr"))))
-  /*
-	Vr_
-	(
-        IOobject
-        (
-            "Vr",
-            mixture.U().time().timeName(),
-            mixture.U().mesh(),
-	    IOobject::MUST_READ,
-            IOobject::AUTO_WRITE
-        ),
-        mixture.U().mesh()
-	)*/
+    relativeVelocityModel(dict, mixture),
+    a_("a", dimless, dict.lookup("a")),
+    a1_("a1", dimless, dict.lookup("a1")),
+    V0_("V0", dimVelocity, dict.lookup("V0")),
+    residualAlpha_(dict.lookup("residualAlpha"))
 {}
 
-Foam::relativeVelocityModels::fromMesoscale::fromMesoscale
-(
-    const dictionary& dict,
-    const incompressibleTwoPhaseInteractingMixture& mixture,
-    const volVectorField& Vr
-)
-:
-    relativeVelocityModel(dict, mixture),
-	Vr_
-	(
-		Vr
-    )
- 
-{}
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-Foam::relativeVelocityModels::fromMesoscale::~fromMesoscale()
+Foam::relativeVelocityModels::general::~general()
 {}
 
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
-void Foam::relativeVelocityModels::fromMesoscale::correct()
+void Foam::relativeVelocityModels::general::correct()
 {
     Udm_ =
         (rhoc_/rho())
-      *Vr_;
+       *V0_
+       *(
+            exp(-a_*max(alphad_ - residualAlpha_, scalar(0)))
+          - exp(-a1_*max(alphad_ - residualAlpha_, scalar(0)))
+        );
 }
 
 
