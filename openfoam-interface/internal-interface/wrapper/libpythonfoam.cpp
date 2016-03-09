@@ -1717,6 +1717,34 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
     }
   } 
 
+  static PyObject* updateTime(PyObject *self, PyObject *args)
+  {   
+     char *name;
+     double time;
+
+     if (!PyArg_ParseTuple(args,"sd",&name,&time)) {
+      PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
+      return NULL;
+    }
+    try {
+      foam_updateTime(std::string(name),time);
+      return Py_BuildValue("");
+    }
+    catch (Foam::error& fErr)
+    {
+      PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
+      return NULL;
+    }
+    catch (std::exception& e) {
+      PyErr_SetString(PyExc_RuntimeError,e.what());
+      return NULL;
+    }
+    catch (...) {
+      PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
+      return NULL;
+    }
+  } 
+
 
 
   static PyMethodDef FoamMethods[] = {
@@ -1767,6 +1795,7 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
     {"setBC",setBC,METH_VARARGS,"Modify boundary condition of the specified field through memory"},
     {"run",run,METH_VARARGS,"Run the required time steps"},
     {"updateData",updateData,METH_VARARGS,"Update mesh data for given time from disk"},
+    {"updateTime",updateTime,METH_VARARGS,"Update mesh time to given time without data reading"},
 
     {NULL, NULL, 0, NULL}        /* Sentinel */
   };

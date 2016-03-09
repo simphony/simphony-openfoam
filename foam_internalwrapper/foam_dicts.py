@@ -907,6 +907,18 @@ def modifyNumerics(mesh, SP, SPExt, solver='pimpleFoam', io=False):
                     foamface.modifyUniformVectorField(mesh.name, 'g', list(g))
 
 
+def check_boundary_names(bc_names, boundary_names, cuba):
+    if not set(bc_names).issubset(set(boundary_names)):
+        error_str = "Boundary name(s) used in boundary conditions "
+        error_str += "for {} does not exist.\nUsed name(s) are: {}\n"
+        error_str += "Boundary names defined in the mesh are: {}\n"
+        raise ValueError(
+            error_str.format(cuba.name,
+                             list(set(bc_names).difference(
+                                 set(boundary_names))),
+                             boundary_names))
+
+
 def modifyFields(mesh, BC, solver='pimpleFoam'):
     """ Modifies the internal fields and boundary conditions
 
@@ -927,6 +939,16 @@ def modifyFields(mesh, BC, solver='pimpleFoam'):
     elif solver == 'driftFluxSimphonyFoam' or solver == 'interFoam':
         name_pressure = 'p_rgh'
         ID_pressure = CUBA.DYNAMIC_PRESSURE
+        # check that boundarynames match with mesh boundary names
+        volumeFractionBCs = BC[CUBA.VOLUME_FRACTION]
+        check_boundary_names(volumeFractionBCs, mesh._boundaries.keys(),
+                             CUBA.VOLUME_FRACTION)
+
+    # check that boundarynames match with mesh boundary names
+    velocityBCs = BC[CUBA.VELOCITY]
+    pressureBCs = BC[ID_pressure]
+    check_boundary_names(velocityBCs, mesh._boundaries.keys(), CUBA.VELOCITY)
+    check_boundary_names(pressureBCs, mesh._boundaries.keys(), ID_pressure)
 
     nCells = foamface.getCellCount(mesh.name)
     p_values = [0.0 for item in range(nCells)]
@@ -962,7 +984,7 @@ def modifyFields(mesh, BC, solver='pimpleFoam'):
                                       dataDimensionMap[dataKeyMap["Sigma"]])
 
     # Refresh boundary conditions
-    velocityBCs = BC[CUBA.VELOCITY]
+
     myDict = ""
 
     for boundary in velocityBCs:
@@ -991,7 +1013,6 @@ def modifyFields(mesh, BC, solver='pimpleFoam'):
 
     foamface.setBC(mesh.name, "U", myDict)
 
-    pressureBCs = BC[ID_pressure]
     myDict = ""
     for boundary in pressureBCs:
         myDict = myDict + str(boundary) + "\n{\n"
@@ -1013,7 +1034,6 @@ def modifyFields(mesh, BC, solver='pimpleFoam'):
     foamface.setBC(mesh.name, name_pressure, myDict)
 
     if solver == 'driftFluxSimphonyFoam' or solver == 'interFoam':
-        volumeFractionBCs = BC[CUBA.VOLUME_FRACTION]
         myDict = ""
         for boundary in volumeFractionBCs:
             myDict = myDict + str(boundary) + "\n{\n"

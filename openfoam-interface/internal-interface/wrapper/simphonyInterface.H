@@ -145,6 +145,8 @@ void foam_setBC(std::string name, std::string fieldname, std::string dict);
 double foam_run(std::string name, int nproc, std::string solver);
 // update mesh data for given time from disk
 void foam_updateData(std::string name, double time);
+// update time
+void foam_updateTime(std::string name, double time);
 // write numerics to disk
 void foam_writeNumerics(std::string name);
 // write dictionary to disk to constant or system directory

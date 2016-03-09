@@ -160,6 +160,7 @@ class FoamMesh(ABCMesh):
             # init objectRegistry and map to mesh name
             foamface.init(name, controlDict)
 
+            foamface.updateTime(name, self._time)
             # add mesh to objectRegisty
             foamface.addMesh(name, pointCoordinates, cellPoints,
                              facePoints, patchNames, patchFaces, patchTypes)

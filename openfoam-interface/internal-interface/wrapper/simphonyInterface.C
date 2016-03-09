@@ -1010,6 +1010,7 @@ void foam_createDefaultFields(std::string name, std::string solver, bool io)
 void foam_writeFields(std::string name)
 {
     fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
+
     std::vector<std::string> names = foam_getCellDataNames(name);
 
     for (std::vector<std::string>::size_type i=0;i<names.size();i++) 
@@ -1328,6 +1329,11 @@ void foam_updateData(std::string name, double time){
   runTimes[name]->setTime(time,0);
   foam_readFields(name); 
 }
+
+void foam_updateTime(std::string name, double time){
+  runTimes[name]->setTime(time,0);
+}
+
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

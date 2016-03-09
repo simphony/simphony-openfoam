@@ -157,10 +157,13 @@ class FoamMesh(ABCMesh):
             foamface.init_IO(name, os.path.abspath(
                 os.path.join(self.path, os.pardir)), controlDict)
 
+            # update time
+            foamface.updateTime(name, self._time)
             # add mesh to objectRegisty
             foamface.addMesh(name, pointCoordinates, cellPoints, facePoints,
                              patchNames, patchFaces, patchTypes)
 
+            # create default fields
             foamface.createDefaultFields(name, solver, True)
             # write mesh to disk
             foamface.writeMesh(name)
