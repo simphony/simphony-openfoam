@@ -986,7 +986,7 @@ boundaryField
 {
 
 }
-                    """, 'Vdj': """
+                    """, 'Vr': """
 dimensions [ 0 1 -1 0 0 0 0 ];
 
 internalField uniform (0 0 0);
@@ -1071,7 +1071,7 @@ boundaryField
 {
 
 }
-                    """, 'Vdj': """
+                    """, 'Vr': """
 dimensions [ 0 1 -1 0 0 0 0 ];
 
 internalField uniform (0 0 0);

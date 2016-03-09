@@ -55,7 +55,7 @@ class fromMesoscale
     // Private data
 
         //- Relative velocity
-	volVectorField Vdj_;
+	volVectorField Vr_;
 
 
 public:
@@ -78,7 +78,7 @@ public:
         (
             const dictionary& dict,
             const incompressibleTwoPhaseInteractingMixture& mixture,
-			const volVectorField& Vdj
+			const volVectorField& Vr
         );
 
     //- Destructor
