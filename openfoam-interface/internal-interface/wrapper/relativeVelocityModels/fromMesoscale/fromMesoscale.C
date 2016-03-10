@@ -48,21 +48,9 @@ Foam::relativeVelocityModels::fromMesoscale::fromMesoscale
 :
   relativeVelocityModel(dict, mixture),
   Vr_(const_cast< GeometricField < vector, fvPatchField, volMesh > &>(mixture.U().mesh().lookupObject< GeometricField <vector, fvPatchField, volMesh> >(word("Vr"))))
-  /*
-	Vr_
-	(
-        IOobject
-        (
-            "Vr",
-            mixture.U().time().timeName(),
-            mixture.U().mesh(),
-	    IOobject::MUST_READ,
-            IOobject::AUTO_WRITE
-        ),
-        mixture.U().mesh()
-	)*/
 {}
 
+/*
 Foam::relativeVelocityModels::fromMesoscale::fromMesoscale
 (
     const dictionary& dict,
@@ -77,6 +65,7 @@ Foam::relativeVelocityModels::fromMesoscale::fromMesoscale
     )
  
 {}
+*/
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
@@ -88,9 +77,9 @@ Foam::relativeVelocityModels::fromMesoscale::~fromMesoscale()
 
 void Foam::relativeVelocityModels::fromMesoscale::correct()
 {
-    Udm_ =
-        (rhoc_/rho())
-      *Vr_;
+
+   Udm_ = (rhoc_/rho())*Vr_;
+
 }
 
 

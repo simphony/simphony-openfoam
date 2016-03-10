@@ -52,7 +52,6 @@ volVectorField& Vr = find_Data<vector>(mesh,VrName);
 volScalarField& alpha1 = find_Data<scalar>(mesh,alphaName);
 
 surfaceScalarField& phi = const_cast<surfaceScalarField&>(mesh.lookupObject<surfaceScalarField>(word("phi"))); 
-phi = linearInterpolate(U) & mesh.Sf();
 
 
 IOdictionary& transportProperties = const_cast<IOdictionary&>(mesh.lookupObject<IOdictionary>(word("transportProperties"))); 
@@ -175,9 +174,11 @@ tmp<surfaceScalarField> tphiAlphaCorr0;
 
 Info<< "\nStarting time loop\n" << endl;
 
+
 U.storePrevIter();
 p_rgh.storePrevIter();
 alpha1.storePrevIter();
+
 
 scalar cumulativeContErr = 0;
 
@@ -195,12 +196,15 @@ while (runTime.run())
 
     #include "modelingMicroScale.H"
 
+
     // --- Pressure-velocity PIMPLE corrector loop
     while (pimple.loop())
     {
         #include "alphaControls.H"
 
         UdmModel.correct();
+
+	//	Info <<UdmModel.Udm()<<endl;
 
         #include "alphaEqnSubCycle.H"
 

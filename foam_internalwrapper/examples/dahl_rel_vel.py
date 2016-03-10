@@ -6,6 +6,8 @@ from simphony.core.cuba import CUBA
 from simphony.engine import openfoam_internal
 from simphony.engine import openfoam_file_io
 
+from mayavi.scripts import mayavi2
+
 import dahl_mesh
 import tempfile
 
@@ -35,6 +37,7 @@ wrapper.SP_extensions[CUBAExt.VISCOSITY_MODEL_COEFFS] =\
                         'BinghamOffset': 0, 'muMax': 10}}
 wrapper.SP_extensions[CUBAExt.STRESS_MODEL] = 'standard'
 wrapper.SP_extensions[CUBAExt.RELATIVE_VELOCITY_MODEL] = 'fromMesoscale'
+
 wrapper.SP_extensions[CUBAExt.EXTERNAL_BODY_FORCE_MODEL] = 'gravitation'
 wrapper.SP_extensions[CUBAExt.EXTERNAL_BODY_FORCE_MODEL_COEFFS] =\
     {'g': (0.0, -9.81, 0.0)}
@@ -77,7 +80,7 @@ mesh_inside_wrapper.update_cells(updated_cells)
 V0 = [0.0, -0.002, 0.0]
 a = 285.0
 
-number_of_outer_timesteps = 100
+number_of_outer_timesteps = 6400
 
 for time_i in range(number_of_outer_timesteps):
     # solve macroscopic scale
@@ -90,8 +93,23 @@ for time_i in range(number_of_outer_timesteps):
     updated_cells = []
     for cell in mesh_inside_wrapper.iter_cells():
         alphad = cell.data[CUBA.VOLUME_FRACTION]
-        vdj = [V*pow(10.0, -a*max(alphad, 0.0)) for V in V0]
-        cell.data[CUBA.RELATIVE_VELOCITY] = vdj
+        vr = [V*pow(10.0, -a*max(alphad, 0.0)) for V in V0]
+        cell.data[CUBA.RELATIVE_VELOCITY] = vr
         updated_cells.append(cell)
 
     mesh_inside_wrapper.update_cells(updated_cells)
+
+
+@mayavi2.standalone
+def view():
+    from mayavi.modules.surface import Surface
+    from simphony_mayavi.sources.api import CUDSSource
+
+    mayavi.new_scene()  # noqa
+    src = CUDSSource(cuds=mesh_inside_wrapper)
+    mayavi.add_source(src)  # noqa
+    s = Surface()
+    mayavi.add_module(s)  # noqa
+
+if __name__ == '__main__':
+    view()

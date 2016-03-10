@@ -52,11 +52,10 @@ class fromMesoscale
 :
     public relativeVelocityModel
 {
-    // Private data
-
-        //- Relative velocity
-	volVectorField Vr_;
-
+  // Private data
+  
+  //- Relative velocity
+  volVectorField Vr_;
 
 public:
 

@@ -817,6 +817,7 @@ void foam_setCellData(std::string name, std::string dataname, std::vector<double
 
     volScalarField& field = find_scalarData(name,dataname);
     field.internalField() = Field<scalar>(UList<scalar>(&(values[0]),values.size()));
+    field.correctBoundaryConditions();
 
   }
 
@@ -829,6 +830,7 @@ void foam_setAndWriteCellData(std::string name,std::string dataname, std::vector
       {
 	volScalarField& field = find_scalarData(name,dataname);
 	field.internalField() = Field<scalar>(UList<scalar>(&(values[0]),values.size()));
+	field.correctBoundaryConditions();
 	field.write();
       }
     else
@@ -847,6 +849,7 @@ void foam_setAndWriteCellData(std::string name,std::string dataname, std::vector
 	 dimensionedScalar(word(dataname), dimensionSet(dimension[0], dimension[1], dimension[2], dimension[3], dimension[4], dimension[5], dimension[6]), 0)
 	 );
 	field.internalField() = Field<scalar>(UList<scalar>(&(values[0]),values.size()));
+	field.correctBoundaryConditions();
 	field.write();
  
       }
@@ -856,6 +859,7 @@ void foam_setCellVectorData(std::string name, std::string dataname, std::vector<
   {
     volVectorField& field = find_vectorData(name,dataname);
     field.internalField() = Field<vector>(UList<vector>((vector*)&(values[0]),values.size()/3));
+    field.correctBoundaryConditions();
 
   }
 
@@ -868,6 +872,7 @@ void foam_setAndWriteCellVectorData(std::string name, std::string dataname, std:
     {
       volVectorField& field = find_vectorData(name,dataname);
       field.internalField() = Field<vector>(UList<vector>((vector*)&(values[0]),values.size()/3));
+      field.correctBoundaryConditions();
       field.write();
     }
   else
@@ -886,6 +891,7 @@ void foam_setAndWriteCellVectorData(std::string name, std::string dataname, std:
 	 dimensionedVector(word(dataname), dimensionSet(dimension[0], dimension[1], dimension[2], dimension[3], dimension[4], dimension[5], dimension[6]), vector::zero)
 );
       field.internalField() = Field<vector>(UList<vector>((vector*)&(values[0]),values.size()/3));
+      field.correctBoundaryConditions();
       field.write();
       
     }
@@ -896,7 +902,7 @@ void foam_setCellTensorData(std::string name, std::string dataname, std::vector<
   {
     volTensorField& field = find_tensorData(name,dataname);
     field.internalField() = Field<tensor>(UList<tensor>((tensor*)&(values[0]),values.size()/9));
-
+    field.correctBoundaryConditions();
   }
 
 
@@ -910,6 +916,7 @@ void foam_setAndWriteCellTensorData(std::string name,  std::string dataname, std
     {
       volTensorField& field = find_tensorData(name,dataname);
       field.internalField() = Field<tensor>(UList<tensor>((tensor*)&(values[0]),values.size()/9));
+      field.correctBoundaryConditions();
       field.write();
     }
   else
@@ -928,14 +935,11 @@ void foam_setAndWriteCellTensorData(std::string name,  std::string dataname, std
 	 dimensionedTensor(word(dataname), dimensionSet(dimension[0], dimension[1], dimension[2], dimension[3], dimension[4], dimension[5], dimension[6]), tensor::zero)
 );
       field.internalField() = Field<tensor>(UList<tensor>((tensor*)&(values[0]),values.size()/9));
+      field.correctBoundaryConditions();
       field.write();
 
     }
-
   }
-
-
-
 
 
 void foam_writeMesh(std::string name)
