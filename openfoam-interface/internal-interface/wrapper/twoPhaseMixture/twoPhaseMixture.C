@@ -26,7 +26,6 @@ License
 
 #include "twoPhaseMixture.H"
 
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 Foam::twoPhaseMixture::twoPhaseMixture
@@ -40,15 +39,7 @@ Foam::twoPhaseMixture::twoPhaseMixture
 
     alpha1_
     (
-        IOobject
-        (
-            IOobject::groupName("alpha", phase1Name_),
-            mesh.time().timeName(),
-            mesh,
-            IOobject::MUST_READ,
-            IOobject::AUTO_WRITE
-        ),
-        mesh
+        const_cast<volScalarField&>(mesh.lookupObject<volScalarField>("alpha.phase1"))
     ),
 
     alpha2_
@@ -61,7 +52,9 @@ Foam::twoPhaseMixture::twoPhaseMixture
         ),
         1.0 - alpha1_
     )
-{}
+{
+
+}
 
 Foam::twoPhaseMixture::twoPhaseMixture
 (
@@ -74,7 +67,7 @@ Foam::twoPhaseMixture::twoPhaseMixture
     phase2Name_(wordList(dict.lookup("phases"))[1]),
     alpha1_
     (
-        mesh.lookupObject<volScalarField>(IOobject::groupName("alpha", phase1Name_))
+        const_cast<volScalarField&>(mesh.lookupObject<volScalarField>("alpha.phase1"))
     ),
 
     alpha2_

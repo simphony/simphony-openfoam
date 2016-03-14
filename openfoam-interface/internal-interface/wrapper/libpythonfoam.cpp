@@ -40,13 +40,16 @@ extern "C" {
   {   
      char *name;
      char *path;
+     char *cD;
 
-     if (!PyArg_ParseTuple(args,"ss",&name,&path)) {
+     //     if (!PyArg_ParseTuple(args,"ss",&name,&path)) {
+     if (!PyArg_ParseTuple(args,"sss",&name,&path,&cD)) {
       PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
       return NULL;
     }
     try {
-      foam_init_IO(std::string(name),std::string(path));
+      //      foam_init_IO(std::string(name),std::string(path));
+      foam_init_IO(std::string(name),std::string(path),std::string(cD));
       return Py_BuildValue("");
     }
     catch (Foam::error& fErr)
@@ -1384,14 +1387,14 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
 
     char *name;
     char *solver;
- 
+    int io;
 
-    if (!PyArg_ParseTuple(args,"ss",&name,&solver)) {
+    if (!PyArg_ParseTuple(args,"ssi",&name,&solver,&io)) {
       PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
       return NULL;
     }
     try {
-      foam_createDefaultFields(std::string(name),std::string(solver));
+      foam_createDefaultFields(std::string(name),std::string(solver),(io==1));
       return Py_BuildValue("");
     }
     catch (Foam::error& fErr)
@@ -1416,14 +1419,14 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
     char *fvSol;
     char *cD;
     char *TP;
- 
+    int io;
 
-    if (!PyArg_ParseTuple(args,"sssss",&name,&fvSch,&fvSol,&cD,&TP)) {
+    if (!PyArg_ParseTuple(args,"sssssi",&name,&fvSch,&fvSol,&cD,&TP,&io)) {
       PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
       return NULL;
     }
     try {
-      foam_modifyNumerics(std::string(name),std::string(fvSch),std::string(fvSol),std::string(cD),std::string(TP));
+      foam_modifyNumerics(std::string(name),std::string(fvSch),std::string(fvSol),std::string(cD),std::string(TP),(io==1));
       return Py_BuildValue("");
     }
     catch (Foam::error& fErr)
@@ -1440,6 +1443,76 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
       return NULL;
     }
   }
+
+  static PyObject* modifyDictionary(PyObject *self, PyObject *args)
+  {
+    char *name;
+    char *dictName;
+    char *dictContent; 
+
+    if (!PyArg_ParseTuple(args,"sss",&name,&dictName,&dictContent)) {
+      PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
+      return NULL;
+    }
+    try {
+      foam_modifyDictionary(std::string(name),std::string(dictName),std::string(dictContent));
+      return Py_BuildValue("");
+    }
+    catch (Foam::error& fErr)
+    {
+      PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
+      return NULL;
+    }
+    catch (std::exception& e) {
+      PyErr_SetString(PyExc_RuntimeError,e.what());
+      return NULL;
+    }
+    catch (...) {
+      PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
+      return NULL;
+    }
+  }
+
+  static PyObject* modifyUniformVectorField(PyObject *self, PyObject *args)
+  {
+    char *name;
+    char *fieldName;
+    PyObject *value;
+
+    if (!PyArg_ParseTuple(args,"ssO!",&name,&fieldName,&PyList_Type,&value)) {
+      PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
+      return NULL;
+    }
+    try {
+      PyObject * strObj;
+      int valuesize = PyList_Size(value);
+
+      std::vector<double> val(valuesize);
+      for (int i=0;i<valuesize;i++) {
+	strObj = PyList_GetItem(value, i);
+	val[i] = PyFloat_AsDouble(strObj);
+      }
+
+
+      foam_modifyUniformDimensionedVectorField(std::string(name),std::string(fieldName),val);
+      return Py_BuildValue("");
+    }
+    catch (Foam::error& fErr)
+    {
+      PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
+      return NULL;
+    }
+    catch (std::exception& e) {
+      PyErr_SetString(PyExc_RuntimeError,e.what());
+      return NULL;
+    }
+    catch (...) {
+      PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
+      return NULL;
+    }
+  }
+
+
 
   static PyObject* setBC(PyObject *self, PyObject *args)
   {
@@ -1502,7 +1575,121 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
     }
   } 
 
-  static PyObject* update_data(PyObject *self, PyObject *args)
+  static PyObject* writeNumerics(PyObject *self, PyObject *args)
+  {   
+     char *name;
+
+     if (!PyArg_ParseTuple(args,"s",&name)) {
+      PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
+      return NULL;
+    }
+    try {
+      foam_writeNumerics(std::string(name));
+      return Py_BuildValue("");
+    }
+    catch (Foam::error& fErr)
+    {
+      PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
+      return NULL;
+    }
+    catch (std::exception& e) {
+      PyErr_SetString(PyExc_RuntimeError,e.what());
+      return NULL;
+    }
+    catch (...) {
+      PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
+      return NULL;
+    }
+  } 
+
+  static PyObject* writeDictionary(PyObject *self, PyObject *args)
+  {   
+     char *name;
+     char *dictionaryName;
+     int constant;
+     if (!PyArg_ParseTuple(args,"ssi",&name,&dictionaryName,&constant)) {
+      PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
+      return NULL;
+    }
+    try {
+      foam_writeDictionary(std::string(name),std::string(dictionaryName),(constant==1));
+      return Py_BuildValue("");
+    }
+    catch (Foam::error& fErr)
+    {
+      PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
+      return NULL;
+    }
+    catch (std::exception& e) {
+      PyErr_SetString(PyExc_RuntimeError,e.what());
+      return NULL;
+    }
+    catch (...) {
+      PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
+      return NULL;
+    }
+  } 
+
+
+  static PyObject* writePathDictionary(PyObject *self, PyObject *args)
+  {   
+     char *path;
+     char *dictionaryName;
+     char *head;
+     char *dictionaryContent;
+     if (!PyArg_ParseTuple(args,"ssss",&path,&dictionaryName,&head,&dictionaryContent)) {
+      PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
+      return NULL;
+    }
+    try {
+      foam_writePathDictionary(std::string(path),std::string(dictionaryName),std::string(head),std::string(dictionaryContent));
+      return Py_BuildValue("");
+    }
+    catch (Foam::error& fErr)
+    {
+      PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
+      return NULL;
+    }
+    catch (std::exception& e) {
+      PyErr_SetString(PyExc_RuntimeError,e.what());
+      return NULL;
+    }
+    catch (...) {
+      PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
+      return NULL;
+    }
+  } 
+
+
+  static PyObject* writeFields(PyObject *self, PyObject *args)
+  {   
+     char *name;
+
+     if (!PyArg_ParseTuple(args,"s",&name)) {
+      PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
+      return NULL;
+    }
+    try {
+      foam_writeFields(std::string(name));
+      return Py_BuildValue("");
+    }
+    catch (Foam::error& fErr)
+    {
+      PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
+      return NULL;
+    }
+    catch (std::exception& e) {
+      PyErr_SetString(PyExc_RuntimeError,e.what());
+      return NULL;
+    }
+    catch (...) {
+      PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
+      return NULL;
+    }
+  } 
+
+
+  static PyObject* updateData(PyObject *self, PyObject *args)
   {   
      char *name;
      double time;
@@ -1512,7 +1699,35 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
       return NULL;
     }
     try {
-      foam_update_data(std::string(name),time);
+      foam_updateData(std::string(name),time);
+      return Py_BuildValue("");
+    }
+    catch (Foam::error& fErr)
+    {
+      PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
+      return NULL;
+    }
+    catch (std::exception& e) {
+      PyErr_SetString(PyExc_RuntimeError,e.what());
+      return NULL;
+    }
+    catch (...) {
+      PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
+      return NULL;
+    }
+  } 
+
+  static PyObject* updateTime(PyObject *self, PyObject *args)
+  {   
+     char *name;
+     double time;
+
+     if (!PyArg_ParseTuple(args,"sd",&name,&time)) {
+      PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
+      return NULL;
+    }
+    try {
+      foam_updateTime(std::string(name),time);
       return Py_BuildValue("");
     }
     catch (Foam::error& fErr)
@@ -1569,13 +1784,18 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
     {"getFaceCount",getFaceCount,METH_VARARGS,"Get mesh faces count"},
     {"getPointCount",getPointCount,METH_VARARGS,"Get mesh points count"},
     {"getCellCount",getCellCount,METH_VARARGS,"Get mesh cells count"},
-
-    //CIMEC ADDS
     {"createDefaultFields",createDefaultFields,METH_VARARGS,"Create default fields depending on the solver"},
     {"modifyNumerics",modifyNumerics,METH_VARARGS,"Modify numerical dictionaries through memory"},
+    {"modifyDictionary",modifyDictionary,METH_VARARGS,"Modify dictionary through memory"},
+    {"modifyUniformVectorField",modifyUniformVectorField,METH_VARARGS,"Modify uniform vector field value through memory"},
+    {"writeNumerics",writeNumerics,METH_VARARGS,"Write numerical dictionaries to disk"},
+    {"writeDictionary",writeDictionary,METH_VARARGS,"Write dictionary to disk to system or constant directory"},
+    {"writePathDictionary",writePathDictionary,METH_VARARGS,"Write given dictionary content to disk to path directory"},
+    {"writeFields",writeFields,METH_VARARGS,"Write data fields to disk"},
     {"setBC",setBC,METH_VARARGS,"Modify boundary condition of the specified field through memory"},
     {"run",run,METH_VARARGS,"Run the required time steps"},
-    {"update_data",update_data,METH_VARARGS,"Update mesh data for given time from disk"},
+    {"updateData",updateData,METH_VARARGS,"Update mesh data for given time from disk"},
+    {"updateTime",updateTime,METH_VARARGS,"Update mesh time to given time without data reading"},
 
     {NULL, NULL, 0, NULL}        /* Sentinel */
   };

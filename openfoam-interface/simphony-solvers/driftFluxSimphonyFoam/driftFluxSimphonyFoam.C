@@ -76,18 +76,19 @@ int main(int argc, char *argv[])
 
         Info<< "Time = " << runTime.timeName() << nl << endl;
 
+        #include "modelingMicroScale.H"
         // --- Pressure-velocity PIMPLE corrector loop
         while (pimple.loop())
         {
             #include "alphaControls.H"
 
             UdmModel.correct();
+
             #include "alphaEqnSubCycle.H"
 
             mixture.correct();
 
             #include "UEqn.H"
-
 
             // --- Pressure corrector loop
             while (pimple.correct())
@@ -105,7 +106,6 @@ int main(int argc, char *argv[])
             << "  ClockTime = " << runTime.elapsedClockTime() << " s"
             << nl << endl;
 
-        #include "modelingMicroScale.H"
     }
 
     Info<< "End\n" << endl;

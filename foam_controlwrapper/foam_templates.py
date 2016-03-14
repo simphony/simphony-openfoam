@@ -63,7 +63,7 @@ edges
 
 boundary
 (
-    boundary2
+    walls
     {
         type patch;
         faces
@@ -72,7 +72,7 @@ boundary
             (1 5 4 0)
         );
     }
-    boundary0
+    inlet
     {
         type patch;
         faces
@@ -80,7 +80,7 @@ boundary
             (0 4 7 3)
         );
     }
-    boundary1
+    outlet
     {
         type patch;
         faces
@@ -88,7 +88,7 @@ boundary
             (2 6 5 1)
         );
     }
-    boundary3
+    frontAndBack
     {
         type empty;
         faces
@@ -986,7 +986,7 @@ boundaryField
 {
 
 }
-                    """, 'Vdj': """
+                    """, 'Vr': """
 dimensions [ 0 1 -1 0 0 0 0 ];
 
 internalField uniform (0 0 0);
@@ -1071,7 +1071,7 @@ boundaryField
 {
 
 }
-                    """, 'Vdj': """
+                    """, 'Vr': """
 dimensions [ 0 1 -1 0 0 0 0 ];
 
 internalField uniform (0 0 0);

@@ -1,19 +1,4 @@
 blockMeshDict = """
-/*--------------------------------*- C++ -*----------------------------------*\
-| =========                 |                                                 |
-| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.1.x                                 |
-|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
-|    \\/     M anipulation  |                                                 |
-\*---------------------------------------------------------------------------*/
-FoamFile
-{
-    version     2.0;
-    format      ascii;
-    class       dictionary;
-    object      blockMeshDict;
-}
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 convertToMeters 1;
 
@@ -64,12 +49,6 @@ edges
    arc 13 14(0 -1 1)
 );
 
-// inlet    boundary0
-// outlet   boundary1
-// top      boundary2
-// bottom   boundary3
-// cylinder boundary4
-// sides    boundary5
 
 boundary
 (

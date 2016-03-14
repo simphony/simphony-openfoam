@@ -56,7 +56,7 @@ protected:
         word phase1Name_;
         word phase2Name_;
 
-        volScalarField alpha1_;
+        volScalarField& alpha1_;
         volScalarField alpha2_;
 
 

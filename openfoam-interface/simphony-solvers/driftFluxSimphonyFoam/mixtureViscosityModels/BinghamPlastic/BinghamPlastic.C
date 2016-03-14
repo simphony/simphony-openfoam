@@ -108,6 +108,11 @@ Foam::mixtureViscosityModels::BinghamPlastic::mu
 
     dimensionedScalar tauySmall("tauySmall", tauy.dimensions(), SMALL);
 
+
+    Info << "muMax "<<muMax_<<endl;
+    Info << "yieldStressExponent_ "<<yieldStressExponent_<<endl;
+    Info << "yieldStressOffset_ "<<yieldStressOffset_<<endl;
+    Info << "yieldStressCoeff_ "<<yieldStressCoeff_<<endl;
     return min
     (
         tauy
@@ -131,6 +136,9 @@ bool Foam::mixtureViscosityModels::BinghamPlastic::read
     plasticCoeffs_.lookup("yieldStressCoeff") >> yieldStressCoeff_;
     plasticCoeffs_.lookup("yieldStressExponent") >> yieldStressExponent_;
     plasticCoeffs_.lookup("yieldStressOffset") >> yieldStressOffset_;
+    Info << "yieldStressExponent_ "<<yieldStressExponent_<<endl;
+    Info << "yieldStressOffset_ "<<yieldStressOffset_<<endl;
+    Info << "yieldStressCoeff_ "<<yieldStressCoeff_<<endl;
 
     return true;
 }

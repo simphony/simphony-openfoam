@@ -37,25 +37,26 @@ wrapper.SP_extensions[CUBAExt.RELATIVE_VELOCITY_MODEL] = 'fromMesoscale'
 wrapper.SP_extensions[CUBAExt.EXTERNAL_BODY_FORCE_MODEL] = 'gravitation'
 wrapper.SP_extensions[CUBAExt.EXTERNAL_BODY_FORCE_MODEL_COEFFS] =\
     {'g': (0.0, -9.81, 0.0)}
-wrapper.BC[CUBA.VELOCITY] = {'boundary0': ('fixedValue', (0.0191, 0, 0)),
-                             'boundary1': ('pressureIOVelocity', (0, 0, 0)),
-                             'boundary2': ('fixedValue', (0, 0, 0)),
-                             'boundary3': ('fixedValue', (0, 0, 0)),
-                             'boundary4': 'slip',
-                             'boundary5': 'empty'}
-wrapper.BC[CUBA.DYNAMIC_PRESSURE] = {'boundary0': 'fixedFluxPressure',
-                                     'boundary1': ('fixedValue', 0),
-                                     'boundary2': 'fixedFluxPressure',
-                                     'boundary3': 'fixedFluxPressure',
-                                     'boundary4': 'fixedFluxPressure',
-                                     'boundary5': 'empty'}
 
-wrapper.BC[CUBA.VOLUME_FRACTION] = {'boundary0': ('fixedValue', 0.001),
-                                    'boundary1': ('inletOutlet', 0.001),
-                                    'boundary2': 'zeroGradient',
-                                    'boundary3': 'zeroGradient',
-                                    'boundary4': 'zeroGradient',
-                                    'boundary5': 'empty'}
+wrapper.BC[CUBA.VELOCITY] = {'inlet': ('fixedValue', (0.0191, 0, 0)),
+                             'outlet': ('pressureIOVelocity', (0, 0, 0)),
+                             'bottomWall': ('fixedValue', (0, 0, 0)),
+                             'endWall': ('fixedValue', (0, 0, 0)),
+                             'top': 'slip',
+                             'frontAndBack': 'empty'}
+wrapper.BC[CUBA.DYNAMIC_PRESSURE] = {'inlet': 'fixedFluxPressure',
+                                     'outlet': ('fixedValue', 0),
+                                     'bottomWall': 'fixedFluxPressure',
+                                     'endWall': 'fixedFluxPressure',
+                                     'top': 'fixedFluxPressure',
+                                     'frontAndBack': 'empty'}
+
+wrapper.BC[CUBA.VOLUME_FRACTION] = {'inlet': ('fixedValue', 0.001),
+                                    'outlet': ('inletOutlet', 0.001),
+                                    'bottomWall': 'zeroGradient',
+                                    'endWall': 'zeroGradient',
+                                    'top': 'zeroGradient',
+                                    'frontAndBack': 'empty'}
 
 # create mesh
 openfoam_file_io.create_block_mesh(tempfile.mkdtemp(), name, wrapper,

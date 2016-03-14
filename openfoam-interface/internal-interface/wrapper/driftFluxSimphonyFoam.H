@@ -34,27 +34,28 @@ Info<< "\nStarting time loop\n" << endl;
 
 std::string p_rghName = "p_rgh";
 std::string UName = "U";
-//std::string alphaName = "alpha1";
-std::string alphaName = "alpha.phase1";
-//std::string Sigma_muName = "Sigma_mu";
 std::string Sigma_muName = "Sigma";
 std::string SName = "S";
 std::string gradAlpha1Name = "gradAlpha1";
 std::string StressName = "Stress";
+std::string VrName = "Vr";
+std::string alphaName = "alpha.phase1";
 
 volScalarField& p_rgh = find_Data<scalar>(mesh,p_rghName);
-volScalarField& alpha1 = find_Data<scalar>(mesh,alphaName);
 volVectorField& U = find_Data<vector>(mesh,UName);
 volTensorField& Sigma_mu = find_Data<tensor>(mesh,Sigma_muName);
 volTensorField& S = find_Data<tensor>(mesh,SName);
 volVectorField& gradAlpha1 = find_Data<vector>(mesh,gradAlpha1Name);
 volTensorField& Stress = find_Data<tensor>(mesh,StressName);
+volVectorField& Vr = find_Data<vector>(mesh,VrName);
+
+volScalarField& alpha1 = find_Data<scalar>(mesh,alphaName);
 
 surfaceScalarField& phi = const_cast<surfaceScalarField&>(mesh.lookupObject<surfaceScalarField>(word("phi"))); 
-phi = linearInterpolate(U) & mesh.Sf();
 
 
 IOdictionary& transportProperties = const_cast<IOdictionary&>(mesh.lookupObject<IOdictionary>(word("transportProperties"))); 
+
 
 incompressibleTwoPhaseInteractingMixture mixture(U, phi, transportProperties);
 // Relative Velocity
@@ -69,18 +70,19 @@ autoPtr<relativeVelocityModel> UdmModelPtr
 
 relativeVelocityModel& UdmModel(UdmModelPtr());
 
-
-
 word stressModelType(transportProperties.lookup("stressModel"));
 Info<< "Stressmodel is "<< stressModelType<<"\n" << endl;
 
 
 //volScalarField& alpha1(mixture.alpha1());
+
 volScalarField& alpha2(mixture.alpha2());
 
 const dimensionedScalar& rho1 = mixture.rhod();
 const dimensionedScalar& rho2 = mixture.rhoc();
 
+Info<<"Density phase 1 "<<rho1<<endl;
+Info<<"Density phase 2 "<<rho2<<endl;
 
 Info<< "Creating field SigmaPrime\n" << endl;
 volTensorField SigmaPrime
@@ -124,25 +126,10 @@ surfaceScalarField rhoPhi
     fvc::interpolate(rho)*phi
 );
 
-// g from transportproperties
+// g 
+uniformDimensionedVectorField& g = const_cast<uniformDimensionedVectorField&>(mesh.lookupObject<uniformDimensionedVectorField>(word("g"))); 
 
-
-Info<< "\nCreating g " <<endl;
-uniformDimensionedVectorField g
-(
-    IOobject
-    (
-        "g",
-        runTimes[name]->timeName(),
-        mesh,
-        IOobject::NO_READ,
-        IOobject::NO_WRITE
-    ),
-    dimensionedVector("g", dimensionSet(0, 1, -2, 0, 0, 0, 0), vector(transportProperties.lookup("g")))
-);
-
-Info<< "\nGravitational vector: " <<vector(transportProperties.lookup("g"))<<endl;
-
+Info<<"g "<<g<<endl; 
 Info<< "Calculating field (g.h)f\n" << endl;
 volScalarField gh("gh", g & mesh.C());
 surfaceScalarField ghf("gh", g & mesh.Cf());
@@ -187,11 +174,11 @@ tmp<surfaceScalarField> tphiAlphaCorr0;
 
 Info<< "\nStarting time loop\n" << endl;
 
-//Info<< alpha1 << endl;
-//Info<< U << endl;
+
 U.storePrevIter();
 p_rgh.storePrevIter();
 alpha1.storePrevIter();
+
 
 scalar cumulativeContErr = 0;
 
@@ -207,12 +194,17 @@ while (runTime.run())
     Info<< "Time = " << runTime.timeName() << nl << endl;
 
 
+    #include "modelingMicroScale.H"
+
+
     // --- Pressure-velocity PIMPLE corrector loop
     while (pimple.loop())
     {
         #include "alphaControls.H"
 
         UdmModel.correct();
+
+	//	Info <<UdmModel.Udm()<<endl;
 
         #include "alphaEqnSubCycle.H"
 
@@ -237,119 +229,9 @@ while (runTime.run())
         << "  ClockTime = " << runTime.elapsedClockTime() << " s"
         << nl << endl;
 
-    #include "modelingMicroScale.H"
 }
 
 Info<< "End\n" << endl;
 
-/*
-while (runTime.run())
-{
-    #include "readTimeControls.H"
-    #include "CourantNo.H"
-    #include "setDeltaT.H"
-
-    runTime++;
-
-    Info<< "Time = " << runTime.timeName() << nl << endl;
-
-    // --- Pressure-velocity PIMPLE corrector loop
-    while (pimple.loop())
-    {
-        // Solve the Momentum equation
-
-        tmp<fvVectorMatrix> UEqn
-        (
-            fvm::ddt(U)
-          + fvm::div(phi, U)
-          + turbulence->divDevReff(U)
-        // ==
-        //    fvOptions(U)
-        );
-
-        UEqn().relax();
-
-        //fvOptions.constrain(UEqn());
-
-        volScalarField rAU(1.0/UEqn().A());
-
-        if (pimple.momentumPredictor())
-        {
-            solve(UEqn() == -fvc::grad(p));
-
-            //fvOptions.correct(U);
-        }
-
-        // --- Pressure corrector loop
-        while (pimple.correct())
-        {
-            surfaceScalarField rAUf("rAUf", fvc::interpolate(rAU));
-            
-            volVectorField HbyA("HbyA", U);
-            HbyA = rAU*UEqn().H();
-            
-            if (pimple.nCorrPISO() <= 1)
-            {
-                UEqn.clear();
-            }
-
-            surfaceScalarField phiHbyA
-            (
-                "phiHbyA",
-                (fvc::interpolate(HbyA) & mesh.Sf())
-              + rAUf*fvc::ddtCorr(U, phi)
-            );
-
-            adjustPhi(phiHbyA, U, p);
-
-            //fvOptions.relativeFlux(phiHbyA);
-
-            // Non-orthogonal pressure corrector loop
-            while (pimple.correctNonOrthogonal())
-            {
-                // Pressure corrector
-                fvScalarMatrix pEqn
-                (
-                    fvm::laplacian(rAUf, p) == fvc::div(phiHbyA)
-                );
-            
-                pEqn.setReference(pRefCell, pRefValue);
-            
-                pEqn.solve(mesh.solver(p.select(pimple.finalInnerIter())));
-            
-                if (pimple.finalNonOrthogonalIter())
-                {
-                    phi = phiHbyA - pEqn.flux();
-                }
-            }
-
-            #include "continuityErrs.H"
-
-            // Explicitly relax pressure for momentum corrector
-            p.relax();
-            
-            U = HbyA - rAU*fvc::grad(p);
-            U.correctBoundaryConditions();
-
-
-            //fvOptions.correct(U);
-        }
-
-        if (pimple.turbCorr())
-        {
-            turbulence->correct();
-        }
-    }
-
-    //runTime.write();
-
-    Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
-        << "  ClockTime = " << runTime.elapsedClockTime() << " s"
-        << nl << endl;
-}
-
-Info<< "End\n" << endl;
-
-*/
 
 // ************************************************************************* //

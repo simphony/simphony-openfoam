@@ -9,7 +9,7 @@ from simphony.cuds.abc_modeling_engine import ABCModelingEngine
 from foam_controlwrapper.cuba_extension import CUBAExt
 from .foam_mesh import FoamMesh
 from .foam_dicts import (modifyNumerics, modifyFields)
-from foam_controlwrapper.foam_templates import get_foam_solver
+from .foam_dicts import get_foam_solver
 import simphonyfoaminterface as foamface
 
 

@@ -3,8 +3,6 @@
 Wrapper module for OpenFOAM
 
 """
-import os
-
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
@@ -13,8 +11,11 @@ from simphony.cuds.abc_mesh import ABCMesh
 from .cuba_extension import CUBAExt
 from .foam_mesh import FoamMesh
 from .foam_runner import FoamRunner
-from .foam_files import modify_files, write_default_files, remove_parser_files
-from .foam_templates import get_foam_solver
+from foam_internalwrapper.foam_dicts import (get_foam_solver,
+                                             modifyNumerics,
+                                             modifyFields,
+                                             create_directories)
+
 import simphonyfoaminterface
 
 
@@ -61,38 +62,29 @@ class Wrapper(ABCModelingEngine):
         mesh = self._meshes[name]
         case = mesh.path
 
-        GE = self.CM_extensions[CUBAExt.GE]
+        create_directories(case)
+
         solver = get_foam_solver(self.CM_extensions)
-        turbulent = 'Turbulent' if not (CUBAExt.LAMINAR_MODEL in GE) else ''
 
-        # write default files based on solver
-        # (not field data files if exists)
-        templateName = solver + turbulent
-        write_default_files(case, templateName, mesh._time, True)
+#       a) Modify and write dictionaries
+        modifyNumerics(mesh, self.SP, self.SP_extensions, solver, True)
 
-        # write first mesh from foams objectRegistry to disk
-        mesh.write()
-
-        # modify control and boundary data files based on SP and BC
-        modify_files(
-            case, mesh._time, self.SP, self.BC,
-            solver, self.SP_extensions, self.CM_extensions)
+#       b) Set boundary condition and Fields
+        modifyFields(mesh, self.BC, solver)
+        simphonyfoaminterface.writeFields(mesh.name)
 
         # run case
         if CUBAExt.NUMBER_OF_CORES in self.CM_extensions:
             ncores = self.CM_extensions[CUBAExt.NUMBER_OF_CORES]
         else:
             ncores = 1
-        runner = FoamRunner(solver, case, ncores)
+        runner = FoamRunner(solver, name, case, ncores)
         runner.run()
-
-        # remove PyFoam parser files
-        remove_parser_files(os.getcwd())
 
         # save timestep to mesh
         mesh._time = runner.get_last_time()
         # update time and data to Foam objectRegistry
-        simphonyfoaminterface.update_data(name, float(mesh._time))
+        simphonyfoaminterface.updateData(name, float(mesh._time))
 
     def add_dataset(self, mesh, name=None):
         """Add a mesh to the OpenFoam modeling engine.
@@ -128,9 +120,12 @@ class Wrapper(ABCModelingEngine):
             raise ValueError('Mesh \'{}\` already exists'.format(mesh_name))
         else:
             if self.BC:
-                self._meshes[mesh_name] = FoamMesh(mesh_name, self.BC, mesh)
+                solver = get_foam_solver(self.CM_extensions)
+                self._meshes[mesh_name] = FoamMesh(mesh_name, self.BC,
+                                                   solver, mesh)
             else:
-                self._meshes[mesh_name] = FoamMesh(mesh_name, {}, mesh)
+                self._meshes[mesh_name] = FoamMesh(mesh_name, {},
+                                                   'pimpleFoam', mesh)
             return self._meshes[mesh_name]
 
     def remove_dataset(self, name):

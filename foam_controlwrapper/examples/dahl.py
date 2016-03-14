@@ -5,6 +5,8 @@ from simphony.core.cuba import CUBA
 
 from simphony.engine import openfoam_file_io
 
+from mayavi.scripts import mayavi2
+
 import dahl_mesh
 import tempfile
 
@@ -23,7 +25,7 @@ wrapper.CM_extensions[CUBAExt.GE] = (CUBAExt.INCOMPRESSIBLE,
 wrapper.CM_extensions[CUBAExt.NUMBER_OF_CORES] = 1
 
 wrapper.SP[CUBA.TIME_STEP] = 0.1
-wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 1
+wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 6400
 
 wrapper.SP_extensions[CUBAExt.PHASE_LIST] = ('sludge', 'water')
 wrapper.SP[CUBA.DENSITY] = {'sludge': 1900.0, 'water': 1000.0}
@@ -41,25 +43,25 @@ wrapper.SP_extensions[CUBAExt.RELATIVE_VELOCITY_MODEL_COEFFS] =\
 wrapper.SP_extensions[CUBAExt.EXTERNAL_BODY_FORCE_MODEL] = 'gravitation'
 wrapper.SP_extensions[CUBAExt.EXTERNAL_BODY_FORCE_MODEL_COEFFS] =\
     {'g': (0.0, -9.81, 0.0)}
-wrapper.BC[CUBA.VELOCITY] = {'boundary0': ('fixedValue', (0.0191, 0, 0)),
-                             'boundary1': ('pressureIOVelocity', (0, 0, 0)),
-                             'boundary2': ('fixedValue', (0, 0, 0)),
-                             'boundary3': ('fixedValue', (0, 0, 0)),
-                             'boundary4': 'slip',
-                             'boundary5': 'empty'}
-wrapper.BC[CUBA.DYNAMIC_PRESSURE] = {'boundary0': 'fixedFluxPressure',
-                                     'boundary1': ('fixedValue', 0),
-                                     'boundary2': 'fixedFluxPressure',
-                                     'boundary3': 'fixedFluxPressure',
-                                     'boundary4': 'fixedFluxPressure',
-                                     'boundary5': 'empty'}
+wrapper.BC[CUBA.VELOCITY] = {'inlet': ('fixedValue', (0.0191, 0, 0)),
+                             'outlet': ('pressureIOVelocity', (0, 0, 0)),
+                             'bottomWall': ('fixedValue', (0, 0, 0)),
+                             'endWall': ('fixedValue', (0, 0, 0)),
+                             'top': 'slip',
+                             'frontAndBack': 'empty'}
+wrapper.BC[CUBA.DYNAMIC_PRESSURE] = {'inlet': 'fixedFluxPressure',
+                                     'outlet': ('fixedValue', 0),
+                                     'bottomWall': 'fixedFluxPressure',
+                                     'endWall': 'fixedFluxPressure',
+                                     'top': 'fixedFluxPressure',
+                                     'frontAndBack': 'empty'}
 
-wrapper.BC[CUBA.VOLUME_FRACTION] = {'boundary0': ('fixedValue', 0.001),
-                                    'boundary1': ('inletOutlet', 0.001),
-                                    'boundary2': 'zeroGradient',
-                                    'boundary3': 'zeroGradient',
-                                    'boundary4': 'zeroGradient',
-                                    'boundary5': 'empty'}
+wrapper.BC[CUBA.VOLUME_FRACTION] = {'inlet': ('fixedValue', 0.001),
+                                    'outlet': ('inletOutlet', 0.001),
+                                    'bottomWall': 'zeroGradient',
+                                    'endWall': 'zeroGradient',
+                                    'top': 'zeroGradient',
+                                    'frontAndBack': 'empty'}
 
 # create mesh
 openfoam_file_io.create_block_mesh(tempfile.mkdtemp(), name, wrapper,
@@ -77,5 +79,19 @@ for cell in mesh_inside_wrapper.iter_cells():
     updated_cells.append(cell)
 
 mesh_inside_wrapper.update_cells(updated_cells)
-
 wrapper.run()
+
+
+@mayavi2.standalone
+def view():
+    from mayavi.modules.surface import Surface
+    from simphony_mayavi.sources.api import CUDSSource
+
+    mayavi.new_scene()  # noqa
+    src = CUDSSource(cuds=mesh_inside_wrapper)
+    mayavi.add_source(src)  # noqa
+    s = Surface()
+    mayavi.add_module(s)  # noqa
+
+if __name__ == '__main__':
+    view()

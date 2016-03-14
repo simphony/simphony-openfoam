@@ -11,6 +11,10 @@ pushd .
 cd openfoam-interface/internal-interface/libs
 ./Allwmake
 cd ../wrapper
+cd relativeVelocityModels
+wclean
+wmake libso
+cd ..
 wclean
 wmake libso
 python setup.py install $1

@@ -11,6 +11,7 @@
       - fvc::div(mixture.mu()*dev(T(fvc::grad(U))))
     // ==
     //    fvOptions(rho, U)
+	== fvVectorMatrix(U, rho.dimensions()*U.dimensions()/dimTime*dimVolume)
     );
 
     UEqn.relax();

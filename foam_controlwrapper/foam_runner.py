@@ -7,14 +7,17 @@ import subprocess
 import os
 import re
 
+import simphonyfoaminterface as foamface
+
 
 class FoamRunner():
     """ Module for running OpenFOAM case
 
     """
 
-    def __init__(self, solver, case, ncores):
+    def __init__(self, solver, name, case, ncores):
         self.solver = solver
+        self.name = name
         self.case = case
         self.ncores = ncores
 
@@ -31,7 +34,14 @@ class FoamRunner():
             subprocess.check_call(cmd, shell=True)
         else:
             # write and modify decomposeParDict file
-
+            dict =\
+                """
+            numberOfSubdomains {ncores};
+            method          scotch;
+            """
+            foamface.modifyDictionary(self.name, "decomposeParDict",
+                                      dict.format(ncores=self.ncores))
+            foamface.writeDictionary(self.name, "decomposeParDict", False)
             # decompose
             cmd = "decomposePar -force -case " + self.case + " > " +\
                   os.path.join(self.case, 'log.decompose')
@@ -55,4 +65,4 @@ class FoamRunner():
         time_dirs = [f for f in os.listdir(self.case) if
                      re.match(r'[0-9]+.*', f)]
         time_dirs.sort(key=lambda time_dirs: float(time_dirs.split()[0]))
-        return time_dirs.pop()
+        return float(time_dirs.pop())

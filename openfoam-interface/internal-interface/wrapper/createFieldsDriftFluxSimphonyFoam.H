@@ -58,24 +58,24 @@ volVectorField* U = new volVectorField
     dimensionedVector("U", dimensionSet(0, 1, -1, 0, 0, 0, 0), vector::zero)
 );
 
-Info<< "Creating field Vdj\n" << endl;
+Info<< "Creating field Vr\n" << endl;
 new volVectorField
 (
     IOobject
     (
-        "Vdj",
+        "Vr",
         runTimes[name]->timeName(),
         mesh,
         IOobject::NO_READ,
         IOobject::NO_WRITE
     ),
     mesh,
-    dimensionedVector("Vdj", dimensionSet(0, 1, -1, 0, 0, 0, 0), vector::zero)
+    dimensionedVector("Vr", dimensionSet(0, 1, -1, 0, 0, 0, 0), vector::zero)
 );
 
 
 
-Info<< "Creating field Sigma_mu" << endl;
+Info<< "Creating field Sigma" << endl;
 new volTensorField
 (
     IOobject
@@ -92,7 +92,7 @@ new volTensorField
 
 Info<< "Calculating face flux field phi\n" << endl;
 
-new surfaceScalarField
+surfaceScalarField* phi = new surfaceScalarField
 (
     IOobject
     (
@@ -169,24 +169,30 @@ IStringStream TP
     "phase1\n"
     "{\n"
     "    transportModel  dummyViscosity;\n"
-    "    nu              1e-04;\n"
-    "    rho             1996;\n"
+    "    nu              0.0;\n"
+    "    rho             0.0;\n"
     "}\n"
     "phase2\n"
     "{\n"
     "    transportModel  Newtonian;\n"
-    "    nu              1.7871e-06;\n"
-    "    rho             996;\n"
+    "    nu              0.0;\n"
+    "    rho             0.0;\n"
     "}\n"
     "relativeVelocityModel simple;\n"
-    "\"(simple|general)Coeffs\"\n"
+    "simpleCoeffs\n"
     "{\n"
-    "    V0              (0 -0.002198 0);\n"
-    "    a               285.84;\n"
-    "    a1              0.1;\n"
+    "    V0              (0 0 0);\n"
+    "    a               0.0;\n"
+    "    a1              0.0;\n"
     "    residualAlpha   0;\n"
     "}\n"
-    "g (0 0 0);\n"
+    "generalCoeffs\n"
+    "{\n"
+    "    V0              (0 0 0);\n"
+    "    a               0.0;\n"
+    "    a1              0.0;\n"
+    "    residualAlpha   0;\n"
+    "}\n"
     );
 
 new IOdictionary
@@ -201,3 +207,22 @@ new IOdictionary
     ),
     TP()
 );
+/*
+IStringStream grav
+    (
+     "dimensions      [0 1 -2 0 0 0 0];\n"
+     "value           ( 0 0 0 );\n"
+    );
+*/
+new uniformDimensionedVectorField
+(
+ IOobject
+ (
+  "g",
+  runTimes[name]->constant(),
+  mesh,
+  IOobject::NO_READ,
+  IOobject::NO_WRITE
+  ),
+ dimensionedVector("g", dimensionSet(0, 1, -2, 0, 0, 0, 0), vector::zero)
+ );
