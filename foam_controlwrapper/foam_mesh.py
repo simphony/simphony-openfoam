@@ -119,7 +119,7 @@ class FoamMesh(ABCMesh):
                 self._foamCellLabelToUuid[label] = uid
                 cellPoints.append(len(cell.points))
                 for puid in cell.points:
-                   cellPoints.append(pointMap[puid])
+                    cellPoints.append(pointMap[puid])
                 label += 1
 
             pointMap.clear()
