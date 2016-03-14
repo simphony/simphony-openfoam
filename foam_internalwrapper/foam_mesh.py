@@ -18,7 +18,7 @@ from simphony.core.cuds_item import CUDSItem
 import simphony.core.data_container as dc
 import simphonyfoaminterface as foamface
 
-from .foam_dicts import (dictionaryMaps, parse_map)
+from .foam_dicts import (dictionaryMaps, parse_map, check_boundary_names)
 from foam_controlwrapper.foam_variables import dataNameMap
 from foam_controlwrapper.foam_variables import (dataKeyMap, dataTypeMap)
 from .mesh_utils import (create_dummy_celldata, set_cells_data)
@@ -147,6 +147,8 @@ class FoamMesh(ABCMesh):
             for patchName in patchNames:
                 if BC:
                     first_key = BC.keys()[0]
+                    check_boundary_names(BC[first_key].keys(), patchNames,
+                                         first_key)
                     if BC[first_key][patchName] == "empty":
                         patchTypes.append("empty")
                     else:

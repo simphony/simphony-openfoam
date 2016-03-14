@@ -19,7 +19,8 @@ from foam_internalwrapper.mesh_utils import set_cells_data
 from foam_internalwrapper.mesh_utils import create_dummy_celldata
 from .foam_variables import (dataNameMap, dataKeyMap)
 from .foam_variables import dataTypeMap
-from foam_internalwrapper.foam_dicts import (dictionaryMaps, parse_map)
+from foam_internalwrapper.foam_dicts import (dictionaryMaps, parse_map,
+                                             check_boundary_names)
 
 
 class FoamMesh(ABCMesh):
@@ -118,7 +119,7 @@ class FoamMesh(ABCMesh):
                 self._foamCellLabelToUuid[label] = uid
                 cellPoints.append(len(cell.points))
                 for puid in cell.points:
-                    cellPoints.append(pointMap[puid])
+                   cellPoints.append(pointMap[puid])
                 label += 1
 
             pointMap.clear()
@@ -143,6 +144,8 @@ class FoamMesh(ABCMesh):
             for patchName in patchNames:
                 if BC:
                     first_key = BC.keys()[0]
+                    check_boundary_names(BC[first_key].keys(), patchNames,
+                                         first_key)
                     if BC[first_key][patchName] == "empty":
                         patchTypes.append("empty")
                     else:
