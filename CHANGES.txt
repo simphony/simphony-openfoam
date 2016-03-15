@@ -1,7 +1,7 @@
 Simphony-OpenFOAM CHANGELOG
 ======================
 
-Release 0.2.0dev0
+Release 0.2.1
 -----------------
 
 * File I/O wrapper changed  to use native interface for data transfer (fields and dictionaries)
