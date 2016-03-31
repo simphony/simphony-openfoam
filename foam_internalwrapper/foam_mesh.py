@@ -7,11 +7,9 @@ and modify a mesh and related data
 import uuid
 import tempfile
 import os
-import numpy
 
 
 from simphony.cuds.abc_mesh import ABCMesh
-from simphony.core.cuba import CUBA
 from simphony.cuds.mesh import Point, Face, Cell
 from simphony.core.cuds_item import CUDSItem
 
@@ -612,8 +610,7 @@ class FoamMesh(ABCMesh):
         if item_type == CUDSItem.POINT:
             return foamface.getPointCount(self.name)
         elif item_type == CUDSItem.EDGE:
-            error_str = 'Item type {} not supported'
-            raise ValueError(error_str.format(item_type))
+            return 0
         elif item_type == CUDSItem.FACE:
             return foamface.getFaceCount(self.name)
         elif item_type == CUDSItem.CELL:
@@ -670,24 +667,3 @@ class FoamMesh(ABCMesh):
         """
 
         return self._boundaries
-
-    def getXYZUVW(self):
-
-        nCells = foamface.getCellCount(self.name)
-        XYZUVW = numpy.zeros((nCells, 6))
-
-        ii = 0
-        for cell in self.iter_cells():
-            label = self._uuidToFoamLabel[cell.uid]
-            pointLabels = foamface.getCellPoints(self.name, label)
-
-            for pid in pointLabels:
-                coords = foamface.getPointCoordinates(self.name, pid)
-                XYZUVW[ii][0:3] = XYZUVW[ii][0:3] + coords
-
-            XYZUVW[ii][0:3] = XYZUVW[ii][0:3]/len(pointLabels)
-            XYZUVW[ii][3:6] = cell.data[CUBA.VELOCITY]
-
-            ii = ii + 1
-
-        return XYZUVW
