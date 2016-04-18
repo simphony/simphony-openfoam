@@ -78,7 +78,7 @@ mesh_inside_wrapper.update_cells(updated_cells)
 V0 = [0.0, -0.002, 0.0]
 a = 285.0
 
-number_of_outer_timesteps = 1
+number_of_outer_timesteps = 6400
 
 for time_i in range(number_of_outer_timesteps):
     # solve macroscopic scale
@@ -91,8 +91,8 @@ for time_i in range(number_of_outer_timesteps):
     updated_cells = []
     for cell in mesh_inside_wrapper.iter_cells():
         alphad = cell.data[CUBA.VOLUME_FRACTION]
-        vdj = [V*pow(10.0, -a*max(alphad, 0.0)) for V in V0]
-        cell.data[CUBA.RELATIVE_VELOCITY] = vdj
+        vr = [V*pow(10.0, -a*max(alphad, 0.0))/(1-alphad) for V in V0]
+        cell.data[CUBA.RELATIVE_VELOCITY] = vr
         updated_cells.append(cell)
 
     mesh_inside_wrapper.update_cells(updated_cells)

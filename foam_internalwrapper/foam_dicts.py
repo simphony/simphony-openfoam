@@ -829,12 +829,16 @@ def modifyNumerics(mesh, SP, SPExt, solver='pimpleFoam', io=False):
         # phase1 uses mixtureViscosity models
         viscosity_model = SPExt[CUBAExt.VISCOSITY_MODEL][
             SPExt[CUBAExt.PHASE_LIST][0]]
+        if viscosity_model == 'Newtonian':
+            viscosity_model = 'dummyViscosity'
         control["phase1"]["transportModel"] = viscosity_model
-        vmc = viscosity_model + 'Coeffs'
-        viscosity_model_coeffs =\
-            SPExt[CUBAExt.VISCOSITY_MODEL_COEFFS][viscosity_model]
-        for coeff in viscosity_model_coeffs:
-            control['phase1'][vmc][coeff] = viscosity_model_coeffs[coeff]
+        print viscosity_model
+        if viscosity_model != 'slurry' and viscosity_model != 'dummyViscosity':
+            vmc = viscosity_model + 'Coeffs'
+            viscosity_model_coeffs =\
+                SPExt[CUBAExt.VISCOSITY_MODEL_COEFFS][viscosity_model]
+            for coeff in viscosity_model_coeffs:
+                control['phase1'][vmc][coeff] = viscosity_model_coeffs[coeff]
         control['phase1']['rho'] = density[SPExt[CUBAExt.PHASE_LIST][0]]
 
         viscosity_model = SPExt[CUBAExt.VISCOSITY_MODEL][

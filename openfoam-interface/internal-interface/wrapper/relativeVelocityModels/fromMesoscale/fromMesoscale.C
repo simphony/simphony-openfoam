@@ -78,7 +78,8 @@ Foam::relativeVelocityModels::fromMesoscale::~fromMesoscale()
 void Foam::relativeVelocityModels::fromMesoscale::correct()
 {
 
-   Udm_ = (rhoc_/rho())*Vr_;
+  volScalarField betac(alphac_*rhoc_);
+  Udm_ = (betac/rho())*Vr_;
 
 }
 

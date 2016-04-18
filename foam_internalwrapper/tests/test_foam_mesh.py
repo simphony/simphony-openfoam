@@ -290,8 +290,8 @@ class FoamMeshTestCase(unittest.TestCase):
                          self.mesh.count_of(item_type))
 
         item_type = CUDSItem.EDGE
-        with self.assertRaises(ValueError):
-            foam_mesh.count_of(item_type)
+        self.assertEqual(foam_mesh.count_of(item_type),
+                         self.mesh.count_of(item_type))
 
         item_type = CUDSItem.FACE
         self.assertEqual(foam_mesh.count_of(item_type),

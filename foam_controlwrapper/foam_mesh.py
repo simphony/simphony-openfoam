@@ -616,8 +616,7 @@ class FoamMesh(ABCMesh):
         if item_type == CUDSItem.POINT:
             return foamface.getPointCount(self.name)
         elif item_type == CUDSItem.EDGE:
-            error_str = 'Item type {} not supported'
-            raise ValueError(error_str.format(item_type))
+            return 0
         elif item_type == CUDSItem.FACE:
             return foamface.getFaceCount(self.name)
         elif item_type == CUDSItem.CELL:

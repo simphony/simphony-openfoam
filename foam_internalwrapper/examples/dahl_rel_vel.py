@@ -93,7 +93,7 @@ for time_i in range(number_of_outer_timesteps):
     updated_cells = []
     for cell in mesh_inside_wrapper.iter_cells():
         alphad = cell.data[CUBA.VOLUME_FRACTION]
-        vr = [V*pow(10.0, -a*max(alphad, 0.0)) for V in V0]
+        vr = [V*pow(10.0, -a*max(alphad, 0.0))/(1-alphad) for V in V0]
         cell.data[CUBA.RELATIVE_VELOCITY] = vr
         updated_cells.append(cell)
 
