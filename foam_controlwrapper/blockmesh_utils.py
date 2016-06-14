@@ -5,7 +5,7 @@
 import os
 import shutil
 
-from foam_internalwrapper.foam_dicts import (dictionaryMaps, parse_map,
+from foam_internalwrapper.foam_dicts import (get_dictionary_maps, parse_map,
                                              write_dictionary,
                                              create_directories)
 from .foam_runner import FoamRunner
@@ -43,11 +43,11 @@ def create_quad_mesh(path, name, mesh_engine, corner_points,
     dictionary_name = 'controlDict'
     full_path = os.path.join(case, 'system')
 
-    map_content = dictionaryMaps[solver]
+    map_content = get_dictionary_maps(solver, False)
 
     controlDict = parse_map(map_content[dictionary_name])
-    write_dictionary(full_path, dictionary_name, controlDict)
 
+    write_dictionary(full_path, dictionary_name, controlDict)
     dictionary_name = 'fvSchemes'
     controlDict = parse_map(map_content[dictionary_name])
     write_dictionary(full_path, dictionary_name, controlDict)
@@ -117,7 +117,6 @@ def create_quad_mesh(path, name, mesh_engine, corner_points,
     blockMeshDict = parse_map(control)
     write_dictionary(os.path.join(case, dictionary_path),
                      dictionary_name, blockMeshDict)
-
     # this to overcome bug in blockMesh case attribute
     # blockMesh searches blockMeshDict -file from doubled case directory
     # copy file to that directory
@@ -161,7 +160,7 @@ def create_block_mesh(path, name, mesh_engine, block_mesh_dict):
     dictionary_name = 'controlDict'
     full_path = os.path.join(case, 'system')
 
-    map_content = dictionaryMaps[solver]
+    map_content = get_dictionary_maps(solver, False)
 
     controlDict = parse_map(map_content[dictionary_name])
     write_dictionary(full_path, dictionary_name, controlDict)

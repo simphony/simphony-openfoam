@@ -449,6 +449,44 @@ extern "C" {
     }
   }  
 
+
+
+  static PyObject* getBoundaryCells(PyObject *self, PyObject *args)
+  {
+    char *name;
+    char *boundaryname;
+    if (!PyArg_ParseTuple(args,"ss",&name,&boundaryname)) {
+      PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
+      return NULL;
+    }
+    try {
+      std::vector<int> values = foam_getBoundaryCells(std::string(name),std::string(boundaryname));
+      PyObject *pylist = PyList_New(values.size());
+      if (pylist != NULL) {
+	for (std::vector<int>::size_type i=0;i<values.size();i++) {
+	  PyObject *item = Py_BuildValue("i",values[i]);
+	  PyList_SetItem(pylist, i, item);
+	}
+	return pylist;
+      }else
+	return NULL;
+    }
+    catch (Foam::error& fErr)
+      {
+	PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
+	return NULL;
+      }
+    catch (std::exception& e) {
+      PyErr_SetString(PyExc_RuntimeError,e.what());
+      return NULL;
+    }
+    catch (...) {
+      PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
+      return NULL;
+    }
+  }  
+
+
     
   static PyObject* getAllCellData(PyObject *self, PyObject *args)
   {
@@ -485,6 +523,8 @@ extern "C" {
       return NULL;
     }
   }
+
+
 
   static PyObject* getCellVectorData(PyObject *self, PyObject *args)
   {
@@ -525,6 +565,8 @@ extern "C" {
   }
       
   }
+
+
 
   static PyObject* getCellTensorData(PyObject *self, PyObject *args)
   {
@@ -600,6 +642,47 @@ extern "C" {
       return NULL;
     }
   }
+
+
+
+  static PyObject* getAllCellTensorData(PyObject *self, PyObject *args)
+  {
+    char *name;
+    char *dataname;
+
+    if (!PyArg_ParseTuple(args,"ss",&name,&dataname)) {
+      PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
+      return NULL;
+    }
+    try {
+      std::vector<double> values = foam_getCellTensorData(std::string(name), std::string(dataname));
+      PyObject *pylist = PyList_New(values.size());
+      if (pylist != NULL) {
+	for (std::vector<double>::size_type i=0;i<values.size();i++) {
+	  PyObject *item = Py_BuildValue("d",values[i]);
+	  PyList_SetItem(pylist, i, item);
+	}
+	return pylist;
+      }else
+	return NULL;	
+    }
+    catch (Foam::error& fErr)
+    {
+      PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
+      return NULL;
+    }
+    catch (std::exception& e) {
+      PyErr_SetString(PyExc_RuntimeError,e.what());
+      return NULL;
+    }
+    catch (...) {
+      PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
+      return NULL;
+    }
+  }
+
+
+
 
   static PyObject* getBoundaryPatchNames(PyObject *self, PyObject *args)
   {
@@ -1642,6 +1725,7 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
       return NULL;
     }
     try {
+      
       foam_writePathDictionary(std::string(path),std::string(dictionaryName),std::string(head),std::string(dictionaryContent));
       return Py_BuildValue("");
     }
@@ -1765,7 +1849,9 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
     {"getCellVectorData",getCellVectorData,METH_VARARGS,"Get vector data associated to cell"},
     {"getCellTensorData",getCellTensorData,METH_VARARGS,"Get tensor data associated to cell"},
     {"getAllCellVectorData",getAllCellVectorData,METH_VARARGS,"Get vector data associated to cells"},
-    {"getBoundaryPatchNames",getBoundaryPatchNames,METH_VARARGS,"Get names of the mesh boundary patches"},
+    {"getAllCellTensorData",getAllCellTensorData,METH_VARARGS,"Get tensor data associated to cells"},
+    {"getBoundaryCells",getBoundaryCells,METH_VARARGS,"Get specified boundary's cell next to boundary face"},
+     {"getBoundaryPatchNames",getBoundaryPatchNames,METH_VARARGS,"Get names of the mesh boundary patches"},
     {"getBoundaryPatchFaces",getBoundaryPatchFaces,METH_VARARGS,"Get mesh boundary patches faces"},
     {"updateCellData",updateCellData,METH_VARARGS,"Update (read) cell data"},
     {"updateCellVectorData",updateCellVectorData,METH_VARARGS,"Update (read) cell vector data"},

@@ -35,12 +35,13 @@ wrapper.BC[CUBA.PRESSURE] = {'inlet': 'zeroGradient',
 
 corner_points = [(0.0, 0.0, 0.0), (20.0e-3, 0.0, 0.0),
                  (20.0e-3, 1.0e-3, 0.0), (0.0, 1.0e-3, 0.0),
-                 (0.0, 0.0, 0.1), (20.0e-3, 0.0, 0.1),
-                 (20.0e-3, 1.0e-3, 0.1), (0.0, 1.0e-3, 0.1)]
+                 (0.0, 0.0, 0.1e-3), (20.0e-3, 0.0, 0.1e-3),
+                 (20.0e-3, 1.0e-3, 0.1e-3), (0.0, 1.0e-3, 0.1e-3)]
 # elements in x -direction
 nex = 8
 # elements in y -direction
 ney = 4
+
 openfoam_file_io.create_quad_mesh(tempfile.mkdtemp(), name, wrapper,
                                   corner_points, nex, ney, 1)
 mesh_inside_wrapper = wrapper.get_dataset(name)
@@ -48,6 +49,14 @@ mesh_inside_wrapper = wrapper.get_dataset(name)
 print "Case directory ", mesh_inside_wrapper.path
 
 wrapper.run()
+
+average_pressure = 0.0
+for cell in mesh_inside_wrapper.get_boundary_cells('inlet'):
+    average_pressure += cell.data[CUBA.PRESSURE]
+
+average_pressure /= len(mesh_inside_wrapper._boundaries['inlet'])
+
+print "Average pressure on inlet: ", average_pressure
 
 
 @mayavi2.standalone

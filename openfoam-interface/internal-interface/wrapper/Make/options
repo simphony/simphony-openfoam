@@ -21,4 +21,5 @@ LIB_LIBS = \
     -lincompressibleRASModelsSimphony \
     -lfiniteVolume \
     $(PLIBS) \
-	-L$(FOAM_USER_LIBBIN)
+    -L$(FOAM_USER_LIBBIN) \
+    -lshearStressPowerLawSlipVelocity

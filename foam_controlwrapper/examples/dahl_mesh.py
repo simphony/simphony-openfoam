@@ -35,8 +35,10 @@ vertices
 
 blocks
 (
-    hex (0 1 2 3 6 7 8 9) (200 4 1) simpleGrading (1 1 1)
-    hex (3 2 4 5 9 8 10 11) (200 36 1) simpleGrading (1 1 1)
+//    hex (0 1 2 3 6 7 8 9) (200 4 1) simpleGrading (1 1 1)
+//    hex (3 2 4 5 9 8 10 11) (200 36 1) simpleGrading (1 1 1)
+    hex (0 1 2 3 6 7 8 9) (20 4 1) simpleGrading (0.1 1 1)
+    hex (3 2 4 5 9 8 10 11) (20 18 1) simpleGrading (0.1 1 1)
 );
 
 edges

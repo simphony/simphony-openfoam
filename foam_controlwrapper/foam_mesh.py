@@ -19,7 +19,7 @@ from foam_internalwrapper.mesh_utils import set_cells_data
 from foam_internalwrapper.mesh_utils import create_dummy_celldata
 from .foam_variables import (dataNameMap, dataKeyMap)
 from .foam_variables import dataTypeMap
-from foam_internalwrapper.foam_dicts import (dictionaryMaps, parse_map,
+from foam_internalwrapper.foam_dicts import (get_dictionary_maps, parse_map,
                                              check_boundary_names)
 
 
@@ -153,7 +153,7 @@ class FoamMesh(ABCMesh):
                 else:
                     patchTypes.append("patch")
 
-            mapContent = dictionaryMaps[solver]
+            mapContent = get_dictionary_maps(solver, False)
             controlDict = parse_map(mapContent['controlDict'])
 
             # init objectRegistry and map to mesh name
@@ -174,6 +174,24 @@ class FoamMesh(ABCMesh):
             # write possible cell data to time directory
             self.copy_cells(mesh.iter_cells())
             foamface.writeFields(name)
+
+            # correct boundary face labels
+            patchNames = foamface.getBoundaryPatchNames(name)
+            patchFaces = foamface.getBoundaryPatchFaces(name)
+            boundaries = {}
+            i = 0
+            k = 0
+            while i < len(patchFaces):
+                boundaries[patchNames[k]] = []
+                start = i+1
+                end = start+patchFaces[i]
+                i += 1
+                for j in range(start, end):
+                    boundaries[patchNames[k]].append(
+                        self._foamFaceLabelToUuid[patchFaces[j]])
+                    i += 1
+                k += 1
+            self._boundaries = boundaries
 
     def get_point(self, uuid):
         """Returns a point with a given uuid.
@@ -264,10 +282,39 @@ class FoamMesh(ABCMesh):
             puids = [self._foamPointLabelToUuid[lbl] for lbl in pointLabels]
 
             face = Face(puids, uuid)
+
             return face
         except KeyError:
             error_str = "Trying to get an non-existing edge with uuid: {}"
             raise ValueError(error_str.format(uuid))
+
+    def get_boundary_cells(self, boundary):
+        """Returns boundar cells for a given boundary.
+
+        Returns the face stored in the mesh
+        identified by uuid. If such face do not
+        exists an exception is raised.
+
+        Parameters
+        ----------
+        boundary : str
+            boundary name
+
+        Returns
+        -------
+        Iterator Cell
+            Iterator to boundary cells
+
+        Raises
+        ------
+        Exception
+            If the face identified by uuid was not found
+
+        """
+
+        cells = foamface.getBoundaryCells(self.name, boundary)
+        for label in cells:
+            yield self.get_cell(self._foamCellLabelToUuid[label])
 
     def get_cell(self, uuid):
         """Returns a cell with a given uuid.
@@ -529,6 +576,66 @@ class FoamMesh(ABCMesh):
                 face = self.get_face(uid)
                 yield face
 
+    def get_cells(self):
+        """Returns all cells in the mesh.
+
+        Returns
+        -------
+        Cells
+            list of Cell
+
+        """
+
+        try:
+
+            pointLabels = foamface.getAllCellPoints(self.name)
+
+            cells = []
+
+            i = 0
+            cell_label = 0
+            while i < len(pointLabels):
+                puids = []
+                for ip in range(pointLabels[i]):
+                    i += 1
+                    puids.append(self._foamPointLabelToUuid[pointLabels[i]])
+                i += 1
+                uuid = self._foamCellLabelToUuid[cell_label]
+                cells.append(Cell(puids, uuid))
+                cell_label += 1
+
+            dataNames = foamface.getCellDataNames(self.name)
+            dataNames += foamface.getCellVectorDataNames(self.name)
+            dataNames += foamface.getCellTensorDataNames(self.name)
+            for dataName in set(dataKeyMap.keys()).intersection(dataNames):
+                if dataTypeMap[dataKeyMap[dataName]] == "scalar":
+                    dataS = foamface.getAllCellData(self.name, dataName)
+                    for cell in cells:
+                        cell.data[dataKeyMap[dataName]] =\
+                            dataS[self._uuidToFoamLabel[cell.uid]]
+
+                elif dataTypeMap[dataKeyMap[dataName]] == "vector":
+                    dataS = foamface.getAllCellVectorData(self.name, dataName)
+                    for cell in cells:
+                        cell_label = self._uuidToFoamLabel[cell.uid]
+                        istart = 3*cell_label
+                        cell.data[dataKeyMap[dataName]] =\
+                            dataS[istart:istart+3]
+
+                elif dataTypeMap[dataKeyMap[dataName]] == "tensor":
+                    dataS = foamface.getAllCellTensorData(self.name, dataName)
+                    for cell in cells:
+                        cell_label = self._uuidToFoamLabel[cell.uid]
+                        istart = 9*cell_label
+                        cell.data[dataKeyMap[dataName]] =\
+                            dataS[istart:istart+9]
+
+            return cells
+
+        except KeyError:
+            error_str = "Trying to get an non-existing cell with uuid: {}"
+            raise ValueError(error_str.format(uuid))
+
     def iter_cells(self, cell_uuids=None):
         """Returns an iterator over the selected cells.
 
@@ -551,9 +658,8 @@ class FoamMesh(ABCMesh):
         """
 
         if cell_uuids is None:
-            cellCount = foamface.getCellCount(self.name)
-            for label in range(cellCount):
-                yield self.get_cell(self._foamCellLabelToUuid[label])
+            for cell in self.get_cells():
+                yield cell
         else:
             for uid in cell_uuids:
                 cell = self.get_cell(uid)

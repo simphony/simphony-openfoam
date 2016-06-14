@@ -16,7 +16,7 @@ from simphony.core.cuds_item import CUDSItem
 import simphony.core.data_container as dc
 import simphonyfoaminterface as foamface
 
-from .foam_dicts import (dictionaryMaps, parse_map, check_boundary_names)
+from .foam_dicts import (get_dictionary_maps, parse_map, check_boundary_names)
 from foam_controlwrapper.foam_variables import dataNameMap
 from foam_controlwrapper.foam_variables import (dataKeyMap, dataTypeMap)
 from .mesh_utils import (create_dummy_celldata, set_cells_data)
@@ -154,7 +154,7 @@ class FoamMesh(ABCMesh):
                 else:
                     patchTypes.append("patch")
 
-            mapContent = dictionaryMaps[solver]
+            mapContent = get_dictionary_maps(solver, False)
             controlDict = parse_map(mapContent['controlDict'])
 
             # init objectRegistry and map to mesh name
@@ -169,6 +169,23 @@ class FoamMesh(ABCMesh):
 
             # write possible cell data to time directory
             self.copy_cells(mesh.iter_cells())
+            # correct boundary face labels
+            patchNames = foamface.getBoundaryPatchNames(name)
+            patchFaces = foamface.getBoundaryPatchFaces(name)
+            boundaries = {}
+            i = 0
+            k = 0
+            while i < len(patchFaces):
+                boundaries[patchNames[k]] = []
+                start = i+1
+                end = start+patchFaces[i]
+                i += 1
+                for j in range(start, end):
+                    boundaries[patchNames[k]].append(
+                        self._foamFaceLabelToUuid[patchFaces[j]])
+                    i += 1
+                k += 1
+            self._boundaries = boundaries
 
     def get_point(self, uuid):
         """ Returns a point with a given uuid.
@@ -263,6 +280,34 @@ class FoamMesh(ABCMesh):
         except KeyError:
             error_str = "Trying to get an non-existing edge with uuid: {}"
             raise ValueError(error_str.format(uuid))
+
+    def get_boundary_cells(self, boundary):
+        """Returns boundar cells for a given boundary.
+
+        Returns the face stored in the mesh
+        identified by uuid. If such face do not
+        exists an exception is raised.
+
+        Parameters
+        ----------
+        boundary : str
+            boundary name
+
+        Returns
+        -------
+        Iterator Cell
+            Iterator to boundary cells
+
+        Raises
+        ------
+        Exception
+            If the face identified by uuid was not found
+
+        """
+
+        cells = foamface.getBoundaryCells(self.name, boundary)
+        for label in cells:
+            yield self.get_cell(self._foamCellLabelToUuid[label])
 
     def get_cell(self, uuid):
         """ Returns a cell with a given uuid.

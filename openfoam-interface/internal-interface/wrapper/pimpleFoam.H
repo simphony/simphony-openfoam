@@ -31,7 +31,6 @@ pimpleControl pimple(mesh);
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-Info<< "\nStarting time loop\n" << endl;
 
 std::string pName = "p";
 std::string UName = "U";
@@ -43,18 +42,16 @@ surfaceScalarField& phi = const_cast<surfaceScalarField&>(mesh.lookupObject<surf
 label pRefCell = 0;
 scalar pRefValue = 0.0;
 setRefCell(p, mesh.solutionDict().subDict("PIMPLE"), pRefCell, pRefValue);
-dictionary& TPDict = const_cast<dictionary&>(mesh.lookupObject<dictionary>(word("transportProperties"))); 
-dimensionedScalar nu = TPDict.lookup(word("nu"));
-std::ostringstream nus;
-nus << nu.value();
-std::string newtonianTransport ="transportModel  Newtonian;\n nu              nu [ 0 2 -1 0 0 0 0 ]"+nus.str()+";";
+
+dictionary& TPDict = const_cast<dictionary&>(mesh.lookupObject<dictionary>(word("transportProperties")));
+
+std::string TPString = dictionary_to_string(TPDict);
 
 singlePhaseTransportModel laminarTransport(U,phi,IStringStream
     (
-     newtonianTransport
+     TPString
    )()
 );
-
 
 
 IStringStream RASPropertiesDict
@@ -96,8 +93,6 @@ while (runTime.run())
     while (pimple.loop())
     {
         // Solve the Momentum equation
-
-      //      Info<< "\n nuEff "<<turbulence->nuEff()<<"\n"<< endl;
 
         tmp<fvVectorMatrix> UEqn
         (
