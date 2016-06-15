@@ -8,7 +8,11 @@ cd openfoam-interface/simphony-solvers/driftFluxSimphonyFoam
 ./Allwmake
 popd
 pushd .
-cd openfoam-interface/simphony-solvers/shearStressPowerLawSlipVelocity
+cd openfoam-interface/simphony-solvers/shearStressPowerLawSlipVelocity/io
+wmake libso
+popd
+pushd .
+cd openfoam-interface/simphony-solvers/shearStressPowerLawSlipVelocity/internal
 wmake libso
 popd
 pushd .
