@@ -10,12 +10,13 @@ popd
 pushd .
 cd openfoam-interface/internal-interface/libs
 ./Allwmake
-cd ../wrapper
-cd relativeVelocityModels
-wclean
+popd
+pushd .
+cd openfoam-interface/internal-interface/wrapper/relativeVelocityModels
 wmake libso
-cd ..
-wclean
+popd
+pushd .
+cd openfoam-interface/internal-interface/wrapper
 wmake libso
 popd
 pushd .
