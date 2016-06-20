@@ -1,0 +1,3 @@
+singlePhaseTransportModel/singlePhaseTransportModel.C
+
+LIB = $(FOAM_USER_LIBBIN)/libincompressibleTransportModelSimphony
