@@ -5,7 +5,8 @@ EXE_INC = \
     -I../../../internal-interface/libs/sourceFiles \
     -I../../../internal-interface/wrapper \
     -I$(LIB_SRC)/turbulenceModels \
-    -I$(LIB_SRC)/transportModels 
+    -I$(LIB_SRC)/transportModels \
+    -I$(LIB_SRC)/transportModels/incompressible/lnInclude
 
 LIB_LIBS = \
     -lfiniteVolume \
