@@ -876,7 +876,7 @@ def modifyNumerics(mesh, SP, SPExt, solver='pimpleFoam', io=False):
                 viscosity_model = SPExt[CUBAExt.VISCOSITY_MODEL][
                     SPExt[CUBAExt.PHASE_LIST][i]]
             else:
-                 viscosity_model = 'Newtonian'
+                viscosity_model = 'Newtonian'
             phase_name = 'phase' + str(i + 1)
             if viscosity_model == 'Newtonian':
                 control[phase_name]['nu              nu [ 0 2 -1 0 0 0 0 ]']\
