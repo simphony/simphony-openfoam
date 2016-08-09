@@ -28,5 +28,4 @@ cd openfoam-interface/simphony-solvers/shearStressPowerLawSlipVelocity/internal
 wmake libso
 popd
 python setup.py install $1
-popd
 export PATH=$PATH:$PWD/openfoam-interface/internal-interface/bin
