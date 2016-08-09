@@ -872,9 +872,12 @@ def modifyNumerics(mesh, SP, SPExt, solver='pimpleFoam', io=False):
         viscosity = SP[CUBA.DYNAMIC_VISCOSITY]
         control = mapContent['transportProperties']
         for i in range(2):
-            viscosity_model = SPExt[CUBAExt.VISCOSITY_MODEL][
-                SPExt[CUBAExt.PHASE_LIST][i]]
-            phase_name = 'phase' + str(i)
+            if CUBAExt.VISCOSITY_MODEL in SPExt:
+                viscosity_model = SPExt[CUBAExt.VISCOSITY_MODEL][
+                    SPExt[CUBAExt.PHASE_LIST][i]]
+            else:
+                 viscosity_model = 'Newtonian'
+            phase_name = 'phase' + str(i + 1)
             if viscosity_model == 'Newtonian':
                 control[phase_name]['nu              nu [ 0 2 -1 0 0 0 0 ]']\
                     = viscosity[SPExt[CUBAExt.PHASE_LIST][i]] / \
