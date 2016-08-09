@@ -175,18 +175,9 @@ std::vector<int> get_cell_points_in_order(const fvMesh & mesh, int label)
 
 
 
-
-
 std::vector<int> foam_getCellPoints(std::string name, int label)
 {
   const fvMesh & mesh = getMeshFromDb(name);
-  //  const labelListList &cellPoints = mesh.cellPoints();
-  //  const cellList &cellFaces = mesh.cells();
-  // gives vertices connected to vertex
-  //  const labelListList &pointPoints = mesh.pointPoints();
-  //  const labelListList &pointFaces = mesh.pointFaces();
-  //  const faceList &facePoints = mesh.faces();
-
   return get_cell_points_in_order(mesh, label);
 }
 
@@ -196,11 +187,6 @@ std::vector<int> foam_getCellPoints(std::string name)
   
   const fvMesh & mesh = getMeshFromDb(name);
   const labelListList &cellPoints = mesh.cellPoints();
-  //  const cellList &cellFaces = mesh.cells();
-  // gives vertices connected to vertex
-  //  const labelListList &pointPoints = mesh.pointPoints();
-  //  const labelListList &pointFaces = mesh.pointFaces();
-  //  const faceList &facePoints = mesh.faces();
 
   int k=0;
 
@@ -332,6 +318,27 @@ double foam_getCellData(std::string name, int label,std::string dataname)
 }
 
 
+
+std::vector<int> foam_getBoundaryCells(std::string name, std::string boundaryname)
+{
+    fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
+
+    label patchID = mesh.boundaryMesh().findPatchID(word(boundaryname));
+    const fvPatch& patch = mesh.boundary()[patchID];
+    const labelUList& labs = patch.faceCells();
+    std::vector<int> cellIDs(labs.size());
+    int i=0;
+    forAll(labs, lab)
+      {
+	cellIDs[i] = labs[lab];
+	i += 1;
+      }
+
+    return cellIDs;
+
+}
+
+
 std::vector<double> foam_getCellVectorData(std::string name, int label,std::string dataname)
 {
   fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
@@ -367,6 +374,8 @@ std::vector<double> foam_getCellVectorData(std::string name, int label,std::stri
       return values;
     }
 }
+
+
 
 
 std::vector<double> foam_getCellTensorData(std::string name, int label,std::string dataname)
@@ -417,6 +426,8 @@ std::vector<double> foam_getCellTensorData(std::string name, int label,std::stri
       return values;
     }
 }
+
+
 
 std::vector<std::string> foam_getBoundaryPatchNames(std::string name)
 {
@@ -500,33 +511,162 @@ std::vector<int> foam_getFacePoints(std::string name)
   }
   
 
-std::vector<double> foam_getCellVectorData(std::string name, std::string dataname)
+std::vector<double> foam_getCellTensorData(std::string name, std::string dataname)
 {
-
-  volVectorField vect = find_vectorData(name,dataname);
-  std::vector<double> retValue(3*vect.size()); 
-  int k=0;
-  for(int i=0;i<vect.size();i++) 
+  fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
+  hashedWordList names(mesh.names());
+  if (names.contains(word(dataname)))
     {
-      retValue[k]=vect[i].x();
-      retValue[k+1]=vect[i].y();
-      retValue[k+2]=vect[i].z();
-      k+=3;
-    }
+      volTensorField& field = find_Data<tensor>(mesh,dataname);
+      std::vector<double> retValue(9*field.size()); 
+      int k=0;
+      for(int i=0;i<field.size();i++) 
+	{
+	  retValue[k]=field[i].xx();
+	  retValue[k+1]=field[i].xy();
+	  retValue[k+2]=field[i].xz();
+	  retValue[k+3]=field[i].yx();
+	  retValue[k+4]=field[i].yy();
+	  retValue[k+5]=field[i].yz();
+	  retValue[k+6]=field[i].zx();
+	  retValue[k+7]=field[i].zy();
+	  retValue[k+8]=field[i].zz();
+	  k+=9;
+	}
 	    
-  return retValue;
+      return retValue;      
+
+    }else
+    {
+    
+      new volTensorField
+	(
+	 IOobject
+	 (
+	  word(dataname),
+	  runTimes[name]->timeName(),
+	  mesh,
+	  IOobject::MUST_READ_IF_MODIFIED,
+	  //	  IOobject::MUST_READ,
+	  IOobject::NO_WRITE
+	  ),
+	 mesh);
+      volTensorField& field = find_Data<tensor>(mesh,dataname);
+      std::vector<double> retValue(9*field.size()); 
+      int k=0;
+      for(int i=0;i<field.size();i++) 
+	{
+	  retValue[k]=field[i].xx();
+	  retValue[k+1]=field[i].xy();
+	  retValue[k+2]=field[i].xz();
+	  retValue[k+3]=field[i].yx();
+	  retValue[k+4]=field[i].yy();
+	  retValue[k+5]=field[i].yz();
+	  retValue[k+6]=field[i].zx();
+	  retValue[k+7]=field[i].zy();
+	  retValue[k+8]=field[i].zz();
+	  k+=9;
+	}
+	    
+      return retValue;
+
+    }
+
 
 }
 
+std::vector<double> foam_getCellVectorData(std::string name, std::string dataname)
+{
+  fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
+  hashedWordList names(mesh.names());
+
+  if (names.contains(word(dataname)))
+    {
+      volVectorField& field = find_Data<vector>(mesh,dataname);
+      std::vector<double> retValue(3*field.size()); 
+      int k=0;
+      for(int i=0;i<field.size();i++) 
+	{
+	  retValue[k]=field[i].x();
+	  retValue[k+1]=field[i].y();
+	  retValue[k+2]=field[i].z();
+	  k+=3;
+	}
+	    
+      return retValue;
+    }else
+    { 
+      new volVectorField
+	(       IOobject
+		(
+		 word(dataname),
+		 runTimes[name]->timeName(),
+		 mesh,
+		 IOobject::MUST_READ_IF_MODIFIED,
+		 //		 IOobject::MUST_READ,
+		 IOobject::NO_WRITE
+		 ),
+		mesh);
+      volVectorField& field = find_Data<vector>(mesh,dataname);
+
+      std::vector<double> retValue(3*field.size()); 
+      int k=0;
+      for(int i=0;i<field.size();i++) 
+	{
+	  retValue[k]=field[i].x();
+	  retValue[k+1]=field[i].y();
+	  retValue[k+2]=field[i].z();
+	  k+=3;
+	}
+	    
+      return retValue;
+
+    }
+
+}
+
+
+
+
 std::vector<double> foam_getCellData(std::string name, std::string dataname)
 {
-  volScalarField scal = find_scalarData(name,dataname);
-  std::vector<double> retValue(scal.size()); 
-  for(int i=0;i<scal.size();i++) 
-    {
-      retValue[i]=scal[i];
-    }
-  return retValue;
+
+   fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
+    hashedWordList names(mesh.names());
+
+    if (names.contains(word(dataname)))
+      {
+	volScalarField& field = find_Data<scalar>(mesh,dataname);
+	std::vector<double> retValue(field.size()); 
+	for(int i=0;i<field.size();i++) 
+	  {
+	    retValue[i]=field[i];
+	  }
+	return retValue;	
+      }
+    else 
+      {
+	new volScalarField
+	  (
+	   IOobject
+	   (
+	    word(dataname),
+	    runTimes[name]->timeName(),
+	    mesh,
+	    IOobject::MUST_READ_IF_MODIFIED,
+	    //        IOobject::MUST_READ,
+	    IOobject::NO_WRITE
+	    ),
+	   mesh);
+	volScalarField& field = find_Data<scalar>(mesh,dataname);
+	std::vector<double> retValue(field.size()); 
+	for(int i=0;i<field.size();i++) 
+	  {
+	    retValue[i]=field[i];
+	  }
+	return retValue;	
+      }
+ 
 }
 
 
@@ -1256,7 +1396,17 @@ void foam_modifyNumerics(std::string name, std::string fvSch, std::string fvSol,
     dictionary& TPDict = const_cast<dictionary&>(mesh.lookupObject<dictionary>(word("transportProperties"))); 
     TPDict.read
     (
-        TPIS()
+        TPIS()        
+    );  
+
+    dictionary& RPDict = const_cast<dictionary&>(mesh.lookupObject<dictionary>(word("RASProperties"))); 
+    RPDict.read
+    (
+     IStringStream
+     (
+      "RASModel            laminar;"
+      "turbulence            off;"      
+      )()
     );    
 }
 

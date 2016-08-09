@@ -10,11 +10,40 @@ from simphony.core.cuba import CUBA
 from foam_controlwrapper.cuba_extension import CUBAExt
 from foam_controlwrapper.foam_variables import (dataDimensionMap, dataKeyMap)
 
+userLibs = """
+("libshearStressPowerLawSlipVelocity.so")
+"""
+userLibsIO = """
+("libshearStressPowerLawSlipVelocityIO.so")
+"""
+
 dictionaryMaps = \
     {'pimpleFoam':
         {'transportProperties':
             {'transportModel': 'Newtonian',
-             'nu nu     [ 0 2 -1 0 0 0 0 ]': '0.0'},
+             'nu nu     [ 0 2 -1 0 0 0 0 ]': '0.0',
+             'CrossPowerLawCoeffs':
+                 {
+                     'nu0': '             nu0 [ 0 2 -1 0 0 0 0 ] {}',
+                     'nuInf': '           nuInf [ 0 2 -1 0 0 0 0 ] {}',
+                     'm': '               m [ 0 0 1 0 0 0 0 ] {}',
+                     'n': '               n [ 0 0 0 0 0 0 0 ] {}'
+                     },
+             'BirdCarreauCoeffs':
+                 {
+                     'nu0': '             nu0 [ 0 2 -1 0 0 0 0 ] {}',
+                     'nuInf': '           nuInf [ 0 2 -1 0 0 0 0 ] {}',
+                     'k': '               k [ 0 0 1 0 0 0 0 ] {}',
+                     'n': '               n [ 0 0 0 0 0 0 0 ] {}'
+                     },
+             'HerschelBulkleyCoeffs':
+                 {
+                     'nu0': '             nu0 [ 0 2 -1 0 0 0 0 ] {}',
+                     'tau0': '            tau0 [ 0 2 -2 0 0 0 0 ] {}',
+                     'k': '               k [ 0 2 -1 0 0 0 0 ] {}',
+                     'n': '               n [ 0 0 0 0 0 0 0 ] {}'
+                     }
+             },
          'turbulenceProperties':
              {'simulationType': 'laminar'},
          'RASProperties':
@@ -43,12 +72,48 @@ dictionaryMaps = \
               'phase1':
                   {'transportModel': 'Newtonian',
                    'nu              nu [ 0 2 -1 0 0 0 0 ]': '0.0',
-                   'rho             rho [ 1 -3 0 0 0 0 0 ]': '0.0'
+                   'rho             rho [ 1 -3 0 0 0 0 0 ]': '0.0',
+                   'CrossPowerLawCoeffs':
+                       {
+                        'nu0': '             nu0 [ 0 2 -1 0 0 0 0 ] {}',
+                        'nuInf': '           nuInf [ 0 2 -1 0 0 0 0 ] {}',
+                        'm': '               m [ 0 0 1 0 0 0 0 ] {}',
+                        'n': '               n [ 0 0 0 0 0 0 0 ] {}'
+                           },
+                   'BirdCarreauCoeffs':
+                       {
+                        'nu0': '             nu0 [ 0 2 -1 0 0 0 0 ] {}',
+                        'nuInf': '           nuInf [ 0 2 -1 0 0 0 0 ] {}',
+                        'k': '               k [ 0 0 1 0 0 0 0 ] {}',
+                        'n': '               n [ 0 0 0 0 0 0 0 ] {}'
+                           },
+                   'HerschelBulkleyCoeffs':
+                       {
+                        'nu0': '             nu0 [ 0 2 -1 0 0 0 0 ] {}',
+                        'tau0': '            tau0 [ 0 2 -2 0 0 0 0 ] {}',
+                        'k': '               k [ 0 2 -1 0 0 0 0 ] {}',
+                        'n': '               n [ 0 0 0 0 0 0 0 ] {}'
+                           }
                    },
               'phase2':
                   {'transportModel': 'Newtonian',
                    'nu              nu [ 0 2 -1 0 0 0 0 ]': '0.0',
-                   'rho             rho [ 1 -3 0 0 0 0 0 ]': '0.0'
+                   'rho             rho [ 1 -3 0 0 0 0 0 ]': '0.0',
+                   'CrossPowerLawCoeffs': {
+                       'nu0': '             nu0 [ 0 2 -1 0 0 0 0 ] {}',
+                       'nuInf': '           nuInf [ 0 2 -1 0 0 0 0 ] {}',
+                       'm': '               m [ 0 0 1 0 0 0 0 ] {}',
+                       'n': '               n [ 0 0 0 0 0 0 0 ] {}'},
+                   'BirdCarreauCoeffs': {
+                       'nu0': '             nu0 [ 0 2 -1 0 0 0 0 ] {}',
+                       'nuInf': '           nuInf [ 0 2 -1 0 0 0 0 ] {}',
+                       'k': '               k [ 0 0 1 0 0 0 0 ] {}',
+                       'n': '               n [ 0 0 0 0 0 0 0 ] {}'},
+                   'HerschelBulkleyCoeffs': {
+                       'nu0': '             nu0 [ 0 2 -1 0 0 0 0 ] {}',
+                       'tau0': '            tau0 [ 0 2 -2 0 0 0 0 ] {}',
+                       'k': '               k [ 0 2 -1 0 0 0 0 ] {}',
+                       'n': '               n [ 0 0 0 0 0 0 0 ] {}'}
                    },
               'sigma           sigma [ 1 0 -2 0 0 0 0 ]': '0.0'
               },
@@ -257,7 +322,7 @@ gradSchemes
 divSchemes
 {
     default         none;
-    div(phi,U)      bounded Gauss linearUpwind grad(U);
+    div(phi,U)      bounded Gauss linearUpwind limited;
     div(phi,k)      bounded Gauss upwind;
     div(phi,epsilon) bounded Gauss upwind;
     div(phi,R)      bounded Gauss upwind;
@@ -406,7 +471,7 @@ gradSchemes
 
 divSchemes
 {
-    div(rhoPhi,U)  Gauss linearUpwind grad(U);
+    div(rhoPhi,U)  bounded Gauss linearUpwind limited;
     div(phi,alpha)  Gauss vanLeer;
     div(phirb,alpha) Gauss linear;
     div((muEff*dev(T(grad(U))))) Gauss linear;
@@ -765,7 +830,7 @@ def modifyNumerics(mesh, SP, SPExt, solver='pimpleFoam', io=False):
     """
 
     fileContent = dictionaryTemplates[solver]
-    mapContent = dictionaryMaps[solver]
+    mapContent = get_dictionary_maps(solver, io)
 
     fvSchemesDict = fileContent['fvSchemes']
     fvSolutionDict = fileContent['fvSolution']
@@ -788,23 +853,47 @@ def modifyNumerics(mesh, SP, SPExt, solver='pimpleFoam', io=False):
 
     if solver == 'pimpleFoam':
         control = mapContent['transportProperties']
-        control['nu nu     [ 0 2 -1 0 0 0 0 ]'] = \
-            SP[CUBA.DYNAMIC_VISCOSITY]/SP[CUBA.DENSITY]
+        if CUBAExt.VISCOSITY_MODEL in SPExt:
+            viscosity_model = SPExt[CUBAExt.VISCOSITY_MODEL]
+            control['transportModel'] = viscosity_model
+            vmc = viscosity_model + 'Coeffs'
+            viscosity_model_coeffs =\
+                SPExt[CUBAExt.VISCOSITY_MODEL_COEFFS][viscosity_model]
+            for coeff in viscosity_model_coeffs:
+                control[vmc][coeff] =\
+                    control[vmc][coeff].format(viscosity_model_coeffs[coeff])
+        else:
+            control['nu nu     [ 0 2 -1 0 0 0 0 ]'] = \
+                SP[CUBA.DYNAMIC_VISCOSITY]/SP[CUBA.DENSITY]
+
         transportPropertiesDict = parse_map(control)
     elif solver == 'interFoam':
         density = SP[CUBA.DENSITY]
         viscosity = SP[CUBA.DYNAMIC_VISCOSITY]
         control = mapContent['transportProperties']
-        control['phase1']['nu              nu [ 0 2 -1 0 0 0 0 ]'] = \
-            viscosity[SPExt[CUBAExt.PHASE_LIST][0]] / \
-            density[SPExt[CUBAExt.PHASE_LIST][0]]
-        control['phase1']['rho             rho [ 1 -3 0 0 0 0 0 ]'] = \
-            density[SPExt[CUBAExt.PHASE_LIST][0]]
-        control['phase2']['nu              nu [ 0 2 -1 0 0 0 0 ]'] = \
-            viscosity[SPExt[CUBAExt.PHASE_LIST][1]] / \
-            density[SPExt[CUBAExt.PHASE_LIST][1]]
-        control['phase2']['rho             rho [ 1 -3 0 0 0 0 0 ]'] = \
-            density[SPExt[CUBAExt.PHASE_LIST][1]]
+        for i in range(2):
+            if CUBAExt.VISCOSITY_MODEL in SPExt:
+                viscosity_model = SPExt[CUBAExt.VISCOSITY_MODEL][
+                    SPExt[CUBAExt.PHASE_LIST][i]]
+            else:
+                viscosity_model = 'Newtonian'
+            phase_name = 'phase' + str(i + 1)
+            if viscosity_model == 'Newtonian':
+                control[phase_name]['nu              nu [ 0 2 -1 0 0 0 0 ]']\
+                    = viscosity[SPExt[CUBAExt.PHASE_LIST][i]] / \
+                    density[SPExt[CUBAExt.PHASE_LIST][i]]
+                control[phase_name]['rho             rho [ 1 -3 0 0 0 0 0 ]']\
+                    = density[SPExt[CUBAExt.PHASE_LIST][i]]
+            else:
+                control[phase_name]['transportModel'] = viscosity_model
+                vmc = viscosity_model + 'Coeffs'
+                viscosity_model_coeffs =\
+                    SPExt[CUBAExt.VISCOSITY_MODEL_COEFFS][viscosity_model]
+                for coeff in viscosity_model_coeffs:
+                    control[phase_name][vmc][coeff] =\
+                        control[phase_name][vmc][coeff].\
+                        format(viscosity_model_coeffs[coeff])
+
         phases = SPExt[CUBAExt.PHASE_LIST]
         if CUBAExt.SURFACE_TENSION in SPExt:
             if phases in SPExt[CUBAExt.SURFACE_TENSION]:
@@ -832,7 +921,6 @@ def modifyNumerics(mesh, SP, SPExt, solver='pimpleFoam', io=False):
         if viscosity_model == 'Newtonian':
             viscosity_model = 'dummyViscosity'
         control["phase1"]["transportModel"] = viscosity_model
-        print viscosity_model
         if viscosity_model != 'slurry' and viscosity_model != 'dummyViscosity':
             vmc = viscosity_model + 'Coeffs'
             viscosity_model_coeffs =\
@@ -1013,6 +1101,15 @@ def modifyFields(mesh, BC, solver='pimpleFoam'):
                 + str(patch[1][0]) + " " \
                 + str(patch[1][1]) + " " \
                 + str(patch[1][2]) + ");\n"
+        elif isinstance(patch, tuple) and patch[0] ==\
+                "shearStressPowerLawSlipVelocity":
+            myDict = myDict + "\t type \t shearStressPowerLawSlipVelocity;\n"
+            parameters = patch[1]
+            for key in parameters:
+                myDict = myDict + "\t " + key + "\t " + str(parameters[key])\
+                    + ";\n"
+            myDict = myDict + "\t value \t uniform (0 0 0);\n"
+
         myDict = myDict + "}\n"
 
     foamface.setBC(mesh.name, "U", myDict)
@@ -1101,6 +1198,7 @@ def write_dictionary(path, dictionary_name, dictionary_content):
 
     heading = head.format(version='2.4', foamclass='dictionary',
                           location='system', foamobject=dictionary_name)
+
     foamface.writePathDictionary(path, dictionary_name, heading,
                                  dictionary_content)
 
@@ -1121,3 +1219,38 @@ def create_directories(case_directory):
         directory = os.path.join(case_directory, dir)
         if not os.path.exists(directory):
             os.makedirs(directory)
+
+
+def add_user_libs(map_content, io_library):
+    """ Adds user libs to controlDict
+
+    Parameters
+    ----------
+    map_content : dictionary
+        specified solver file map
+    io_library : bool
+        use IO user libraries
+    """
+
+    controlDict = map_content['controlDict']
+    if io_library:
+        controlDict['libs'] = userLibsIO
+    else:
+        controlDict['libs'] = userLibs
+
+
+def get_dictionary_maps(solver, io_library=True):
+    """ returns dictionary map for specified solver
+
+    Parameters
+    ----------
+    solver : str
+        solver name
+    io_library : bool
+        use IO user libraries
+
+    """
+    mapContent = dictionaryMaps[solver]
+    add_user_libs(mapContent, io_library)
+
+    return mapContent

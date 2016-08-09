@@ -12,8 +12,10 @@ cp sourceFiles/options_2 incompressibleTurbulenceModel/RAS/Make/options
 
 wclean incompressibleTurbulenceModel/turbulenceModel
 wclean incompressibleTurbulenceModel/RAS
+wclean incompressibleTransportModel
 
 wmake libso incompressibleTurbulenceModel/turbulenceModel
 wmake libso incompressibleTurbulenceModel/RAS
+wmake libso incompressibleTransportModel
 
 # ----------------------------------------------------------------- end-of-file

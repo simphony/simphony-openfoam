@@ -10,14 +10,22 @@ popd
 pushd .
 cd openfoam-interface/internal-interface/libs
 ./Allwmake
-cd ../wrapper
-cd relativeVelocityModels
-wclean
+popd
+pushd .
+cd openfoam-interface/internal-interface/wrapper/relativeVelocityModels
 wmake libso
-cd ..
-wclean
+popd
+pushd .
+cd openfoam-interface/simphony-solvers/shearStressPowerLawSlipVelocity/io
+wmake libso
+popd
+pushd .
+cd openfoam-interface/simphony-solvers/shearStressPowerLawSlipVelocity/internal
+wmake libso
+popd
+pushd .
+cd openfoam-interface/internal-interface/wrapper
 wmake libso
 python setup.py install $1
-popd
 
 export PATH=$PATH:$PWD/openfoam-interface/internal-interface/bin

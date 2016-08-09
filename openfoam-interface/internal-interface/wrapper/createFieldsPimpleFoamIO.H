@@ -95,6 +95,7 @@ new IOdictionary
 IStringStream RaP
     (
      "RASModel            laminar;"
+     "turbulence            off;"
     );
 
 new IOdictionary

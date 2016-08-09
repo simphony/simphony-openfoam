@@ -4,7 +4,7 @@
 import simphonyfoaminterface as foamface
 
 from .foam_mesh import FoamMesh
-from foam_internalwrapper.foam_dicts import (dictionaryMaps, parse_map)
+from foam_internalwrapper.foam_dicts import (get_dictionary_maps, parse_map)
 
 
 def read_foammesh(name, path):
@@ -23,7 +23,7 @@ def read_foammesh(name, path):
 
     """
 
-    mapContent = dictionaryMaps['pimpleFoam']
+    mapContent = get_dictionary_maps('pimpleFoam', False)
     controlDict = parse_map(mapContent['controlDict'])
     foamface.init_IO(name, path, controlDict)
     foamface.readMesh(name)

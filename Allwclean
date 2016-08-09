@@ -8,6 +8,16 @@ wclean
 rm -rf build
 popd
 pushd .
+cd openfoam-interface/simphony-solvers/shearStressPowerLawSlipVelocity/io
+wclean
+rm -rf build
+popd
+pushd .
+cd openfoam-interface/simphony-solvers/shearStressPowerLawSlipVelocity/internal
+wclean
+rm -rf build
+popd
+pushd .
 rm -f openfoam-interface/internal-interface/bin/*
 cd openfoam-interface/internal-interface/libs
 wclean incompressibleTurbulenceModel/turbulenceModel

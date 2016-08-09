@@ -30,8 +30,6 @@ wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 6400
 wrapper.SP_extensions[CUBAExt.PHASE_LIST] = ('sludge', 'water')
 wrapper.SP[CUBA.DENSITY] = {'sludge': 1900.0, 'water': 1000.0}
 wrapper.SP[CUBA.DYNAMIC_VISCOSITY] = {'sludge': 0.01, 'water': 1e-3}
-wrapper.SP_extensions[CUBAExt.VISCOSITY_MODEL] =\
-    {'sludge': 'BinghamPlastic', 'water': 'Newtonian'}
 wrapper.SP_extensions[CUBAExt.VISCOSITY_MODEL_COEFFS] =\
     {'BinghamPlastic': {'coeff': 0.00023143, 'exponent': 179.26,
                         'BinghamCoeff': 0.0005966, 'BinghamExponent': 1050.8,

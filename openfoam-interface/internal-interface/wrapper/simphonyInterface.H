@@ -62,8 +62,6 @@ std::vector<int> foam_getFacePoints(std::string name, int label);
 // get mesh faces points
 std::vector<int> foam_getFacePoints(std::string name);
 
-// get mesh single face data named dataname
-std::vector<double> foam_getFaceData(std::string name,int label, std::string dataname);
 // get mesh single cell points
 std::vector<int> foam_getCellPoints(std::string name, int label);
 // get mesh cells points
@@ -76,7 +74,6 @@ std::vector<std::string> foam_getCellVectorDataNames(std::string name);
 std::vector<std::string> foam_getCellTensorDataNames(std::string name);
 // get mesh single cell scalar data named dataname
 double foam_getCellData(std::string name, int label,std::string dataname);
-
 // get mesh cells scalar data named dataname
 std::vector<double> foam_getCellData(std::string name, std::string dataname);
 // get mesh single cell vector data named dataname
@@ -85,6 +82,13 @@ std::vector<double> foam_getCellVectorData(std::string name, int label,std::stri
 std::vector<double> foam_getCellTensorData(std::string name, int label,std::string dataname);
 // get mesh cells vector data named dataname
 std::vector<double> foam_getCellVectorData(std::string name, std::string dataname);
+// get mesh cells tensor data named dataname
+std::vector<double> foam_getCellTensorData(std::string name, std::string dataname);
+
+
+std::vector<int> foam_getBoundaryCells(std::string name, std::string boundaryname);
+
+
 // get mesh boundary patch names
 std::vector<std::string> foam_getBoundaryPatchNames(std::string name);
 // get mesh boundary patches faces
@@ -161,6 +165,28 @@ template<class Type>
 GeometricField<Type, fvPatchField, volMesh> & find_Data(fvMesh& mesh,std::string& dataname)
 {
   return const_cast< GeometricField < Type, fvPatchField, volMesh > &>(mesh.lookupObject< GeometricField <Type, fvPatchField, volMesh> >(word(dataname))); 
+}
+
+
+std::string dictionary_to_string(dictionary& dict)
+{
+  std::ostringstream ostream;
+  tokenList tokens = dict.tokens();
+  forAll(tokens, itoken)
+    {
+      token tok = tokens[itoken];
+      if (tok.isString())
+	ostream << " "<<tok.stringToken();
+      else if (tok.isWord())
+	ostream << " "<< tok.wordToken();
+      else if (tok.isLabel())
+	ostream << " "<< tok.labelToken();
+      else if (tok.isPunctuation())
+	ostream << " "<< tok.pToken();
+      else if (tok.isScalar())
+	ostream << " "<< tok.scalarToken();
+    } 
+  return ostream.str();
 }
 
 
