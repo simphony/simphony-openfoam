@@ -7,7 +7,7 @@ from setuptools.command.install import install
 with open('README.rst', 'r') as readme:
     README_TEXT = readme.read()
 
-VERSION = '0.2.1'
+VERSION = '0.2.2'
 
 
 class CleanCommand(Command):
@@ -63,7 +63,6 @@ setup(
     long_description=README_TEXT,
     packages=find_packages(),
     install_requires=['simphony >= 0.2.0',
-                      'PyFoam == 0.6.4',
                       'simphony[H5IO, CUBAGen]'],
     entry_points={'simphony.engine':
                   ['openfoam_file_io = foam_controlwrapper',

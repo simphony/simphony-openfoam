@@ -1,6 +1,11 @@
 Simphony-OpenFOAM CHANGELOG
 ======================
 
+Release 0.2.2
+----------------
+
+* New wall shear stress dependent slip velocity boundary condition 
+
 Release 0.2.1
 -----------------
 
