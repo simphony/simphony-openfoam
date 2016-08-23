@@ -79,7 +79,7 @@ def create_quad_mesh(path, name, mesh_engine, corner_points,
     (
     walls
     {
-        type patch;
+        type wall;
         faces
         (
             (3 7 6 2)

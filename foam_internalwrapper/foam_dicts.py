@@ -11,10 +11,10 @@ from foam_controlwrapper.cuba_extension import CUBAExt
 from foam_controlwrapper.foam_variables import (dataDimensionMap, dataKeyMap)
 
 userLibs = """
-("libshearStressPowerLawSlipVelocity.so")
+("libshearStressPowerLawSlipVelocity.so"  "libtwoPhaseProperties.so")
 """
 userLibsIO = """
-("libshearStressPowerLawSlipVelocityIO.so")
+("libshearStressPowerLawSlipVelocityIO.so" "libtwoPhaseProperties.so")
 """
 
 dictionaryMaps = \
@@ -737,7 +737,7 @@ boundary
 (
     walls
     {
-        type patch;
+        type wall;
         faces
         (
             (3 7 6 2)
@@ -840,7 +840,8 @@ def modifyNumerics(mesh, SP, SPExt, solver='pimpleFoam', io=False):
     deltaT = SP[CUBA.TIME_STEP]
     interval = nOfTimeSteps*deltaT
     endTime = interval + mesh._time
-
+    if CUBAExt.MAX_COURANT_NUMBER in SPExt:
+        mapContent['controlDict']['maxCo'] = SPExt[CUBAExt.MAX_COURANT_NUMBER]
     mapContent['controlDict']['startTime'] = str(mesh._time)
     mapContent['controlDict']['deltaT'] = str(deltaT)
     mapContent['controlDict']['endTime'] = str(endTime)
@@ -1152,6 +1153,12 @@ def modifyFields(mesh, BC, solver='pimpleFoam'):
                     myDict = myDict + "\t type \t fixedValue;\n"
                     myDict = myDict + "\t value \t uniform " \
                         + str(volumeFractionBCs[boundary][1]) + ";\n"
+                elif volumeFractionBCs[boundary][0] == "wettingAngle":
+                    myDict = myDict + "\t type \t constantAlphaContactAngle;\n"
+                    myDict = myDict + "\t theta0 \t" +\
+                        str(volumeFractionBCs[boundary][1]) + ";\n"
+                    myDict = myDict + "\t limit \t gradient;\n"
+                    myDict = myDict + "\t value \t uniform 0;\n"
             myDict = myDict + "}\n"
 
         foamface.setBC(mesh.name, "alpha.phase1", myDict)

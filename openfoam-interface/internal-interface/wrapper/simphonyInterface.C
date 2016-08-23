@@ -905,6 +905,7 @@ void foam_addMesh(std::string name,std::vector<double> points,  std::vector<int>
 			true                // this to register object
 			    );
 
+
   
  new fvMesh
      (
@@ -1439,6 +1440,7 @@ void foam_setBC(std::string name, std::string fieldname, std::string dict)
 {
 
       fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
+
 
 	IStringStream dictIS(dict.c_str());
 

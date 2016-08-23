@@ -7,56 +7,50 @@ from simphony.engine import openfoam_file_io
 
 from mayavi.scripts import mayavi2
 
+import tube_mesh
+
 import tempfile
 
 wrapper = openfoam_file_io.Wrapper()
 CUBAExt = openfoam_file_io.CUBAExt
 
 
-name = 'poiseuille_vof'
+name = 'capillary_rise'
 
 wrapper.CM[CUBA.NAME] = name
 
 wrapper.CM_extensions[CUBAExt.GE] = (CUBAExt.INCOMPRESSIBLE,
                                      CUBAExt.LAMINAR_MODEL,
                                      CUBAExt.VOF_MODEL)
-wrapper.SP[CUBA.TIME_STEP] = 0.001
-wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 100
-wrapper.SP_extensions[CUBAExt.MAX_COURANT_NUMBER] = 0.5
+wrapper.SP[CUBA.TIME_STEP] = 1.0e-5
+wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 50000
+wrapper.SP_extensions[CUBAExt.MAX_COURANT_NUMBER] = 0.2
 
 wrapper.SP_extensions[CUBAExt.PHASE_LIST] = ('water', 'air')
 wrapper.SP[CUBA.DENSITY] = {'water': 1000.0, 'air': 1.0}
-wrapper.SP[CUBA.DYNAMIC_VISCOSITY] = {'water': 0.001, 'air': 1.8e-5}
-wrapper.SP_extensions[CUBAExt.SURFACE_TENSION] = {('water', 'air'): 72.86e-3}
+wrapper.SP[CUBA.DYNAMIC_VISCOSITY] = {'water': 0.001, 'air': 1.48e-5}
+wrapper.SP_extensions[CUBAExt.SURFACE_TENSION] = {('water', 'air'): 70.7106e-3}
+wrapper.SP_extensions[CUBAExt.EXTERNAL_BODY_FORCE_MODEL] = 'gravitation'
+wrapper.SP_extensions[CUBAExt.EXTERNAL_BODY_FORCE_MODEL_COEFFS] =\
+    {'g': (0.0, -9.81, 0.0)}
 
-wrapper.BC[CUBA.VELOCITY] = {'inlet': 'zeroGradient',
-                             'outlet': 'zeroGradient',
+wrapper.BC[CUBA.VELOCITY] = {'inlet': ('pressureIOVelocity', (0, 0, 0)),
+                             'atmosphere': ('pressureIOVelocity', (0, 0, 0)),
                              'walls': ('fixedValue', (0, 0, 0)),
                              'frontAndBack': 'empty'}
-wrapper.BC[CUBA.DYNAMIC_PRESSURE] = {'inlet': ('fixedValue', 1),
-                                     'outlet': ('fixedValue', 0),
+wrapper.BC[CUBA.DYNAMIC_PRESSURE] = {'inlet': ('fixedValue', 0),
+                                     'atmosphere': ('fixedValue', 0),
                                      'walls': 'fixedFluxPressure',
                                      'frontAndBack': 'empty'}
-wrapper.BC[CUBA.VOLUME_FRACTION] = {'inlet': ('fixedValue', 1),
-                                    'outlet': 'zeroGradient',
-                                    'walls': 'zeroGradient',
+wrapper.BC[CUBA.VOLUME_FRACTION] = {'inlet': ('inletOutlet', 1),
+                                    'atmosphere': 'zeroGradient',
+                                    'walls': ('wettingAngle', 45),
                                     'frontAndBack': 'empty'}
 
-len_x = 20.0e-3
-len_y = 1.0e-3
-len_z = 0.1e-3
 
-corner_points = [(0.0, 0.0, 0.0), (len_x, 0.0, 0.0),
-                 (len_x, len_y, 0.0), (0.0, len_y, 0.0),
-                 (0.0, 0.0, len_z), (len_x, 0.0, len_z),
-                 (len_x, len_y, len_z), (0.0, len_y, len_z)]
-
-# elements in x -direction
-nex = 100
-# elements in y -direction
-ney = 10
-openfoam_file_io.create_quad_mesh(tempfile.mkdtemp(), name, wrapper,
-                                  corner_points, nex, ney, 1)
+# create mesh
+openfoam_file_io.create_block_mesh(tempfile.mkdtemp(), name, wrapper,
+                                   tube_mesh.blockMeshDict)
 
 mesh_inside_wrapper = wrapper.get_dataset(name)
 
@@ -69,7 +63,7 @@ for cell in mesh_inside_wrapper.iter_cells():
     xmid = sum(mesh_inside_wrapper.get_point(puid).coordinates[0]
                for puid in cell.points)
     xmid /= sum(1.0 for _ in cell.points)
-    if xmid < len_x/3.:
+    if xmid < 8e-3:
         cell.data[CUBA.VOLUME_FRACTION] = 1.0
     else:
         cell.data[CUBA.VOLUME_FRACTION] = 0.0
