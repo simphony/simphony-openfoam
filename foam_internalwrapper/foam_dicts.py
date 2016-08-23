@@ -471,7 +471,7 @@ gradSchemes
 
 divSchemes
 {
-    div(rhoPhi,U)  bounded Gauss linearUpwind limited;
+    div(rhoPhi,U)  Gauss upwind;
     div(phi,alpha)  Gauss vanLeer;
     div(phirb,alpha) Gauss linear;
     div((muEff*dev(T(grad(U))))) Gauss linear;
@@ -842,6 +842,8 @@ def modifyNumerics(mesh, SP, SPExt, solver='pimpleFoam', io=False):
     endTime = interval + mesh._time
     if CUBAExt.MAX_COURANT_NUMBER in SPExt:
         mapContent['controlDict']['maxCo'] = SPExt[CUBAExt.MAX_COURANT_NUMBER]
+        mapContent['controlDict']['maxAlphaCo'] =\
+            SPExt[CUBAExt.MAX_COURANT_NUMBER]
     mapContent['controlDict']['startTime'] = str(mesh._time)
     mapContent['controlDict']['deltaT'] = str(deltaT)
     mapContent['controlDict']['endTime'] = str(endTime)

@@ -60,10 +60,10 @@ print "Case directory ", mesh_inside_wrapper.path
 
 updated_cells = []
 for cell in mesh_inside_wrapper.iter_cells():
-    xmid = sum(mesh_inside_wrapper.get_point(puid).coordinates[0]
+    ymid = sum(mesh_inside_wrapper.get_point(puid).coordinates[1]
                for puid in cell.points)
-    xmid /= sum(1.0 for _ in cell.points)
-    if xmid < 8e-3:
+    ymid /= sum(1.0 for _ in cell.points)
+    if ymid < 8e-3:
         cell.data[CUBA.VOLUME_FRACTION] = 1.0
     else:
         cell.data[CUBA.VOLUME_FRACTION] = 0.0
@@ -74,6 +74,7 @@ for cell in mesh_inside_wrapper.iter_cells():
     updated_cells.append(cell)
 
 mesh_inside_wrapper.update_cells(updated_cells)
+
 
 wrapper.run()
 
