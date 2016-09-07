@@ -1104,6 +1104,10 @@ def modifyFields(mesh, BC, solver='pimpleFoam'):
                 + str(patch[1][0]) + " " \
                 + str(patch[1][1]) + " " \
                 + str(patch[1][2]) + ");\n"
+        elif isinstance(patch, tuple) and patch[0] == "flowRate":
+            myDict = myDict + "\t type \t flowRateInletVelocity;\n"
+            myDict = myDict + "\t volumetricFlowRate \t" \
+                + str(patch[1]) + ";\n"
         elif isinstance(patch, tuple) and patch[0] ==\
                 "shearStressPowerLawSlipVelocity":
             myDict = myDict + "\t type \t shearStressPowerLawSlipVelocity;\n"
