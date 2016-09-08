@@ -205,7 +205,7 @@ dictionaryMaps = \
                     'a1': '0.0',
                     'residualAlpha': '0'},
                'fromMesoscaleCoeffs':
-                   {}
+                   {'dummy': '0'}
                },
           'g':
               {'dimensions': '[0 1 -2 0 0 0 0]',
@@ -919,9 +919,12 @@ def modifyNumerics(mesh, SP, SPExt, solver='pimpleFoam', io=False):
         density = SP[CUBA.DENSITY]
         viscosity = SP[CUBA.DYNAMIC_VISCOSITY]
         # phase1 uses mixtureViscosity models
-        viscosity_model = SPExt[CUBAExt.VISCOSITY_MODEL][
-            SPExt[CUBAExt.PHASE_LIST][0]]
-        if viscosity_model == 'Newtonian':
+        if CUBAExt.VISCOSITY_MODEL in SPExt:
+            viscosity_model = SPExt[CUBAExt.VISCOSITY_MODEL][
+                SPExt[CUBAExt.PHASE_LIST][0]]
+            if viscosity_model == 'Newtonian':
+                viscosity_model = 'dummyViscosity'
+        else:
             viscosity_model = 'dummyViscosity'
         control["phase1"]["transportModel"] = viscosity_model
         if viscosity_model != 'slurry' and viscosity_model != 'dummyViscosity':
@@ -932,8 +935,11 @@ def modifyNumerics(mesh, SP, SPExt, solver='pimpleFoam', io=False):
                 control['phase1'][vmc][coeff] = viscosity_model_coeffs[coeff]
         control['phase1']['rho'] = density[SPExt[CUBAExt.PHASE_LIST][0]]
 
-        viscosity_model = SPExt[CUBAExt.VISCOSITY_MODEL][
-            SPExt[CUBAExt.PHASE_LIST][1]]
+        if CUBAExt.VISCOSITY_MODEL in SPExt:
+            viscosity_model = SPExt[CUBAExt.VISCOSITY_MODEL][
+                SPExt[CUBAExt.PHASE_LIST][1]]
+        else:
+            viscosity_model = 'Newtonian'
         if viscosity_model == 'Newtonian':
             control["phase2"]["transportModel"] = viscosity_model
             control['phase2']['nu'] = \

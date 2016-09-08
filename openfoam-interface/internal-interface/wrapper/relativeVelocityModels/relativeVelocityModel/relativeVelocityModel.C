@@ -75,8 +75,6 @@ Foam::autoPtr<Foam::relativeVelocityModel> Foam::relativeVelocityModel::New
 {
     word modelType(dict.lookup(typeName));
 
-    Info<< "Selecting relative velocity model " << modelType << endl;
-
     dictionaryConstructorTable::iterator cstrIter =
         dictionaryConstructorTablePtr_->find(modelType);
 
@@ -95,8 +93,10 @@ Foam::autoPtr<Foam::relativeVelocityModel> Foam::relativeVelocityModel::New
             << abort(FatalError);
     }
 
+    Info<< "Selecting relative velocity model " << modelType << endl;
+
     return
-        autoPtr<relativeVelocityModel>
+      autoPtr<Foam::relativeVelocityModel>
         (
             cstrIter()
             (

@@ -207,6 +207,27 @@ new IOdictionary
     ),
     TP()
 );
+
+IStringStream RaP
+    (
+     "RASModel            laminar;"
+     "turbulence            off;"
+    );
+
+new IOdictionary
+(
+    IOobject
+    (
+        "RASProperties",
+        runTimes[name]->timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    RaP()
+);
+
+
 /*
 IStringStream grav
     (
