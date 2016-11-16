@@ -178,6 +178,7 @@ class FoamMesh(ABCMesh):
             # correct boundary face labels
             patchNames = foamface.getBoundaryPatchNames(name)
             patchFaces = foamface.getBoundaryPatchFaces(name)
+
             boundaries = {}
             i = 0
             k = 0

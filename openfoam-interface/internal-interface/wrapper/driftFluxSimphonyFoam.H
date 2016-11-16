@@ -57,6 +57,7 @@ surfaceScalarField& phi = const_cast<surfaceScalarField&>(mesh.lookupObject<surf
 IOdictionary& transportProperties = const_cast<IOdictionary&>(mesh.lookupObject<IOdictionary>(word("transportProperties"))); 
 
 
+
 incompressibleTwoPhaseInteractingMixture mixture(U, phi, transportProperties);
 // Relative Velocity
 autoPtr<relativeVelocityModel> UdmModelPtr
@@ -68,7 +69,9 @@ autoPtr<relativeVelocityModel> UdmModelPtr
     )
 );
 
+
 relativeVelocityModel& UdmModel(UdmModelPtr());
+
 
 word stressModelType(transportProperties.lookup("stressModel"));
 Info<< "Stressmodel is "<< stressModelType<<"\n" << endl;

@@ -71,6 +71,7 @@ class Wrapper(ABCModelingEngine):
 
 #       b) Set boundary condition and Fields
         modifyFields(mesh, self.BC, solver)
+
         simphonyfoaminterface.writeFields(mesh.name)
 
         # run case
