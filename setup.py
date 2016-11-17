@@ -50,6 +50,7 @@ version = '%s'
     finally:
         fh.close()
 
+
 write_version_py(os.path.join(os.path.dirname(__file__),
                               'foam_controlwrapper', 'version.py'))
 write_version_py(os.path.join(os.path.dirname(__file__),

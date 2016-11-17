@@ -308,5 +308,6 @@ class FoamInterfaceTestCase(unittest.TestCase):
         nCells = foamface.getCellCount(self.name)
         self.assertEqual(nCells, len(self.cells))
 
+
 if __name__ == '__main__':
     unittest.main()

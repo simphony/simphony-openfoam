@@ -111,5 +111,6 @@ def view():
     s = Surface()
     mayavi.add_module(s)  # noqa
 
+
 if __name__ == '__main__':
     view()

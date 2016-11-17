@@ -96,11 +96,6 @@ def view():
     s = Surface()
     mayavi.add_module(s)  # noqa
 
+
 if __name__ == '__main__':
     view()
-
-
-# name = 'dahl_out'
-# wrapper_io = openfoam_file_io.Wrapper()
-# wrapper_io.add_dataset(mesh_inside_wrapper, name)
-# print "Result directory: ", wrapper_io.get_dataset(name).path

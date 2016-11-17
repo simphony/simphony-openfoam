@@ -69,5 +69,6 @@ def view(dataset):
     s = Surface()
     mayavi.add_module(s)  # noqa
 
+
 if __name__ == '__main__':
     view(mesh_inside_wrapper)
