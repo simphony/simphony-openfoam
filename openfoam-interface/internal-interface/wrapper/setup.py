@@ -35,7 +35,7 @@ module = Extension('simphonyfoaminterface',
                    extra_compile_args=['-Dlinux64 -DWM_DP -DNoRepository'],
                    sources=['libpythonfoam.cpp'])
 setup(name='FoamInterface',
-      version='0.2.3',
+      version='0.2.4.dev0',
       description='Foam interface to Python',
       author='Juan Marcelo Gimenez and \
       Santiago Marquez Damian and Norberto Nigro',
