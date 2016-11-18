@@ -12,7 +12,7 @@ from .foam_runner import FoamRunner
 from .io_utils import read_foammesh
 
 
-def create_quad_mesh(path, name, mesh_engine, corner_points,
+def create_quad_mesh(path, name, corner_points,
                      nex, ney, nez):
     """ create and add mesh to engine
 
@@ -22,8 +22,6 @@ def create_quad_mesh(path, name, mesh_engine, corner_points,
         path to mesh parent directory
     name : str
         name of mesh
-    mesh_engine : ABCModelingEngine
-        Mesh engine
     corner_points : list
         list of 8 [x,y,z] corner points
     nex : int
@@ -32,6 +30,11 @@ def create_quad_mesh(path, name, mesh_engine, corner_points,
         number of elements in y -direction
     nez : int
         number of elements in z -direction
+
+    Return
+    ------------
+    mesh : FoamMesh
+       created mesh
 
     """
 
@@ -131,12 +134,10 @@ def create_quad_mesh(path, name, mesh_engine, corner_points,
     runner = FoamRunner(solver, name, case, ncores)
     runner.run()
 
-    foam_mesh = read_foammesh(name, path)
-    # add mesh to engine
-    mesh_engine.add_dataset(foam_mesh)
+    return read_foammesh(name, path)
 
 
-def create_block_mesh(path, name, mesh_engine, block_mesh_dict):
+def create_block_mesh(path, name, block_mesh_dict):
     """ create and add mesh to engine
 
     Parameters
@@ -145,10 +146,13 @@ def create_block_mesh(path, name, mesh_engine, block_mesh_dict):
         path to mesh parent directory
     name : str
         name of mesh
-    mesh_engine : ABCModelingEngine
-        Mesh engine
     block_mesh_dict : str
         blockMeshDict -file as a string
+
+    Return
+    ------------
+    mesh : FoamMesh
+       created mesh
 
     """
 
@@ -195,7 +199,4 @@ def create_block_mesh(path, name, mesh_engine, block_mesh_dict):
     runner = FoamRunner(solver, name, case, ncores)
     runner.run()
 
-    foam_mesh = read_foammesh(name, path)
-
-    # add mesh to engine
-    mesh_engine.add_dataset(foam_mesh)
+    return read_foammesh(name, path)

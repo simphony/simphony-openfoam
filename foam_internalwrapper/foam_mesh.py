@@ -82,7 +82,7 @@ class FoamMesh(ABCMesh):
             label = 0
             pointCoordinates = []
             pointMap = {}
-            for point in mesh.iter_points():
+            for point in mesh._iter_points():
                 pointMap[point.uid] = label
                 uid = self._generate_uuid()
                 self._uuidToFoamLabel[uid] = label
@@ -92,7 +92,7 @@ class FoamMesh(ABCMesh):
                 label += 1
 
             label = 0
-            for edge in mesh.iter_edges():
+            for edge in mesh._iter_edges():
                 uid = self._generate_uuid()
                 self._uuidToFoamLabel[uid] = label
                 self._foamEdgeLabelToUuid[label] = uid
@@ -101,7 +101,7 @@ class FoamMesh(ABCMesh):
             label = 0
             facePoints = []
             faceMap = {}
-            for face in mesh.iter_faces():
+            for face in mesh._iter_faces():
                 faceMap[face.uid] = label
                 uid = self._generate_uuid()
                 self._uuidToFoamLabel[uid] = label
@@ -114,7 +114,7 @@ class FoamMesh(ABCMesh):
 
             label = 0
             cellPoints = []
-            for cell in mesh.iter_cells():
+            for cell in mesh._iter_cells():
                 uid = self._generate_uuid()
                 self._uuidToFoamLabel[uid] = label
                 self._foamCellLabelToUuid[label] = uid
@@ -141,16 +141,17 @@ class FoamMesh(ABCMesh):
 
             faceMap.clear()
 
+            bcs={}
+            
+            for boundary in cuds.iter(api.Boundary):
+                bcs.put(boundary.name,
+                        get_foam_boundary_condition(boundary.condition[0]))
+            check_boundary_names(bcs.keys(), patchNames)
+
             patchTypes = []
             for patchName in patchNames:
-                if BC:
-                    first_key = BC.keys()[0]
-                    check_boundary_names(BC[first_key].keys(), patchNames,
-                                         first_key)
-                    if BC[first_key][patchName] == "empty":
-                        patchTypes.append("empty")
-                    else:
-                        patchTypes.append("patch")
+                if bcs[patchName] == "empty":
+                    patchTypes.append("empty")
                 else:
                     patchTypes.append("patch")
 
@@ -168,7 +169,7 @@ class FoamMesh(ABCMesh):
             foamface.createDefaultFields(name, solver, False)
 
             # write possible cell data to time directory
-            self.copy_cells(mesh.iter_cells())
+            self.copy_cells(mesh._iter_cells())
             # correct boundary face labels
             patchNames = foamface.getBoundaryPatchNames(name)
             patchFaces = foamface.getBoundaryPatchFaces(name)
@@ -187,7 +188,7 @@ class FoamMesh(ABCMesh):
                 k += 1
             self._boundaries = boundaries
 
-    def get_point(self, uuid):
+    def _get_point(self, uuid):
         """ Returns a point with a given uuid.
 
         Returns the point stored in the mesh
@@ -220,7 +221,7 @@ class FoamMesh(ABCMesh):
             error_str = "Trying to get an non-existing point with uuid: {}"
             raise ValueError(error_str.format(uuid))
 
-    def get_edge(self, uuid):
+    def _get_edge(self, uuid):
         """ Returns an edge with a given uuid.
 
         Returns the edge stored in the mesh
@@ -246,7 +247,7 @@ class FoamMesh(ABCMesh):
         message = "Edges are not supported yet in OpenFoam engine"
         raise NotImplementedError(message)
 
-    def get_face(self, uuid):
+    def _get_face(self, uuid):
         """ Returns a face with a given uuid.
 
         Returns the face stored in the mesh
@@ -307,9 +308,9 @@ class FoamMesh(ABCMesh):
 
         cells = foamface.getBoundaryCells(self.name, boundary)
         for label in cells:
-            yield self.get_cell(self._foamCellLabelToUuid[label])
+            yield self._get_cell(self._foamCellLabelToUuid[label])
 
-    def get_cell(self, uuid):
+    def _get_cell(self, uuid):
         """ Returns a cell with a given uuid.
 
         Returns the cell stored in the mesh
@@ -367,35 +368,35 @@ class FoamMesh(ABCMesh):
             error_str = "Trying to get an non-existing cell with uuid: {}"
             raise ValueError(error_str.format(uuid))
 
-    def add_points(self, points):
+    def _add_points(self, points):
         message = 'Points addition not supported yet'
         raise NotImplementedError(message)
 
-    def add_edges(self, edges):
+    def _add_edges(self, edges):
         message = 'Edges addition not supported yet'
         raise NotImplementedError(message)
 
-    def add_faces(self, face):
+    def _add_faces(self, face):
         message = 'Faces addition not supported yet'
         raise NotImplementedError(message)
 
-    def add_cells(self, cells):
+    def _add_cells(self, cells):
         message = 'Cells addition not supported yet'
         raise NotImplementedError(message)
 
-    def update_points(self, points):
+    def _update_points(self, points):
         message = 'Point update not supported yet'
         raise NotImplementedError(message)
 
-    def update_edges(self, edges):
+    def _update_edges(self, edges):
         message = 'Edges update not supported yet'
         raise NotImplementedError(message)
 
-    def update_faces(self, faces):
+    def _update_faces(self, faces):
         message = 'Faces update not supported yet'
         raise NotImplementedError(message)
 
-    def update_cells(self, cells):
+    def _update_cells(self, cells):
         """ Updates the information of a set of cells.
 
         Gets the mesh cell identified by the same
@@ -499,7 +500,7 @@ class FoamMesh(ABCMesh):
 
         set_cells_data(self.name, cellList, dataNameKeyMap)
 
-    def iter_points(self, point_uuids=None):
+    def _iter_points(self, point_uuids=None):
         """ Returns an iterator over the selected points.
 
         Returns an iterator over the points with uuid in
@@ -523,21 +524,21 @@ class FoamMesh(ABCMesh):
         if point_uuids is None:
             pointCount = foamface.getPointCount(self.name)
             for label in range(pointCount):
-                point = self.get_point(self._foamPointLabelToUuid[label])
+                point = self._get_point(self._foamPointLabelToUuid[label])
                 yield Point.from_point(point)
         else:
             for uid in point_uuids:
-                point = self.get_point(uid)
+                point = self._get_point(uid)
                 yield Point.from_point(point)
 
-    def iter_edges(self, edge_uuids=None):
+    def _iter_edges(self, edge_uuids=None):
         """ Return empty list while edges are not supported yet
 
         """
 
         return []
 
-    def iter_faces(self, face_uuids=None):
+    def _iter_faces(self, face_uuids=None):
         """ Returns an iterator over the selected faces.
 
         Returns an iterator over the faces with uuid in
@@ -561,14 +562,14 @@ class FoamMesh(ABCMesh):
         if face_uuids is None:
             faceCount = foamface.getFaceCount(self.name)
             for label in range(faceCount):
-                face = self.get_face(self._foamFaceLabelToUuid[label])
+                face = self._get_face(self._foamFaceLabelToUuid[label])
                 yield Face.from_face(face)
         else:
             for uid in face_uuids:
-                face = self.get_face(uid)
+                face = self._get_face(uid)
                 yield Face.from_face(face)
 
-    def iter_cells(self, cell_uuids=None):
+    def _iter_cells(self, cell_uuids=None):
         """ Returns an iterator over the selected cells.
 
         Returns an iterator over the cells with uuid in
@@ -592,20 +593,34 @@ class FoamMesh(ABCMesh):
         if cell_uuids is None:
             cellCount = foamface.getCellCount(self.name)
             for label in range(cellCount):
-                yield self.get_cell(self._foamCellLabelToUuid[label])
+                yield self._get_cell(self._foamCellLabelToUuid[label])
         else:
             for uid in cell_uuids:
-                cell = self.get_cell(uid)
+                cell = self._get_cell(uid)
                 yield cell
 
-    def has_edges(self):
+    def _has_points(self):
+        """Check if the mesh has points
+
+        Returns
+        -------
+        bool
+            True of there are points in the mesh,
+            False otherwise
+
+        """
+        numberPoints = foamface.getPointCount(self.name)
+        return numberPoints > 0
+
+
+    def _has_edges(self):
         """ Return false while edges are not supported yet
 
         """
 
         return False
 
-    def has_faces(self):
+    def _has_faces(self):
         """ Check if the mesh has faces
 
         Returns
@@ -618,7 +633,7 @@ class FoamMesh(ABCMesh):
         numberFaces = foamface.getFaceCount(self.name)
         return numberFaces > 0
 
-    def has_cells(self):
+    def _has_cells(self):
         """ Check if the mesh has cells
 
         Returns
@@ -706,7 +721,7 @@ class FoamMesh(ABCMesh):
             if bname not in self._boundaries:
                 self.boundaries[bname] = blist
 
-    def get_boundaries(self):
+    def _get_boundaries(self):
         """ get boundaries
 
         """

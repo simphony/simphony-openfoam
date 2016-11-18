@@ -4,9 +4,10 @@ Wrapper module for OpenFOAM
 
 """
 from simphony.core.cuba import CUBA
-from simphony.core.data_container import DataContainer
+#from simphony.core.data_container import DataContainer
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
 from simphony.cuds.abc_mesh import ABCMesh
+from simphony.cuds.meta import api
 
 from .cuba_extension import CUBAExt
 from .foam_mesh import FoamMesh
@@ -24,19 +25,23 @@ class Wrapper(ABCModelingEngine):
 
     """
 
-    def __init__(self):
-        super(Wrapper, self).__init__()
+    def __init__(self,**kwargs):
+       
         self._meshes = {}
-        self.CM = DataContainer()
-        self.BC = DataContainer()
-        self.SP = DataContainer()
-        #: to be able to use CUBAExt keywords, which are not in accepted
-        #  CUBA keywords these extensions to CM and SP is used
-        self.CM_extensions = {}
-        self.SP_extensions = {}
+        super(Wrapper, self).__init__(**kwargs)
+
+    def _load_cuds(self):
+        """Load CUDS data into  engine."""
+        cuds = self.get_cuds()
+        if not cuds:
+            return
+
+        for component in cuds.iter(ABCMesh):
+            self.add_dataset(component)
+        # 
 
     def run(self):
-        """Run OpenFoam based on CM, BC and SP data
+        """Run OpenFoam based on cuds data
 
         Raises
         ------
@@ -45,40 +50,38 @@ class Wrapper(ABCModelingEngine):
 
         """
 
-        if not self.CM[CUBA.NAME]:
-            error_str = "Mesh name must be defined in CM[CUBA.NAME]"
-            raise ValueError(error_str)
-
+ 
         if not self._meshes:
             error_str = "Meshes not added to wrapper. Use add_mesh method"
             raise ValueError(error_str)
 
-        name = self.CM[CUBA.NAME]
+        if len(self._meshes) > 1:
+            error_str = "Multiple meshes not supported"
+            raise ValueError(error_str)
 
-        if not self._meshes[name]:
-            error_str = "Mesh {} does not exist"
-            raise ValueError(error_str.format(name))
-
-        mesh = self._meshes[name]
+        mesh = self._meshes.values()[0]
         case = mesh.path
 
         create_directories(case)
-
-        solver = get_foam_solver(self.CM_extensions)
+        cuds = self.get_cuds()
+        solver = get_foam_solver(cuds)
 
 #       a) Modify and write dictionaries
-        modifyNumerics(mesh, self.SP, self.SP_extensions, solver, True)
+        modifyNumerics(mesh, cuds, solver, True)
 
 #       b) Set boundary condition and Fields
-        modifyFields(mesh, self.BC, solver)
+        modifyFields(mesh, cuds, solver)
 
         simphonyfoaminterface.writeFields(mesh.name)
 
         # run case
-        if CUBAExt.NUMBER_OF_CORES in self.CM_extensions:
-            ncores = self.CM_extensions[CUBAExt.NUMBER_OF_CORES]
-        else:
-            ncores = 1
+        solver_parameters = cuds.iter(api.SolverParameter)
+        ncores = 1
+        if solver_parameters != None:
+            for sp in solver_parameters:
+                if CUBAExt.NUMBER_OF_CORES in sp.data:
+                    ncores = sp.data[CUBAExt.NUMBER_OF_CORES]
+                    break;
         runner = FoamRunner(solver, name, case, ncores)
         runner.run()
 
@@ -88,7 +91,7 @@ class Wrapper(ABCModelingEngine):
         simphonyfoaminterface.updateData(name, float(mesh._time))
 
     def add_dataset(self, mesh, name=None):
-        """Add a mesh to the OpenFoam modeling engine.
+        """Add a CUDS container to the OpenFoam modeling engine.
 
         Parameters
         ----------
@@ -120,9 +123,9 @@ class Wrapper(ABCModelingEngine):
         if mesh_name in self._meshes:
             raise ValueError('Mesh \'{}\` already exists'.format(mesh_name))
         else:
-            if self.BC:
-                solver = get_foam_solver(self.CM_extensions)
-                self._meshes[mesh_name] = FoamMesh(mesh_name, self.BC,
+            if self.cuds.iter(Boundary) != None:
+                solver = get_foam_solver(self.cuds)
+                self._meshes[mesh_name] = FoamMesh(mesh_name, cuds,
                                                    solver, mesh)
             else:
                 self._meshes[mesh_name] = FoamMesh(mesh_name, {},
