@@ -4,18 +4,17 @@ Wrapper module for OpenFOAM
 
 """
 from simphony.core.cuba import CUBA
-#from simphony.core.data_container import DataContainer
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
 from simphony.cuds.abc_mesh import ABCMesh
 from simphony.cuds.meta import api
 
-from .cuba_extension import CUBAExt
 from .foam_mesh import FoamMesh
 from .foam_runner import FoamRunner
 from foam_internalwrapper.foam_dicts import (get_foam_solver,
                                              modifyNumerics,
                                              modifyFields,
-                                             create_directories)
+                                             create_directories,
+                                             not_empty)
 
 import simphonyfoaminterface
 
@@ -25,8 +24,7 @@ class Wrapper(ABCModelingEngine):
 
     """
 
-    def __init__(self,**kwargs):
-       
+    def __init__(self, **kwargs):
         self._meshes = {}
         super(Wrapper, self).__init__(**kwargs)
 
@@ -37,8 +35,15 @@ class Wrapper(ABCModelingEngine):
             return
 
         for component in cuds.iter(ABCMesh):
-            self.add_dataset(component)
-        # 
+            # while mesh can be from other mesh engine add_dataset creates
+            # new FoamMesh. While there is no other way to know the
+            # new mesh name on cuds the corresponding mesh component is
+            # removed from cuds and replaced with the new mesh.
+            # If the component is wanted to remain on cuds it must be
+            # duplicated on user level code using some other name
+            new_mesh = self.add_dataset(component)
+            cuds.remove(component.name)
+            cuds.add(new_mesh)
 
     def run(self):
         """Run OpenFoam based on cuds data
@@ -50,7 +55,6 @@ class Wrapper(ABCModelingEngine):
 
         """
 
- 
         if not self._meshes:
             error_str = "Meshes not added to wrapper. Use add_mesh method"
             raise ValueError(error_str)
@@ -77,18 +81,19 @@ class Wrapper(ABCModelingEngine):
         # run case
         solver_parameters = cuds.iter(api.SolverParameter)
         ncores = 1
-        if solver_parameters != None:
+        if solver_parameters is not None:
             for sp in solver_parameters:
-                if CUBAExt.NUMBER_OF_CORES in sp.data:
-                    ncores = sp.data[CUBAExt.NUMBER_OF_CORES]
-                    break;
-        runner = FoamRunner(solver, name, case, ncores)
+                if CUBA.NUMBER_OF_CORES in sp.data:
+                    ncores = sp.data[CUBA.NUMBER_OF_CORES]
+                    break
+        runner = FoamRunner(solver, mesh.name, case, ncores)
         runner.run()
 
         # save timestep to mesh
         mesh._time = runner.get_last_time()
+        print mesh._time
         # update time and data to Foam objectRegistry
-        simphonyfoaminterface.updateData(name, float(mesh._time))
+        simphonyfoaminterface.updateData(mesh.name, float(mesh._time))
 
     def add_dataset(self, mesh, name=None):
         """Add a CUDS container to the OpenFoam modeling engine.
@@ -123,8 +128,9 @@ class Wrapper(ABCModelingEngine):
         if mesh_name in self._meshes:
             raise ValueError('Mesh \'{}\` already exists'.format(mesh_name))
         else:
-            if self.cuds.iter(Boundary) != None:
-                solver = get_foam_solver(self.cuds)
+            cuds = self.get_cuds()
+            if cuds is not None and not_empty(cuds.iter(api.Boundary)):
+                solver = get_foam_solver(cuds)
                 self._meshes[mesh_name] = FoamMesh(mesh_name, cuds,
                                                    solver, mesh)
             else:

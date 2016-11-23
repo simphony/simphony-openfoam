@@ -4,68 +4,103 @@ slip velocity law for wall layer
 
 """
 
+import foam_controlwrapper
 from simphony.core.cuba import CUBA
-from simphony.engine import openfoam_file_io
+from simphony.api import CUDS, Simulation
+from simphony.cuds.meta import api
+from simphony.engine import EngineInterface
 
-from mayavi.scripts import mayavi2
+# from mayavi.scripts import mayavi2
 
 import pipe_mesh
 import tempfile
 
-wrapper = openfoam_file_io.Wrapper()
-CUBAExt = openfoam_file_io.CUBAExt
+case_name = 'aqueous_foam'
+mesh_name = 'aqueous_foam_mesh'
 
-name = 'aqueous_foam'
+cuds = CUDS(name=case_name)
 
-wrapper.CM[CUBA.NAME] = name
+# physics model
+cfd = api.Cfd(name='default model')
 
-wrapper.CM_extensions[CUBAExt.GE] = (CUBAExt.INCOMPRESSIBLE,
-                                     CUBAExt.LAMINAR_MODEL)
+# these are already bt default set in CFD
+cfd.thermal_model = api.IsothermalModel(name='isothermal')
+cfd.turbulence_model = api.LaminarFlowModel(name='laminar')
+cfd.compressibility_model = api.IncompressibleFluidModel(name='incompressible')
 
-wrapper.CM_extensions[CUBAExt.NUMBER_OF_CORES] = 1
+# material
+foam = api.Material(name='foam')
+foam._data[CUBA.DENSITY] = 250.0
+foam._data[CUBA.DYNAMIC_VISCOSITY] = 4.37
+cuds.add(foam)
 
-wrapper.SP[CUBA.TIME_STEP] = 0.0001
-wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 3000
-wrapper.SP[CUBA.DENSITY] = 250.0
-wrapper.SP_extensions[CUBAExt.VISCOSITY_MODEL] = 'HerschelBulkley'
-wrapper.SP_extensions[CUBAExt.VISCOSITY_MODEL_COEFFS] =\
-    {'HerschelBulkley': {'nu0': 0.01748,
-                         'tau0': 0.0148,
-                         'k': 0.00268,
-                         'n': 0.5}}
+# use Herschel Bulkley viscosity model for aqueous foam
+hb = api.HerschelBulkleyModel(name='foam_rheology')
+hb.initial_viscosity = 0.01748
+hb.relaxation_time = 0.0148
+hb.linear_constant = 0.00268
+hb.power_law_index = 0.5
+hb.material = cuds.get('foam').uid
+cfd.rheology_model = hb
 
-wrapper.BC[CUBA.VELOCITY] = {'inlet': ('fixedValue', (0, 0, 0.53)),
-                             'outlet': 'zeroGradient',
-                             'walls': ('shearStressPowerLawSlipVelocity',
-                                       {'rho': 250.0,
-                                        'beta': 3.1e-3,
-                                        'n': 1.16})}
+cuds.add(cfd)
 
-wrapper.BC[CUBA.PRESSURE] = {'inlet': 'zeroGradient',
-                             'outlet': ('fixedValue', 0),
-                             'walls': 'zeroGradient'}
+# time setting
+sim_time = api.IntegrationTime(name='simulation_time',
+                               current=0.0,
+                               final=0.3,
+                               size=0.0001)
+cuds.add(sim_time)
 
+# create computational mesh
+mesh = foam_controlwrapper.create_block_mesh(tempfile.mkdtemp(), mesh_name,
+                                             pipe_mesh.blockMeshDict)
+cuds.add(mesh)
 
-# create mesh
-openfoam_file_io.create_block_mesh(tempfile.mkdtemp(), name, wrapper,
-                                   pipe_mesh.blockMeshDict)
+# boundary conditions
+vel_inlet = api.Dirichlet(name='vel_inlet')
+vel_inlet._data[CUBA.VARIABLE] = CUBA.VELOCITY
+vel_inlet._data[CUBA.VELOCITY] = (0, 0, 0.53)
+pres_inlet = api.Neumann(name='pres_inlet')
+pres_inlet._data[CUBA.VARIABLE] = CUBA.PRESSURE
 
-mesh_inside_wrapper = wrapper.get_dataset(name)
+vel_outlet = api.Neumann(name='vel_outlet')
+vel_outlet._data[CUBA.VARIABLE] = CUBA.VELOCITY
+pres_outlet = api.Dirichlet(name='pres_outlet')
+pres_outlet._data[CUBA.VARIABLE] = CUBA.PRESSURE
+pres_outlet._data[CUBA.PRESSURE] = 0.0
 
+vel_walls = api.ShearStressPowerLawSlipVelocity(name='vel_walls')
+vel_walls.density = 250.0
+vel_walls.linear_constant = 3.1e-3
+vel_walls.power_law_index = 1.16
+vel_walls._data[CUBA.VARIABLE] = CUBA.VELOCITY
+pres_walls = api.Neumann(name='pres_walls')
+pres_walls._data[CUBA.VARIABLE] = CUBA.PRESSURE
+
+inlet = api.Boundary(name='inlet', condition=[vel_inlet, pres_inlet])
+walls = api.Boundary(name='walls', condition=[vel_walls, pres_walls])
+outlet = api.Boundary(name='outlet', condition=[vel_outlet, pres_outlet])
+
+cuds.add(inlet)
+cuds.add(walls)
+cuds.add(outlet)
+
+sim = Simulation(cuds, 'OpenFOAM', engine_interface=EngineInterface.FileIO)
+
+sim.run()
+
+mesh_inside_wrapper = cuds.get(mesh_name)
 print "Working directory ", mesh_inside_wrapper.path
-
-# run returns the latest time
-wrapper.run()
-
 average_pressure = 0.0
-for cell in mesh_inside_wrapper.get_boundary_cells('inlet'):
+for cell in mesh_inside_wrapper.get_boundary_cells(inlet.name):
     average_pressure += cell.data[CUBA.PRESSURE]
 
-average_pressure /= len(mesh_inside_wrapper._boundaries['inlet'])
+average_pressure /= len(mesh_inside_wrapper._boundaries[inlet.name])
 
 print "Average pressure on inlet: ", average_pressure
 
-
+"""
 @mayavi2.standalone
 def view():
     from mayavi.modules.surface import Surface
@@ -80,3 +115,4 @@ def view():
 
 if __name__ == '__main__':
     view()
+"""

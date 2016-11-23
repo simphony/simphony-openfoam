@@ -10,7 +10,8 @@ import os
 
 from simphony.cuds.abc_mesh import ABCMesh
 from simphony.cuds.mesh import Point, Face, Cell
-from simphony.core.cuds_item import CUDSItem
+from simphony.cuds.meta import api
+from simphony.core.cuba import CUBA
 
 import simphony.core.data_container as dc
 import simphonyfoaminterface as foamface
@@ -141,19 +142,21 @@ class FoamMesh(ABCMesh):
 
             faceMap.clear()
 
-
-            bcs={}
-            
-            for boundary in cuds.iter(api.Boundary):
-                bcs.put(boundary.name,
-                        get_foam_boundary_condition(boundary.condition[0]))
-            check_boundary_names(bcs.keys(), patchNames)
-
             patchTypes = []
-            for patchName in patchNames:
-                if bcs[patchName] == "empty":
-                    patchTypes.append("empty")
-                else:
+            if cuds:
+                bcs = {}
+                for boundary in cuds.iter(api.Boundary):
+                    bcs[boundary.name] = \
+                        get_foam_boundary_condition(boundary.condition[0])
+                check_boundary_names(bcs.keys(), patchNames)
+
+                for patchName in patchNames:
+                    if patchName in bcs and bcs[patchName] == "empty":
+                        patchTypes.append("empty")
+                    else:
+                        patchTypes.append("patch")
+            else:
+                for patchName in patchNames:
                     patchTypes.append("patch")
 
             mapContent = get_dictionary_maps(solver, False)
@@ -716,12 +719,12 @@ class FoamMesh(ABCMesh):
         return numberCells > 0
 
     def count_of(self, item_type):
-        """ Return the count of item_type in the container.
+        """ Return the count of points, edges, faces or cells in the container.
 
         Parameters
         ----------
-        item_type : CUDSItem
-            The CUDSItem enum of the type of the items to return the count of.
+        item_type : CUBA
+            The CUBA keywordto give type of the items to return the count of.
 
         Returns
         -------
@@ -736,13 +739,13 @@ class FoamMesh(ABCMesh):
 
         """
 
-        if item_type == CUDSItem.POINT:
+        if item_type == CUBA.POINT:
             return foamface.getPointCount(self.name)
-        elif item_type == CUDSItem.EDGE:
+        elif item_type == CUBA.EDGE:
             return 0
-        elif item_type == CUDSItem.FACE:
+        elif item_type == CUBA.FACE:
             return foamface.getFaceCount(self.name)
-        elif item_type == CUDSItem.CELL:
+        elif item_type == CUBA.CELL:
             return foamface.getCellCount(self.name)
         else:
             error_str = 'Item type {} not supported'

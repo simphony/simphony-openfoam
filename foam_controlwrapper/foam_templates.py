@@ -1121,21 +1121,3 @@ boundaryField
 
 
                  }
-
-multiphase_solvers = ("interFoam", "driftFluxSimphonyFoam")
-
-
-def get_foam_solver(CM):
-    GE = CM[CUBAExt.GE]
-    solver = "pimpleFoam"
-    if CUBAExt.LAMINAR_MODEL in GE:
-        if CUBAExt.VOF_MODEL in GE:
-            solver = "interFoam"
-        elif CUBAExt.MIXTURE_MODEL in GE:
-            solver = "driftFluxSimphonyFoam"
-        else:
-            solver = "pimpleFoam"
-        return solver
-    else:
-        error_str = "GE does not define supported solver: GE = {}"
-        raise NotImplementedError(error_str.format(GE))

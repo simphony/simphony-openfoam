@@ -1,87 +1,177 @@
 """Example to solve mixture model
 """
 
+import foam_controlwrapper
 from simphony.core.cuba import CUBA
+from simphony.api import CUDS, Simulation
+from simphony.cuds.meta import api
+from simphony.engine import EngineInterface
 
-from simphony.engine import openfoam_file_io
 
-from mayavi.scripts import mayavi2
+# from mayavi.scripts import mayavi2
 
 import dahl_mesh
 import tempfile
 
+case_name = 'dahl'
+mesh_name = 'dahl_mesh'
 
-wrapper = openfoam_file_io.Wrapper()
-CUBAExt = openfoam_file_io.CUBAExt
+cuds = CUDS(name=case_name)
 
-name = 'dahl'
+# physics model
+cfd = api.Cfd(name='default model')
 
-wrapper.CM[CUBA.NAME] = name
+# these are already bt default set in CFD
+cfd.thermal_model = api.IsothermalModel(name='isothermal')
+cfd.turbulence_model = api.LaminarFlowModel(name='laminar')
+cfd.compressibility_model = api.IncompressibleFluidModel(name='incompressible')
 
-wrapper.CM_extensions[CUBAExt.GE] = (CUBAExt.INCOMPRESSIBLE,
-                                     CUBAExt.LAMINAR_MODEL,
-                                     CUBAExt.MIXTURE_MODEL)
 
-wrapper.CM_extensions[CUBAExt.NUMBER_OF_CORES] = 1
+# time setting
+sim_time = api.IntegrationTime(name='simulation_time',
+                               current=0.0,
+                               final=640.0,
+                               size=0.1)
+cuds.add(sim_time)
 
-wrapper.SP[CUBA.TIME_STEP] = 0.1
-wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 6400
 
-wrapper.SP_extensions[CUBAExt.PHASE_LIST] = ('sludge', 'water')
-wrapper.SP[CUBA.DENSITY] = {'sludge': 1900.0, 'water': 1000.0}
-wrapper.SP[CUBA.DYNAMIC_VISCOSITY] = {'sludge': 0.01, 'water': 1e-3}
-wrapper.SP_extensions[CUBAExt.VISCOSITY_MODEL] =\
-    {'sludge': 'BinghamPlastic', 'water': 'Newtonian'}
-wrapper.SP_extensions[CUBAExt.VISCOSITY_MODEL_COEFFS] =\
-    {'BinghamPlastic': {'coeff': 0.00023143, 'exponent': 179.26,
-                        'BinghamCoeff': 0.0005966, 'BinghamExponent': 1050.8,
-                        'BinghamOffset': 0, 'muMax': 10}}
-wrapper.SP_extensions[CUBAExt.STRESS_MODEL] = 'standard'
-wrapper.SP_extensions[CUBAExt.RELATIVE_VELOCITY_MODEL] = 'simple'
-wrapper.SP_extensions[CUBAExt.RELATIVE_VELOCITY_MODEL_COEFFS] =\
-    {'V0': (0.0, -0.002, 0.0), 'a': 285.0, 'a1': 0.1, 'residualAlpha': 0}
-wrapper.SP_extensions[CUBAExt.EXTERNAL_BODY_FORCE_MODEL] = 'gravitation'
-wrapper.SP_extensions[CUBAExt.EXTERNAL_BODY_FORCE_MODEL_COEFFS] =\
-    {'g': (0.0, -9.81, 0.0)}
-wrapper.BC[CUBA.VELOCITY] = {'inlet': ('fixedValue', (0.0191, 0, 0)),
-                             'outlet': ('pressureIOVelocity', (0, 0, 0)),
-                             'bottomWall': ('fixedValue', (0, 0, 0)),
-                             'endWall': ('fixedValue', (0, 0, 0)),
-                             'top': 'slip',
-                             'frontAndBack': 'empty'}
-wrapper.BC[CUBA.DYNAMIC_PRESSURE] = {'inlet': 'fixedFluxPressure',
-                                     'outlet': ('fixedValue', 0),
-                                     'bottomWall': 'fixedFluxPressure',
-                                     'endWall': 'fixedFluxPressure',
-                                     'top': 'fixedFluxPressure',
-                                     'frontAndBack': 'empty'}
+# create computational mesh
+mesh = foam_controlwrapper.create_block_mesh(tempfile.mkdtemp(), mesh_name,
+                                             dahl_mesh.blockMeshDict)
+cuds.add(mesh)
 
-wrapper.BC[CUBA.VOLUME_FRACTION] = {'inlet': ('fixedValue', 0.001),
-                                    'outlet': ('inletOutlet', 0.001),
-                                    'bottomWall': 'zeroGradient',
-                                    'endWall': 'zeroGradient',
-                                    'top': 'zeroGradient',
-                                    'frontAndBack': 'empty'}
 
-# create mesh
-openfoam_file_io.create_block_mesh(tempfile.mkdtemp(), name, wrapper,
-                                   dahl_mesh.blockMeshDict)
+# materials
+sludge = api.Material(name='sludge')
+sludge._data[CUBA.DENSITY] = 1900.0
+sludge._data[CUBA.DYNAMIC_VISCOSITY] = 0.01
+cuds.add(sludge)
 
-mesh_inside_wrapper = wrapper.get_dataset(name)
+water = api.Material(name='water')
+water._data[CUBA.DENSITY] = 1000.0
+water._data[CUBA.DYNAMIC_VISCOSITY] = 1.0e-3
+cuds.add(water)
 
-print mesh_inside_wrapper.path
+# mixture model
+mm = api.MixtureModel(name='mixture')
+mm.disperse = cuds.get('sludge').uid
+cuds.add(mm)
+
+# use Bingham plastic for sludge rheology model
+bp = api.BinghamPlasticModel(name='sludge_rheology')
+bp.linear_constant = (0.00023143, 0.0005966)
+bp.power_law_index = (179.26, 1050.8)
+bp.maximum_viscosity = 10.0
+bp.material = cuds.get('sludge').uid
+
+# water is Newtonian so no need to add that to rheology models
+cfd.rheology_model = bp
+
+cuds.add(cfd)
+
+sm = api.StandardStressModel(name='standard_stress_model')
+cuds.add(sm)
+
+rvm = api.SimpleRelativeVelocityModel(name='simple_rel_vel_model')
+rvm.diffusion_velocity = (0, -0.002, 0)
+rvm.linear_constant = 285.0
+cuds.add(rvm)
+
+gm = api.GravityModel(name='gravitation')
+gm.acceleration = (0, -9.81, 0)
+cuds.add(gm)
+
+# boundary condtitions
+vel_inlet = api.Dirichlet(name='vel_inlet')
+vel_inlet._data[CUBA.VARIABLE] = CUBA.VELOCITY
+vel_inlet._data[CUBA.VELOCITY] = (0.0191, 0, 0)
+pres_inlet = api.Neumann(name='pres_inlet')
+pres_inlet._data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
+vf_inlet = api.Dirichlet(name='vf_inlet')
+vf_inlet._data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
+vf_inlet._data[CUBA.VOLUME_FRACTION] = 0.001
+
+vel_outlet = api.InletOutlet(name='vel_outlet')
+vel_outlet._data[CUBA.VARIABLE] = CUBA.VELOCITY
+vel_outlet._data[CUBA.VELOCITY] = (0, 0, 0)
+
+pres_outlet = api.Dirichlet(name='pres_outlet')
+pres_outlet._data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
+pres_outlet._data[CUBA.DYNAMIC_PRESSURE] = 0.0
+vf_outlet = api.InletOutlet(name='vf_outlet')
+vf_outlet._data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
+vf_outlet._data[CUBA.VOLUME_FRACTION] = 0.001
+
+vel_walls = api.Dirichlet(name='vel_walls')
+vel_walls._data[CUBA.VARIABLE] = CUBA.VELOCITY
+vel_walls._data[CUBA.VELOCITY] = (0, 0, 0)
+pres_walls = api.Neumann(name='pres_walls')
+pres_walls._data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
+vf_walls = api.Neumann(name='vf_walls')
+vf_walls._data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
+
+vel_top = api.SlipVelocity(name='vel_top')
+vel_top._data[CUBA.VARIABLE] = CUBA.VELOCITY
+pres_top = api.Neumann(name='pres_top')
+pres_top._data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
+vf_top = api.Neumann(name='vf_top')
+vf_top._data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
+
+vel_frontAndBack = api.Empty(name='vel_frontAndBack')
+vel_frontAndBack._data[CUBA.VARIABLE] = CUBA.VELOCITY
+pres_frontAndBack = api.Empty(name='pres_frontAndBack')
+pres_frontAndBack._data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
+vf_frontAndBack = api.Empty(name='vf_frontAndBack')
+vf_frontAndBack._data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
+
+# boundaries
+inlet = api.Boundary(name='inlet', condition=[vel_inlet, pres_inlet, vf_inlet])
+bottom_wall = api.Boundary(name='bottomWall', condition=[vel_walls,
+                                                         pres_walls,
+                                                         vf_walls])
+end_wall = api.Boundary(name='endWall', condition=[vel_walls, pres_walls,
+                                                   vf_walls])
+top = api.Boundary(name='top', condition=[vel_top, pres_top, vf_top])
+outlet = api.Boundary(name='outlet', condition=[vel_outlet, pres_outlet,
+                                                vf_outlet])
+frontAndBack = api.Boundary(name='frontAndBack', condition=[vel_frontAndBack,
+                                                            pres_frontAndBack,
+                                                            vf_frontAndBack])
+
+cuds.add(inlet)
+cuds.add(bottom_wall)
+cuds.add(end_wall)
+cuds.add(top)
+cuds.add(outlet)
+cuds.add(frontAndBack)
+
+mesh_in_cuds = cuds.get(mesh_name)
 
 updated_cells = []
-for cell in mesh_inside_wrapper.iter_cells():
+for cell in mesh_in_cuds._iter_cells():
     cell.data[CUBA.VOLUME_FRACTION] = 0.001
     cell.data[CUBA.DYNAMIC_PRESSURE] = 0.0
     cell.data[CUBA.VELOCITY] = [0.0191, 0.0, 0.0]
     updated_cells.append(cell)
 
-mesh_inside_wrapper.update_cells(updated_cells)
-wrapper.run()
+mesh_in_cuds._update_cells(updated_cells)
+
+sim = Simulation(cuds, 'OpenFOAM', engine_interface=EngineInterface.FileIO)
+
+sim.run()
+
+mesh_inside_wrapper = cuds.get(mesh_name)
+
+average_vf = 0.0
+for cell in mesh_inside_wrapper.get_boundary_cells(outlet.name):
+    average_vf += cell.data[CUBA.VOLUME_FRACTION]
+
+average_vf /= len(mesh_inside_wrapper._boundaries[outlet.name])
+
+print "Average volume fraction on outlet: ", average_vf
 
 
+"""
 @mayavi2.standalone
 def view():
     from mayavi.modules.surface import Surface
@@ -96,3 +186,4 @@ def view():
 
 if __name__ == '__main__':
     view()
+"""

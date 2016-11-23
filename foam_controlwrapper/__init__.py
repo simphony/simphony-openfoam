@@ -6,14 +6,13 @@ from simphony.engine import EngineInterface
 from simphony.engine.decorators import register
 
 from .foam_controlwrapper import Wrapper as FileIOWrapper
-from foam_internalwrapper.form_internalwrapper import (
+from foam_internalwrapper.foam_internalwrapper import (
     Wrapper as InternalWrapper)
 from .io_utils import read_foammesh
 from .blockmesh_utils import (create_quad_mesh, create_block_mesh)
-from .cuba_extension import CUBAExt
 
-__all__ = ['CUBAExt', 'read_foammesh',
-           'create_quad_mesh', 'create_block_mesh', 'EngineType']
+__all__ = ['read_foammesh', 'create_quad_mesh',
+           'create_block_mesh', 'EngineType']
 
 
 @register

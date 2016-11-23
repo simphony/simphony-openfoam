@@ -1,63 +1,113 @@
 """Example to solve 2D vortex shedding flow
 
 """
-from mayavi.scripts import mayavi2
 
+# from mayavi.scripts import mayavi2
+
+import foam_controlwrapper as wrapper
 from simphony.core.cuba import CUBA
-from simphony.engine import openfoam_file_io
+from simphony.api import CUDS, Simulation
+from simphony.cuds.meta import api
+from simphony.engine import EngineInterface
+
 import vortex_shedding_mesh
 
 import tempfile
 import math
 
-wrapper = openfoam_file_io.Wrapper()
-CUBAExt = openfoam_file_io.CUBAExt
+case_name = 'vortex_shedding'
+mesh_name = 'vortex_shedding_mesh'
 
-name = 'vortex_shedding'
 
-wrapper.CM[CUBA.NAME] = name
+# create cuds
+cuds = CUDS(name=case_name)
 
-wrapper.CM_extensions[CUBAExt.GE] = (CUBAExt.INCOMPRESSIBLE,
-                                     CUBAExt.LAMINAR_MODEL)
-wrapper.SP[CUBA.TIME_STEP] = 0.025
-wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 6000
-wrapper.SP[CUBA.DENSITY] = 1.0
-wrapper.SP[CUBA.DYNAMIC_VISCOSITY] = 2.0e-2
+# physics model
+cfd = api.Cfd(name='default model')
 
-# this is just an example. It is not enough for general setting of BC's
-wrapper.BC[CUBA.VELOCITY] = {'boundary0': ('fixedValue', (1.0, 0, 0)),
-                             'boundary1': 'zeroGradient',
-                             'boundary2': 'slip',
-                             'boundary3': 'slip',
-                             'boundary4': ('fixedValue', (0, 0, 0)),
-                             'boundary5': 'empty'}
-wrapper.BC[CUBA.PRESSURE] = {'boundary0': 'zeroGradient',
-                             'boundary1': ('fixedValue', 0),
-                             'boundary2': 'zeroGradient',
-                             'boundary3': 'zeroGradient',
-                             'boundary4': 'zeroGradient',
-                             'boundary5': 'empty'}
+# these are already by default set in CFD
+cfd.rheology_model = api.NewtonianFluidModel(name='newtonian')
+cfd.thermal_model = api.IsothermalModel(name='isothermal')
+cfd.turbulence_model = api.LaminarFlowModel(name='laminar')
+cfd.compressibility_model = api.IncompressibleFluidModel(name='incompressible')
+# add to cuds
+cuds.add(cfd)
+
+# material
+mat = api.Material(name='a_material')
+mat._data[CUBA.DENSITY] = 1.0
+mat._data[CUBA.DYNAMIC_VISCOSITY] = 2.0e-2
+cuds.add(mat)
+
+# time setting
+sim_time = api.IntegrationTime(name='simulation_time',
+                               current=0.0,
+                               final=150.0,
+                               size=0.025)
+cuds.add(sim_time)
 
 # create mesh
-openfoam_file_io.create_block_mesh(tempfile.mkdtemp(), name, wrapper,
-                                   vortex_shedding_mesh.blockMeshDict)
+mesh = wrapper.create_block_mesh(tempfile.mkdtemp(), mesh_name,
+                                 vortex_shedding_mesh.blockMeshDict)
+cuds.add(mesh)
 
-mesh_inside_wrapper = wrapper.get_dataset(name)
+vel_b = [None]*6
+pres_b = [None]*6
+vel_b[0] = api.Dirichlet(name='vel_b0')
+vel_b[0]._data[CUBA.VARIABLE] = CUBA.VELOCITY
+vel_b[0]._data[CUBA.VELOCITY] = (1.0, 0, 0)
+pres_b[0] = api.Neumann(name='pres_b0')
+pres_b[0]._data[CUBA.VARIABLE] = CUBA.PRESSURE
 
-print "Case directory ", mesh_inside_wrapper.path
+vel_b[1] = api.Neumann(name='vel_b1')
+vel_b[1]._data[CUBA.VARIABLE] = CUBA.VELOCITY
+pres_b[1] = api.Dirichlet(name='pres_b1')
+pres_b[1]._data[CUBA.VARIABLE] = CUBA.PRESSURE
+pres_b[1]._data[CUBA.PRESSURE] = 0.0
 
-wrapper.run()
+vel_b[2] = api.SlipVelocity(name='vel_b2')
+vel_b[2]._data[CUBA.VARIABLE] = CUBA.VELOCITY
+pres_b[2] = api.Neumann(name='pres_b2')
+pres_b[2]._data[CUBA.VARIABLE] = CUBA.PRESSURE
 
-# compute velocity magnitude (volume fraction here)
+vel_b[3] = api.SlipVelocity(name='vel_b3')
+vel_b[3]._data[CUBA.VARIABLE] = CUBA.VELOCITY
+pres_b[3] = api.Neumann(name='pres_b3')
+pres_b[3]._data[CUBA.VARIABLE] = CUBA.PRESSURE
+
+vel_b[4] = api.Neumann(name='vel_b4')
+vel_b[4]._data[CUBA.VARIABLE] = CUBA.VELOCITY
+pres_b[4] = api.Dirichlet(name='pres_b4')
+pres_b[4]._data[CUBA.VARIABLE] = CUBA.PRESSURE
+pres_b[4]._data[CUBA.PRESSURE] = 0.0
+
+vel_b[5] = api.Empty(name='vel_b5')
+vel_b[5]._data[CUBA.VARIABLE] = CUBA.VELOCITY
+pres_b[5] = api.Empty(name='pres_b5')
+pres_b[5]._data[CUBA.VARIABLE] = CUBA.PRESSURE
+
+for i in range(6):
+    cuds.add(api.Boundary(name='boundary' + str(i),
+                          condition=[vel_b[i], pres_b[i]]))
+
+sim = Simulation(cuds, 'OpenFOAM', engine_interface=EngineInterface.FileIO)
+
+sim.run()
+
+mesh_in_cuds = cuds.get(mesh_name)
+
+print "Case directory ", mesh_in_cuds.path
+
+# compute velocity magnitude for visualization
 updated_cells = []
-for cell in mesh_inside_wrapper.iter_cells():
+for cell in mesh_in_cuds._iter_cells():
     velo = cell.data[CUBA.VELOCITY]
-    cell.data[CUBA.VOLUME_FRACTION] = math.sqrt(sum(velo[i]*velo[i]
-                                                    for i in range(3)))
+    cell.data[CUBA.MAGNITUDE] = math.sqrt(sum(velo[i]*velo[i]
+                                              for i in range(3)))
     updated_cells.append(cell)
-mesh_inside_wrapper.update_cells(updated_cells)
+mesh_in_cuds._update_cells(updated_cells)
 
-
+"""
 @mayavi2.standalone
 def view(dataset):
     from mayavi.modules.surface import Surface
@@ -71,4 +121,5 @@ def view(dataset):
 
 
 if __name__ == '__main__':
-    view(mesh_inside_wrapper)
+    view(mesh_in_cuds)
+"""

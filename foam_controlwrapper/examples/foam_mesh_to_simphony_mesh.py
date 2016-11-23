@@ -2,10 +2,8 @@
 
 """
 
-from simphony.engine import openfoam_file_io
-
-wrapper = openfoam_file_io.Wrapper()
+import foam_controlwrapper
 
 name = 'poiseuille'
 path = '.'
-mesh_inside_wrapper = openfoam_file_io.read_foammesh(name, path)
+mesh_inside_wrapper = foam_controlwrapper.read_foammesh(name, path)

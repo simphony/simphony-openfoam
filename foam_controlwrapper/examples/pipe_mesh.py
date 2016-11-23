@@ -40,11 +40,18 @@ vertices
 
 blocks
   (
-    hex (0  1  2  3  8  9  10  11)(15 15 10) simpleGrading (1 1 1)
-    hex (4  5  1  0  12  13  9  8)(15 15 10) simpleGrading (1 1 1)
-    hex (1  5  6  2  9  13  14  10)(15 15 10) simpleGrading (1 1 1)
-    hex (3  2  6  7  11  10  14  15)(15 15 10) simpleGrading (1 1 1)
-    hex (4  0  3  7  12  8  11  15)(15 15 10) simpleGrading (1 1 1)
+//    hex (0  1  2  3  8  9  10  11)(15 15 10) simpleGrading (1 1 1)
+//    hex (4  5  1  0  12  13  9  8)(15 15 10) simpleGrading (1 1 1)
+//    hex (1  5  6  2  9  13  14  10)(15 15 10) simpleGrading (1 1 1)
+//    hex (3  2  6  7  11  10  14  15)(15 15 10) simpleGrading (1 1 1)
+//    hex (4  0  3  7  12  8  11  15)(15 15 10) simpleGrading (1 1 1)
+
+    hex (0  1  2  3  8  9  10  11)(5 5 2) simpleGrading (1 1 1)
+    hex (4  5  1  0  12  13  9  8)(5 5 2) simpleGrading (1 1 1)
+    hex (1  5  6  2  9  13  14  10)(5 5 2) simpleGrading (1 1 1)
+    hex (3  2  6  7  11  10  14  15)(5 5 2) simpleGrading (1 1 1)
+    hex (4  0  3  7  12  8  11  15)(5 5 2) simpleGrading (1 1 1)
+
   );
 
 edges

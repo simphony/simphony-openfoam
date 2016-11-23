@@ -4,11 +4,10 @@ Wrapper module for OpenFOAM
 
 """
 from simphony.core.cuba import CUBA
-from simphony.core.data_container import DataContainer
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
+from simphony.cuds.abc_mesh import ABCMesh
 from simphony.cuds.meta import api
 
-from foam_controlwrapper.cuba_extension import CUBAExt
 from .foam_mesh import FoamMesh
 from .foam_dicts import (modifyNumerics, modifyFields)
 from .foam_dicts import get_foam_solver
@@ -24,7 +23,6 @@ class Wrapper(ABCModelingEngine):
 
         self._meshes = {}
         super(Wrapper, self).__init__(**kwargs)
- 
 
     def _load_cuds(self):
         """Load CUDS data into  engine."""
@@ -33,8 +31,15 @@ class Wrapper(ABCModelingEngine):
             return
 
         for component in cuds.iter(ABCMesh):
-            self.add_dataset(component)
-        # 
+            # while mesh can be from other mesh engine add_dataset creates
+            # new FoamMesh. While there is no other way to know the
+            # new mesh name on cuds the corresponding mesh component is
+            # removed from cuds and replaced with the new mesh.
+            # If the component is wanted to remain on cuds it must be
+            # duplicated on user level code using some other name
+            new_mesh = self.add_dataset(component)
+            cuds.remove(component.name)
+            cuds.add(new_mesh)
 
     def run(self):
         """ run OpenFoam based on CM, BC and SP data
@@ -51,7 +56,6 @@ class Wrapper(ABCModelingEngine):
 
         """
 
-
         if not self._meshes:
             error_str = "Meshes not added to wrapper. Use add_mesh method"
             raise ValueError(error_str)
@@ -60,7 +64,7 @@ class Wrapper(ABCModelingEngine):
             error_str = "Multiple meshes not supported"
             raise ValueError(error_str)
 
-
+        cuds = self.get_cuds()
         solver = get_foam_solver(cuds)
 
         mesh = self._meshes.values()[0]
@@ -74,11 +78,11 @@ class Wrapper(ABCModelingEngine):
 #       c) Call solver
         solver_parameters = cuds.iter(api.SolverParameter)
         ncores = 1
-        if solver_parameters != None:
+        if solver_parameters is not None:
             for sp in solver_parameters:
-                if CUBAExt.NUMBER_OF_CORES in sp.data:
-                    ncores = sp.data[CUBAExt.NUMBER_OF_CORES]
-                    break;
+                if CUBA.NUMBER_OF_CORES in sp.data:
+                    ncores = sp.data[CUBA.NUMBER_OF_CORES]
+                    break
         mesh._time = foamface.run(mesh.name, ncores, solver)
 
     def add_dataset(self, mesh, name=None):
@@ -110,8 +114,9 @@ class Wrapper(ABCModelingEngine):
         if mesh_name in self._meshes:
             raise ValueError('Mesh \'{}\` already exists'.format(mesh_name))
         else:
-            solver = get_foam_solver(self.cuds)
-            self._meshes[mesh_name] = FoamMesh(mesh_name, self.cuds,
+            cuds = self.get_cuds()
+            solver = get_foam_solver(cuds)
+            self._meshes[mesh_name] = FoamMesh(mesh_name, cuds,
                                                solver, mesh)
             return self._meshes[mesh_name]
 

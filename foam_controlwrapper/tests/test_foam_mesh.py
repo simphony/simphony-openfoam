@@ -11,7 +11,6 @@ import os
 from simphony.cuds.mesh import Mesh, Face, Point, Cell, Edge
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
-from simphony.core.cuds_item import CUDSItem
 
 from foam_controlwrapper.foam_mesh import FoamMesh
 
@@ -50,7 +49,7 @@ class FoamMeshTestCase(unittest.TestCase):
                 (0.0, 1.0, 1.0))
         ]
 
-        puids = self.mesh.add_points(self.points)
+        puids = self.mesh._add_points(self.points)
 
         self.faces = [
             Face([puids[0], puids[3], puids[7], puids[4]]),
@@ -63,7 +62,7 @@ class FoamMeshTestCase(unittest.TestCase):
 
         self.edges = [Edge([puids[0], puids[3]])]
 
-        self.fuids = self.mesh.add_faces(self.faces)
+        self.fuids = self.mesh._add_faces(self.faces)
 
         self.cells = [
             Cell(puids,
@@ -73,40 +72,40 @@ class FoamMeshTestCase(unittest.TestCase):
 
         self.puids = puids
 
-        self.mesh.add_cells(self.cells)
+        self.mesh._add_cells(self.cells)
         self.boundaries = {"boundary"+str(i): [self.fuids[i]]
                            for i in range(6)}
         self.mesh._boundaries = self.boundaries
 
     def test_get_point(self):
-        """Test get_point method
+        """Test _get_point method
 
         """
 
         foam_mesh = FoamMesh('test_mesh', {}, self.solver, self.mesh)
         label = 0
-        for point in self.mesh.iter_points():
+        for point in self.mesh._iter_points():
             puid = foam_mesh._foamPointLabelToUuid[label]
-            point_f = foam_mesh.get_point(puid)
+            point_f = foam_mesh._get_point(puid)
             self.assertEqual(point.coordinates, point_f.coordinates)
             label += 1
 
     def test_get_edge(self):
-        """Test get_edge method
+        """Test _get_edge method
 
         """
 
         foam_mesh = FoamMesh('test_mesh', {}, self.solver, self.mesh)
         with self.assertRaises(NotImplementedError):
-            foam_mesh.get_edge(self.edges[0].uid)
+            foam_mesh._get_edge(self.edges[0].uid)
 
     def test_get_face(self):
-        """Test get_face method
+        """Test _get_face method
 
         """
 
         foam_mesh = FoamMesh('test_mesh', {}, self.solver, self.mesh)
-        for face in foam_mesh.iter_faces():
+        for face in foam_mesh._iter_faces():
             self.assertEqual(len(face.points), 4)
 
     def test_get_cell(self):
@@ -116,9 +115,9 @@ class FoamMeshTestCase(unittest.TestCase):
 
         foam_mesh = FoamMesh('test_mesh', {}, self.solver, self.mesh)
         label = 0
-        for cell in self.mesh.iter_cells():
+        for cell in self.mesh._iter_cells():
             cuid = foam_mesh._foamCellLabelToUuid[label]
-            cell_f = foam_mesh.get_cell(cuid)
+            cell_f = foam_mesh._get_cell(cuid)
             self.assertEqual(cell.data[CUBA.PRESSURE],
                              cell_f.data[CUBA.PRESSURE])
             self.assertEqual(cell.data[CUBA.VELOCITY],
@@ -126,159 +125,159 @@ class FoamMeshTestCase(unittest.TestCase):
             label += 1
 
     def test_add_points(self):
-        """Test add_points method
+        """Test _add_points method
 
         """
 
         foam_mesh = FoamMesh('test_mesh', {}, self.solver, self.mesh)
         with self.assertRaises(NotImplementedError):
-            foam_mesh.add_points(self.points)
+            foam_mesh._add_points(self.points)
 
     def test_add_edges(self):
-        """Test add_edges method
+        """Test _add_edges method
 
         """
 
         foam_mesh = FoamMesh('test_mesh', {}, self.solver, self.mesh)
         with self.assertRaises(NotImplementedError):
-            foam_mesh.add_edges(self.edges)
+            foam_mesh._add_edges(self.edges)
 
     def test_add_faces(self):
-        """Test add_faces method
+        """Test _add_faces method
 
         """
 
         foam_mesh = FoamMesh('test_mesh', {}, self.solver, self.mesh)
         with self.assertRaises(NotImplementedError):
-            foam_mesh.add_faces(self.faces)
+            foam_mesh._add_faces(self.faces)
 
     def test_add_cells(self):
-        """Test add_cells method
+        """Test _add_cells method
 
         """
 
         foam_mesh = FoamMesh('test_mesh', {}, self.solver, self.mesh)
         with self.assertRaises(NotImplementedError):
-            foam_mesh.add_cells(self.cells)
+            foam_mesh._add_cells(self.cells)
 
     def test_update_points(self):
-        """Test update_points method
+        """Test _update_points method
 
         """
 
         foam_mesh = FoamMesh('test_mesh', {}, self.solver, self.mesh)
         with self.assertRaises(NotImplementedError):
-            foam_mesh.update_points(self.points)
+            foam_mesh._update_points(self.points)
 
     def test_update_edges(self):
-        """Test update_edges method
+        """Test _update_edges method
 
         """
 
         foam_mesh = FoamMesh('test_mesh', {}, self.solver, self.mesh)
         with self.assertRaises(NotImplementedError):
-            foam_mesh.update_edges(self.edges)
+            foam_mesh._update_edges(self.edges)
 
     def test_update_faces(self):
-        """Test update_faces method
+        """Test _update_faces method
 
         """
 
         foam_mesh = FoamMesh('test_mesh', {}, self.solver, self.mesh)
         with self.assertRaises(NotImplementedError):
-            foam_mesh.update_faces(self.faces)
+            foam_mesh._update_faces(self.faces)
 
     def test_update_cells(self):
-        """Test update_cells method
+        """Test _update_cells method
 
         """
 
         foam_mesh = FoamMesh('test_mesh', {}, self.solver, self.mesh)
         label = 0
         cuid = foam_mesh._foamCellLabelToUuid[label]
-        cell_f = foam_mesh.get_cell(cuid)
+        cell_f = foam_mesh._get_cell(cuid)
         self.assertIsInstance(cell_f.data, DataContainer)
-        cell = list(self.mesh.iter_cells())[label]
+        cell = list(self.mesh._iter_cells())[label]
         self.assertEqual(cell.data, cell_f.data)
 
         updated_cells = []
-        for cell in foam_mesh.iter_cells():
+        for cell in foam_mesh._iter_cells():
             cell.data[CUBA.VELOCITY] = [2, 1, 3]
             updated_cells.append(cell)
-        foam_mesh.update_cells(updated_cells)
+        foam_mesh._update_cells(updated_cells)
 
         label = 0
         cuid = foam_mesh._foamCellLabelToUuid[label]
-        cell_f = foam_mesh.get_cell(cuid)
+        cell_f = foam_mesh._get_cell(cuid)
         self.assertIsInstance(cell_f.data, DataContainer)
-        cell = list(self.mesh.iter_cells())[label]
+        cell = list(self.mesh._iter_cells())[label]
         self.assertNotEqual(cell.data, cell_f.data)
 
         updated_cells = []
-        for cell in foam_mesh.iter_cells():
+        for cell in foam_mesh._iter_cells():
             cell.points = [self.points[1].uid, self.points[2].uid,
                            self.points[3].uid]
             updated_cells.append(cell)
         with self.assertRaises(Warning):
-            foam_mesh.update_cells(updated_cells)
+            foam_mesh._update_cells(updated_cells)
 
     def test_iter_points(self):
-        """Test iter_points method
+        """Test _iter_points method
 
         """
 
         foam_mesh = FoamMesh('test_mesh', {}, self.solver, self.mesh)
         label = 0
-        for point in self.mesh.iter_points():
+        for point in self.mesh._iter_points():
             puid = foam_mesh._foamPointLabelToUuid[label]
-            point_f = foam_mesh.get_point(puid)
+            point_f = foam_mesh._get_point(puid)
             self.assertEqual(point.coordinates, point_f.coordinates)
             label += 1
 
     def test_iter_edges(self):
-        """Test iter_edges method
+        """Test _iter_edges method
 
         """
 
         foam_mesh = FoamMesh('test_mesh', {}, self.solver, self.mesh)
-        self.assertEqual(foam_mesh.iter_edges(), [])
+        self.assertEqual(foam_mesh._iter_edges(), [])
 
     def test_iter_faces(self):
-        """Test iter_faces method
+        """Test _iter_faces method
 
         """
 
         foam_mesh = FoamMesh('test_mesh', {}, self.solver, self.mesh)
-        for face_f in foam_mesh.iter_faces():
+        for face_f in foam_mesh._iter_faces():
             self.assertEqual(len(face_f.points), 4)
 
     def test_iter_cells(self):
-        """Test iter_cells method
+        """Test _iter_cells method
 
         """
 
         foam_mesh = FoamMesh('test_mesh', {}, self.solver, self.mesh)
-        for cell_f in foam_mesh.iter_cells():
+        for cell_f in foam_mesh._iter_cells():
             label = foam_mesh._uuidToFoamLabel[cell_f.uid]
             cell = self.cells[label]
             self.assertEqual(cell.data[CUBA.VELOCITY],
                              cell_f.data[CUBA.VELOCITY])
 
     def test_has_faces(self):
-        """Test has_faces method
+        """Test _has_faces method
 
         """
 
         foam_mesh = FoamMesh('test_mesh', {}, self.solver, self.mesh)
-        self.assertTrue(foam_mesh.has_faces())
+        self.assertTrue(foam_mesh._has_faces())
 
     def test_has_cells(self):
-        """Test has_cells method
+        """Test _has_cells method
 
         """
 
         foam_mesh = FoamMesh('test_mesh', {}, self.solver, self.mesh)
-        self.assertTrue(foam_mesh.has_cells())
+        self.assertTrue(foam_mesh._has_cells())
 
     def test_count_of(self):
         """Test count_of method
@@ -287,19 +286,19 @@ class FoamMeshTestCase(unittest.TestCase):
 
         foam_mesh = FoamMesh('test_mesh', {}, self.solver, self.mesh)
 
-        item_type = CUDSItem.POINT
+        item_type = CUBA.POINT
         self.assertEqual(foam_mesh.count_of(item_type),
                          self.mesh.count_of(item_type))
 
-        item_type = CUDSItem.EDGE
+        item_type = CUBA.EDGE
         self.assertEqual(foam_mesh.count_of(item_type),
                          self.mesh.count_of(item_type))
 
-        item_type = CUDSItem.FACE
+        item_type = CUBA.FACE
         self.assertEqual(foam_mesh.count_of(item_type),
                          self.mesh.count_of(item_type))
 
-        item_type = CUDSItem.CELL
+        item_type = CUBA.CELL
         self.assertEqual(foam_mesh.count_of(item_type),
                          self.mesh.count_of(item_type))
 
