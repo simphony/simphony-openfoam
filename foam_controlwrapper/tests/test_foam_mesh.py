@@ -325,5 +325,6 @@ class FoamMeshTestCase(unittest.TestCase):
         foam_mesh = FoamMesh('test_mesh', {}, self.solver, self.mesh)
         foam_mesh.generate_uuidmapping(8, 0, 6, 1)
 
+
 if __name__ == '__main__':
     unittest.main()
