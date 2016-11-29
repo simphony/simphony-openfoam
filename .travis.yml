@@ -3,6 +3,14 @@ python:
   - "2.7"
 virtualenv:
   system_site_packages: false
+env:
+  - SIMPHONY_VERSION=master
+  - SIMPHONY_VERSION=0.3.0
+  - SIMPHONY_VERSION=413eb6f5683c4733b943c300c3192265c79ac26b
+matrix:
+  allow_failures:
+    - env: SIMPHONY_VERSION=master
+    - env: SIMPHONY_VERSION=0.3.0
 before_install:
   - sudo sh -c "echo deb http://www.openfoam.org/download/ubuntu precise main > /etc/apt/sources.list.d/openfoam.list"
   - sudo apt-get update -qq
@@ -14,7 +22,7 @@ before_install:
   # (2) Pytables breaks with latest Cython
   #     see https://github.com/PyTables/PyTables/issues/388
   - pip install numexpr cython==0.20
-  - pip install -r requirements.txt
+  - pip install -e git+git://github.com/simphony/simphony-common.git@${SIMPHONY_VERSION}#egg=simphony
   - pip install -r dev_requirements.txt
   - pip install -r doc_requirements.txt
   - pip install coveralls
