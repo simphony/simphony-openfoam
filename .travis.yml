@@ -9,9 +9,8 @@ env:
   - SIMPHONY_VERSION=413eb6f5683c4733b943c300c3192265c79ac26b
 matrix:
   allow_failures:
-    - env: 
-        - SIMPHONY_VERSION=master
-        - SIMPHONY_VERSION=0.3.0
+    - env: SIMPHONY_VERSION=master
+    - env: SIMPHONY_VERSION=0.3.0
 before_install:
   - sudo sh -c "echo deb http://www.openfoam.org/download/ubuntu precise main > /etc/apt/sources.list.d/openfoam.list"
   - sudo apt-get update -qq
