@@ -2,7 +2,6 @@
 
 """
 
-import foam_controlwrapper
 from simphony.core.cuba import CUBA
 
 from mayavi.scripts import mayavi2
@@ -12,6 +11,7 @@ from simphony.cuds.meta import api
 from simphony.engine import EngineInterface
 
 import tempfile
+from foam_controlwrapper import create_quad_mesh
 
 case_name = 'poiseuille'
 mesh_name = 'poiseuille_mesh'
@@ -56,8 +56,8 @@ ney = 4
 # this routine creates one block quad mesh
 #  - boundaries have predescribed names (inlet, walls, outlet, frontAndBack)
 
-mesh = foam_controlwrapper.create_quad_mesh(tempfile.mkdtemp(), mesh_name,
-                                            corner_points, nex, ney, 1)
+mesh = create_quad_mesh(tempfile.mkdtemp(), mesh_name,
+                        corner_points, nex, ney, 1)
 cuds.add(mesh)
 
 vel_inlet = api.Dirichlet(name='vel_inlet')
