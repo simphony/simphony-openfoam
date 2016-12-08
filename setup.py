@@ -65,9 +65,6 @@ setup(
     packages=find_packages(),
     install_requires=['simphony >= 0.3.0',
                       'simphony[H5IO, CUBAGen]'],
-#    entry_points={'simphony.engine':
-#                  ['openfoam_file_io = foam_controlwrapper',
-#                   'openfoam_internal = foam_internalwrapper']},
     cmdclass={
         'clean': CleanCommand,
         'install': InstallCommand}

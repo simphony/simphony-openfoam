@@ -6,7 +6,6 @@ foam_mesh module functionalities
 """
 
 import unittest
-import os
 
 from simphony.cuds.mesh import Mesh, Face, Point, Cell, Edge
 from simphony.core.cuba import CUBA
@@ -311,7 +310,6 @@ class FoamMeshTestCase(unittest.TestCase):
         item_type = CUBA.CELL
         self.assertEqual(foam_mesh.count_of(item_type),
                          self.mesh.count_of(item_type))
-
 
     def test_generate_uuidmapping(self):
         """Test generate_uuidmapping method

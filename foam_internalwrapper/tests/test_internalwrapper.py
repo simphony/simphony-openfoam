@@ -21,6 +21,7 @@ class TestMesh(Mesh):
         Mesh.__init__(self, name)
         self._boundaries = {}
 
+
 class WrapperTestCase(unittest.TestCase):
     """Test case for Wrapper class"""
     def setUp(self):
@@ -57,7 +58,7 @@ class WrapperTestCase(unittest.TestCase):
         ]
 
         self.fuids = self.mesh._add_faces(self.faces)
-        
+
         self.cells = [
             Cell(puids,
                  data=DataContainer({CUBA.VELOCITY: [1, 0, 0],
@@ -71,7 +72,7 @@ class WrapperTestCase(unittest.TestCase):
         self.boundaries = {"boundary"+str(i): [self.fuids[i]]
                            for i in range(6)}
         self.mesh._boundaries = self.boundaries
-        
+
     def test_add_dataset(self):
         """Test add_dataset method
 
