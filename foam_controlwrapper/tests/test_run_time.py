@@ -24,9 +24,9 @@ class WrapperRunTestCase(unittest.TestCase):
         cuds.add(cfd)
 
         self.sim_time = api.IntegrationTime(name='simulation_time',
-                                            current = 0.0,
-                                            final = 1.0,
-                                            size = 0.5)
+                                            current=0.0,
+                                            final=1.0,
+                                            size=0.5)
         cuds.add(self.sim_time)
 
         mat = api.Material(name='a_material')
@@ -44,7 +44,7 @@ class WrapperRunTestCase(unittest.TestCase):
         vel_outlet._data[CUBA.VARIABLE] = CUBA.VELOCITY
         pres_outlet = api.Dirichlet(name='pres_outlet')
         pres_outlet._data[CUBA.VARIABLE] = CUBA.PRESSURE
-        pres_outlet._data[CUBA.PRESSURE] = 0.0 
+        pres_outlet._data[CUBA.PRESSURE] = 0.0
 
         vel_walls = api.Dirichlet(name='vel_walls')
         vel_walls._data[CUBA.VARIABLE] = CUBA.VELOCITY
@@ -80,7 +80,7 @@ class WrapperRunTestCase(unittest.TestCase):
         cuds.add(mesh)
         self.cuds = cuds
         self.sim = Simulation(cuds, 'OpenFOAM',
-                              engine_interface = EngineInterface.FileIO)
+                              engine_interface=EngineInterface.FileIO)
         self.mesh_in_cuds = self.cuds.get(mesh_name)
 
     def tearDown(self):
@@ -88,7 +88,7 @@ class WrapperRunTestCase(unittest.TestCase):
             shutil.rmtree(self.mesh_in_cuds.path)
         if os.path.exists(self.mesh_path):
             shutil.rmtree(self.mesh_path)
- 
+
     def test_run_time(self):
         """Test that field variable value is changed after
         consecutive calls of run method

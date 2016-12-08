@@ -10,10 +10,13 @@ from simphony.api import CUDS, Simulation
 from simphony.cuds.meta import api
 from simphony.engine import EngineInterface
 
-# from mayavi.scripts import mayavi2
+from mayavi.scripts import mayavi2
 
 import pipe_mesh
 import tempfile
+import time
+
+start = time.time()
 
 case_name = 'aqueous_foam'
 mesh_name = 'aqueous_foam_mesh'
@@ -52,11 +55,22 @@ sim_time = api.IntegrationTime(name='simulation_time',
                                size=0.0001)
 cuds.add(sim_time)
 
+end = time.time()
+print "Time spend in initialization: ", end-start
+
+start = time.time()
 # create computational mesh
 mesh = foam_controlwrapper.create_block_mesh(tempfile.mkdtemp(), mesh_name,
                                              pipe_mesh.blockMeshDict)
-cuds.add(mesh)
+end = time.time()
+print "Time spend in blockmesh: ", end-start
 
+start = time.time()
+cuds.add(mesh)
+end = time.time()
+print "Time spend in add mesh to cuds: ", end-start
+
+start = time.time()
 # boundary conditions
 vel_inlet = api.Dirichlet(name='vel_inlet')
 vel_inlet._data[CUBA.VARIABLE] = CUBA.VELOCITY
@@ -86,10 +100,21 @@ cuds.add(inlet)
 cuds.add(walls)
 cuds.add(outlet)
 
+end = time.time()
+print "Time spend in boundary settings: ", end-start
+
+start = time.time()
 sim = Simulation(cuds, 'OpenFOAM', engine_interface=EngineInterface.FileIO)
+end = time.time()
+print "Time spend in Simulation initialization: ", end-start
+
+start = time.time()
 
 sim.run()
+end = time.time()
+print "Time spend in run: ", end-start
 
+start = time.time()
 mesh_inside_wrapper = cuds.get(mesh_name)
 print "Working directory ", mesh_inside_wrapper.path
 average_pressure = 0.0
@@ -97,10 +122,12 @@ for cell in mesh_inside_wrapper.get_boundary_cells(inlet.name):
     average_pressure += cell.data[CUBA.PRESSURE]
 
 average_pressure /= len(mesh_inside_wrapper._boundaries[inlet.name])
+end = time.time()
+print "Time spend in post processing: ", end-start
 
 print "Average pressure on inlet: ", average_pressure
 
-"""
+
 @mayavi2.standalone
 def view():
     from mayavi.modules.surface import Surface
@@ -115,4 +142,3 @@ def view():
 
 if __name__ == '__main__':
     view()
-"""

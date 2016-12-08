@@ -24,15 +24,15 @@ class WrapperRunTestCase(unittest.TestCase):
         cfd = api.Cfd(name='default model')
         cuds.add(cfd)
 
-        self.sp = api.SolverParameter(name = 'solver_parameters')
+        self.sp = api.SolverParameter(name='solver_parameters')
         self.sp._data[CUBA.NUMBER_OF_CORES] = 4
 
         cuds.add(self.sp)
 
         sim_time = api.IntegrationTime(name='simulation_time',
-                                       current = 0.0,
-                                       final = 1.0,
-                                       size = 1.0)
+                                       current=0.0,
+                                       final=1.0,
+                                       size=1.0)
         cuds.add(sim_time)
 
         mat = api.Material(name='a_material')
@@ -50,7 +50,7 @@ class WrapperRunTestCase(unittest.TestCase):
         vel_outlet._data[CUBA.VARIABLE] = CUBA.VELOCITY
         pres_outlet = api.Dirichlet(name='pres_outlet')
         pres_outlet._data[CUBA.VARIABLE] = CUBA.PRESSURE
-        pres_outlet._data[CUBA.PRESSURE] = 0.0 
+        pres_outlet._data[CUBA.PRESSURE] = 0.0
 
         vel_walls = api.Dirichlet(name='vel_walls')
         vel_walls._data[CUBA.VARIABLE] = CUBA.VELOCITY
@@ -86,7 +86,7 @@ class WrapperRunTestCase(unittest.TestCase):
         cuds.add(mesh)
         self.cuds = cuds
         self.sim = Simulation(cuds, 'OpenFOAM',
-                              engine_interface = EngineInterface.FileIO)
+                              engine_interface=EngineInterface.FileIO)
         self.mesh_in_cuds = self.cuds.get(mesh_name)
 
     def tearDown(self):

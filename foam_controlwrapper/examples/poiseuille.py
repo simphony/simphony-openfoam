@@ -5,7 +5,7 @@
 import foam_controlwrapper
 from simphony.core.cuba import CUBA
 
-# from mayavi.scripts import mayavi2
+from mayavi.scripts import mayavi2
 
 from simphony.api import CUDS, Simulation
 from simphony.cuds.meta import api
@@ -109,7 +109,7 @@ average_pressure /= len(mesh_inside_wrapper._boundaries[inlet.name])
 
 print "Average pressure on " + inlet.name + ": ", average_pressure
 
-"""
+
 @mayavi2.standalone
 def view():
     from mayavi.modules.surface import Surface
@@ -124,4 +124,4 @@ def view():
 
 if __name__ == '__main__':
     view()
-"""
+

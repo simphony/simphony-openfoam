@@ -4,7 +4,6 @@ Templates for OpenFOAM -files
 
 """
 import os
-from cuba_extension import CUBAExt
 
 head = \
     """

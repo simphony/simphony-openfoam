@@ -27,7 +27,6 @@ class IOUtilsTestCase(unittest.TestCase):
         self.mesh = create_quad_mesh(self.path, self.name, corner_points,
                                      5, 5, 5)
 
-
     def test_read_foammesh(self):
         """Test read_foammesh method
 

@@ -226,7 +226,7 @@ while (runTime.run())
 
     #include "calcStrain.H"
 
-    runTime.write();
+    //    runTime.write();
 
     Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
         << "  ClockTime = " << runTime.elapsedClockTime() << " s"

@@ -3,6 +3,7 @@
 Wrapper module for OpenFOAM
 
 """
+
 from simphony.core.cuba import CUBA
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
 from simphony.cuds.abc_mesh import ABCMesh
@@ -14,7 +15,8 @@ from foam_internalwrapper.foam_dicts import (get_foam_solver,
                                              modifyNumerics,
                                              modifyFields,
                                              create_directories,
-                                             not_empty)
+                                             not_empty,
+                                             get_simphony_io_solver)
 
 import simphonyfoaminterface
 
@@ -54,9 +56,8 @@ class Wrapper(ABCModelingEngine):
         Exception when file IO occurs.
 
         """
-
         if not self._meshes:
-            error_str = "Meshes not added to wrapper. Use add_mesh method"
+            error_str = "Meshes not added to wrapper. Use add_dataset method"
             raise ValueError(error_str)
 
         if len(self._meshes) > 1:
@@ -77,7 +78,6 @@ class Wrapper(ABCModelingEngine):
         modifyFields(mesh, cuds, solver)
 
         simphonyfoaminterface.writeFields(mesh.name)
-
         # run case
         solver_parameters = cuds.iter(api.SolverParameter)
         ncores = 1
@@ -86,12 +86,12 @@ class Wrapper(ABCModelingEngine):
                 if CUBA.NUMBER_OF_CORES in sp.data:
                     ncores = sp.data[CUBA.NUMBER_OF_CORES]
                     break
-        runner = FoamRunner(solver, mesh.name, case, ncores)
+        runner = FoamRunner(get_simphony_io_solver(solver), mesh.name,
+                            case, ncores)
         runner.run()
 
         # save timestep to mesh
         mesh._time = runner.get_last_time()
-        print mesh._time
         # update time and data to Foam objectRegistry
         simphonyfoaminterface.updateData(mesh.name, float(mesh._time))
 

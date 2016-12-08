@@ -69,7 +69,7 @@ cuds.add(cfd)
 sm = api.StandardStressModel(name='standard_stress_model')
 cuds.add(sm)
 
-rvm = api.MesoScaleRelativeVelocityModel(name='meso_rel_vel_model')
+rvm = api.MesoScopicRelativeVelocityModel(name='meso_rel_vel_model')
 cuds.add(rvm)
 
 gm = api.GravityModel(name='gravitation')

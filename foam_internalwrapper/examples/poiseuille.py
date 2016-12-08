@@ -39,7 +39,7 @@ cuds.add(mat)
 # time setting
 sim_time = api.IntegrationTime(name='simulation_time',
                                current=0.0,
-                               final=1.0,
+                               final=0.2,
                                size=0.01)
 cuds.add(sim_time)
 

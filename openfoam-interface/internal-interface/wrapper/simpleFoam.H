@@ -5,10 +5,8 @@
   \\  /    A nd           | Copyright (C) 2015 SimPhoNy -project
    \\/     M anipulation  |
 -------------------------------------------------------------------------------
-
-
 License
-    This file is a derivative work of OpenFOAM.
+    This file is a derivativee work of OpenFOAM.
 
     OpenFOAM is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
@@ -26,11 +24,19 @@ License
 
 \*---------------------------------------------------------------------------*/
 
+/*
+#include "fvCFD.H"
+#include "singlePhaseTransportModel.H"
+#include "RASModel.H"
+#include "simpleControl.H"
+#include "fvIOoptionList.H"
+*/
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+#include "simpleControl.H"
+
 #include "initContinuityErrs.H"
-pimpleControl pimple(mesh);
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
+simpleControl simple(mesh);
 
 std::string pName = "p";
 std::string UName = "U";
@@ -38,21 +44,20 @@ std::string Sigma_muName = "Sigma";
 std::string SName = "S";
 std::string StressName = "Stress";
 
+
 volScalarField& p = find_Data<scalar>(mesh,pName);
 
 volVectorField& U = find_Data<vector>(mesh,UName);
 surfaceScalarField& phi = const_cast<surfaceScalarField&>(mesh.lookupObject<surfaceScalarField>(word("phi"))); 
-
 volTensorField& Sigma_mu = find_Data<tensor>(mesh,Sigma_muName);
 volTensorField& S = find_Data<tensor>(mesh,SName);
 volTensorField& Stress = find_Data<tensor>(mesh,StressName);
 
 label pRefCell = 0;
 scalar pRefValue = 0.0;
-setRefCell(p, mesh.solutionDict().subDict("PIMPLE"), pRefCell, pRefValue);
+setRefCell(p, mesh.solutionDict().subDict("SIMPLE"), pRefCell, pRefValue);
 
 dictionary& TPDict = const_cast<dictionary&>(mesh.lookupObject<dictionary>(word("transportProperties")));
-
 std::string TPString = dictionary_to_string(TPDict);
 
 singlePhaseTransportModel laminarTransport(U,phi,IStringStream
@@ -101,11 +106,11 @@ volTensorField SigmaPrime
     Sigma_mu - Stress
 );
 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 Info<< "\nStarting time loop\n" << endl;
 
-// scale pressure
-
+//scale pressure
 dimensionedScalar dimlessRho = dimensionedScalar("dimlessRho",dimensionSet(0,0,0,0,0,0,0),rho.value());
 
 p=p/dimlessRho;
@@ -113,20 +118,16 @@ p=p/dimlessRho;
 U.storePrevIter();
 p.storePrevIter();
 
-while (runTime.run())
-{
-    #include "readTimeControls.H"
-    #include "CourantNo.H"
-    #include "setDeltaT.H"
+scalar cumulativeContErr = 0;
 
-    runTime++;
-
+while (simple.loop())
+  {
     Info<< "Time = " << runTime.timeName() << nl << endl;
 
-    // --- Pressure-velocity PIMPLE corrector loop
-    while (pimple.loop())
+    // --- Pressure-velocity SIMPLE corrector
     {
-        // Solve the Momentum equation
+    // Momentum predictor
+
       if(stressModelType != word("fromMesoscale")){
 	// do SigmaPrime = Sigma_mu-Sigma
 	//microscale tensor is selected as the same in macroscale 
@@ -135,105 +136,79 @@ while (runTime.run())
       }
 
       SigmaPrime = Sigma_mu - Stress;
-      //      Info << SigmaPrime <<endl;
-        tmp<fvVectorMatrix> UEqn
+
+     tmp<fvVectorMatrix> UEqn
+    (
+        fvm::div(phi, U)
+      - fvc::div(SigmaPrime)/rho
+      - fvm::laplacian(laminarTransport.nu(), U)
+      - fvc::div(laminarTransport.nu()*dev(T(fvc::grad(U))))
+	//      ==
+	//        fvOptions(U)
+    );
+
+    UEqn().relax();
+
+    //    fvOptions.constrain(UEqn());
+
+    solve(UEqn() == -fvc::grad(p));
+
+    //    fvOptions.correct(U);
+ 
+    volScalarField rAU(1.0/UEqn().A());
+    volVectorField HbyA("HbyA", U);
+    HbyA = rAU*UEqn().H();
+    UEqn.clear();
+
+    surfaceScalarField phiHbyA("phiHbyA", fvc::interpolate(HbyA) & mesh.Sf());
+
+    //    fvOptions.makeRelative(phiHbyA);
+
+    adjustPhi(phiHbyA, U, p);
+
+    // Non-orthogonal pressure corrector loop
+    while (simple.correctNonOrthogonal())
+    {
+        fvScalarMatrix pEqn
         (
-            fvm::ddt(U)
-          + fvm::div(phi, U)
-	  - fvc::div(SigmaPrime)/rho
-          + turbulence->divDevReff(U)
-        // ==
-        //    fvOptions(U)
+            fvm::laplacian(rAU, p) == fvc::div(phiHbyA)
         );
 
-        UEqn().relax();
+        pEqn.setReference(pRefCell, pRefValue);
 
-        //fvOptions.constrain(UEqn());
+        pEqn.solve();
 
-        volScalarField rAU(1.0/UEqn().A());
-
-        if (pimple.momentumPredictor())
+        if (simple.finalNonOrthogonalIter())
         {
-            solve(UEqn() == -fvc::grad(p));
-
-            //fvOptions.correct(U);
+            phi = phiHbyA - pEqn.flux();
         }
+    }
 
-        // --- Pressure corrector loop
-        while (pimple.correct())
-        {
-            surfaceScalarField rAUf("rAUf", fvc::interpolate(rAU));
-            
-            volVectorField HbyA("HbyA", U);
-            HbyA = rAU*UEqn().H();
-            
-            if (pimple.nCorrPISO() <= 1)
-            {
-                UEqn.clear();
-            }
+    
+    #include "continuityErrs.H"
 
-            surfaceScalarField phiHbyA
-            (
-                "phiHbyA",
-                (fvc::interpolate(HbyA) & mesh.Sf())
-              + rAUf*fvc::ddtCorr(U, phi)
-            );
+    // Explicitly relax pressure for momentum corrector
+    p.relax();
 
-            adjustPhi(phiHbyA, U, p);
-
-            //fvOptions.relativeFlux(phiHbyA);
-
-            // Non-orthogonal pressure corrector loop
-            while (pimple.correctNonOrthogonal())
-            {
-                // Pressure corrector
-                fvScalarMatrix pEqn
-                (
-                    fvm::laplacian(rAUf, p) == fvc::div(phiHbyA)
-                );
-            
-                pEqn.setReference(pRefCell, pRefValue);
-            
-                pEqn.solve(mesh.solver(p.select(pimple.finalInnerIter())));
-            
-                if (pimple.finalNonOrthogonalIter())
-                {
-                    phi = phiHbyA - pEqn.flux();
-                }
-            }
-
-            #include "continuityErrs.H"
-
-            // Explicitly relax pressure for momentum corrector
-            p.relax();
-            
-            U = HbyA - rAU*fvc::grad(p);
-            U.correctBoundaryConditions();
-
-
-            //fvOptions.correct(U);
-        }
-
-        if (pimple.turbCorr())
-        {
-            turbulence->correct();
-        }
-
-	S = fvc::grad(U) + T(fvc::grad(U));
-	Stress = laminarTransport.nu()*rho*S;
+    // Momentum corrector
+    U = HbyA - rAU*fvc::grad(p);
+    U.correctBoundaryConditions();
+    //    fvOptions.correct(U);
 
     }
 
- 
-    //runTime.write();
+    turbulence->correct();
+
+    S = fvc::grad(U) + T(fvc::grad(U));
+    Stress = laminarTransport.nu()*rho*S;
+
 
     Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
-        << "  ClockTime = " << runTime.elapsedClockTime() << " s"
-        << nl << endl;
- }
+	<< "  ClockTime = " << runTime.elapsedClockTime() << " s"
+	<< nl << endl;
 
-// scale pressure
-p = p*dimlessRho;
+  }
+p=p*dimlessRho;
 
 Info<< "End\n" << endl;
 

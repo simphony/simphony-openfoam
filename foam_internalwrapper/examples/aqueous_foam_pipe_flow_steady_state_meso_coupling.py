@@ -3,6 +3,7 @@ Herschel-Bulkley power law for bulk and wall shear stress dependent
 slip velocity law for wall layer
 
 """
+import numpy as np
 
 import foam_controlwrapper
 from simphony.core.cuba import CUBA
@@ -34,26 +35,23 @@ cfd.compressibility_model = api.IncompressibleFluidModel(name='incompressible')
 # material
 foam = api.Material(name='foam')
 foam._data[CUBA.DENSITY] = 250.0
-foam._data[CUBA.DYNAMIC_VISCOSITY] = 4.37
+foam._data[CUBA.DYNAMIC_VISCOSITY] = 4.37  # initial_viscosity of HB model
 cuds.add(foam)
 
 # use Herschel Bulkley viscosity model for aqueous foam
 hb = api.HerschelBulkleyModel(name='foam_rheology')
-hb.initial_viscosity = 0.01748
-hb.relaxation_time = 0.0148
-hb.linear_constant = 0.00268
+hb.initial_viscosity = 0.01748 * foam._data[CUBA.DENSITY]
+hb.relaxation_time = 0.0148 * foam._data[CUBA.DENSITY]
+hb.linear_constant = 0.00268 * foam._data[CUBA.DENSITY]
 hb.power_law_index = 0.5
 hb.material = cuds.get('foam').uid
 cfd.rheology_model = hb
 
 cuds.add(cfd)
 
-# time setting
-sim_time = api.IntegrationTime(name='simulation_time',
-                               current=0.0,
-                               final=0.3,
-                               size=0.0001)
-cuds.add(sim_time)
+sol_par = api.SolverParameter(name='steady_state')
+sol_par._data[CUBA.STEADY_STATE] = True
+cuds.add(sol_par)
 
 end = time.time()
 print "Time spend in initialization: ", end-start
@@ -108,14 +106,63 @@ sim = Simulation(cuds, 'OpenFOAM', engine_interface=EngineInterface.Internal)
 end = time.time()
 print "Time spend in Simulation initialization: ", end-start
 
-start = time.time()
+
+# time setting
+sim_time = api.IntegrationTime(name='simulation_time',
+                               current=0.0,
+                               final=20,
+                               size=1)
+cuds.add(sim_time)
 
 sim.run()
+
+mesh_inside_wrapper = cuds.get(mesh_name)
+
+
+sm = api.MesoScopicStressModel(name='meso_stress_model')
+cuds.add(sm)
+
+cuds.remove('simulation_time')
+sim_time = api.IntegrationTime(name='simulation_time',
+                               current=0.0,
+                               final=1,
+                               size=1)
+cuds.add(sim_time)
+
+
+start = time.time()
+
+number_of_outer_timesteps = 500
+print "Working directory: ", mesh_inside_wrapper.path
+for time_i in range(number_of_outer_timesteps):
+    # solve macroscopic scale
+    print "Solve cfd"
+    sim.run()
+    print "Time: ", mesh_inside_wrapper._time
+    print "Mesoscale as analytic coupling"
+    print " Update stress"
+
+    updated_cells = []
+    for cell in mesh_inside_wrapper._iter_cells():
+        strain = cell.data[CUBA.STRAIN_TENSOR]
+        strain_rate = np.linalg.norm(strain)
+
+        nu = min(hb.initial_viscosity,
+                 (hb.relaxation_time +
+                  hb.linear_constant*pow(strain_rate, hb.power_law_index))
+                 / (max(strain_rate, 1.0e-6))
+                 )
+        hb_stress = [nu*sri for sri in strain]
+        hb_stress = cell.data[CUBA.STRESS_TENSOR]
+        cell.data[CUBA.HOMOGENIZED_STRESS_TENSOR] = hb_stress
+        updated_cells.append(cell)
+    mesh_inside_wrapper._update_cells(updated_cells)
+
+
 end = time.time()
 print "Time spend in run: ", end-start
 
 start = time.time()
-mesh_inside_wrapper = cuds.get(mesh_name)
 print "Working directory ", mesh_inside_wrapper.path
 average_pressure = 0.0
 for cell in mesh_inside_wrapper.get_boundary_cells(inlet.name):

@@ -5,7 +5,7 @@
 import foam_controlwrapper
 from simphony.core.cuba import CUBA
 
-# from mayavi.scripts import mayavi2
+from mayavi.scripts import mayavi2
 
 from simphony.api import CUDS, Simulation
 from simphony.cuds.meta import api
@@ -142,7 +142,7 @@ cuds.add(frontAndBack)
 # initial state. In VOF only one velocity and pressure field
 mesh_in_cuds = cuds.get(mesh_name)
 updated_cells = []
-for cell in mesh_in_cuds._iter_cells():
+for cell in mesh_in_cuds.iter(item_type=CUBA.CELL):
     xmid = sum(mesh_in_cuds._get_point(puid).coordinates[0]
                for puid in cell.points)
     xmid /= sum(1.0 for _ in cell.points)
@@ -156,7 +156,7 @@ for cell in mesh_in_cuds._iter_cells():
 
     updated_cells.append(cell)
 
-mesh_in_cuds._update_cells(updated_cells)
+mesh_in_cuds.update(updated_cells)
 
 
 sim = Simulation(cuds, 'OpenFOAM', engine_interface=EngineInterface.FileIO)
@@ -167,7 +167,7 @@ mesh_inside_wrapper = cuds.get(mesh_name)
 
 print "Case directory ", mesh_inside_wrapper.path
 
-"""
+
 @mayavi2.standalone
 def view():
     from mayavi.modules.surface import Surface
@@ -182,4 +182,4 @@ def view():
 
 if __name__ == '__main__':
     view()
-"""
+

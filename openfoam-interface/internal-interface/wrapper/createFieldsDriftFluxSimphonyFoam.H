@@ -92,7 +92,7 @@ new volTensorField
 
 Info<< "Calculating face flux field phi\n" << endl;
 
-surfaceScalarField* phi = new surfaceScalarField
+new surfaceScalarField
 (
     IOobject
     (

@@ -45,7 +45,7 @@ dataTypeMap = {CUBA.PRESSURE: "scalar",
                CUBA.STRESS_TENSOR: "tensor"
                }
 
-dataDimensionMap = {CUBA.PRESSURE: [0, 2, -2, 0, 0, 0, 0],
+dataDimensionMap = {CUBA.PRESSURE: [1, -1, -2, 0, 0, 0, 0],
                     CUBA.DYNAMIC_PRESSURE: [1, -1, -2, 0, 0, 0, 0],
                     CUBA.VELOCITY: [0, 1, -1, 0, 0, 0, 0],
                     CUBA.VOLUME_FRACTION: [0, 0, 0, 0, 0, 0, 0],

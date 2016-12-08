@@ -9,7 +9,8 @@ import simphonyfoaminterface as foamface
 from simphony.core.cuba import CUBA
 from simphony.cuds.meta import api
 
-from foam_controlwrapper.foam_variables import (dataDimensionMap, dataKeyMap)
+from foam_controlwrapper.foam_variables import (dataDimensionMap, dataKeyMap,
+                                                dataNameMap)
 
 userLibs = """
 ("libshearStressPowerLawSlipVelocity.so"  "libtwoPhaseProperties.so")
@@ -19,7 +20,58 @@ userLibsIO = """
 """
 
 dictionaryMaps = \
-    {'pimpleFoam':
+    {'simpleFoam':
+        {'transportProperties':
+            {'transportModel': 'Newtonian',
+             'nu nu     [ 0 2 -1 0 0 0 0 ]': '0.0',
+             'rho rho [ 1 -3 0 0 0 0 0 ]': '0.0',
+             'stressModel': 'standard',
+             'CrossPowerLawCoeffs':
+                 {
+                     'nu0': '             nu0 [ 0 2 -1 0 0 0 0 ] {}',
+                     'nuInf': '           nuInf [ 0 2 -1 0 0 0 0 ] {}',
+                     'm': '               m [ 0 0 1 0 0 0 0 ] {}',
+                     'n': '               n [ 0 0 0 0 0 0 0 ] {}'
+                     },
+             'BirdCarreauCoeffs':
+                 {
+                     'nu0': '             nu0 [ 0 2 -1 0 0 0 0 ] {}',
+                     'nuInf': '           nuInf [ 0 2 -1 0 0 0 0 ] {}',
+                     'k': '               k [ 0 0 1 0 0 0 0 ] {}',
+                     'n': '               n [ 0 0 0 0 0 0 0 ] {}'
+                     },
+             'HerschelBulkleyCoeffs':
+                 {
+                     'nu0': '             nu0 [ 0 2 -1 0 0 0 0 ] {}',
+                     'tau0': '            tau0 [ 0 2 -2 0 0 0 0 ] {}',
+                     'k': '               k [ 0 2 -1 0 0 0 0 ] {}',
+                     'n': '               n [ 0 0 0 0 0 0 0 ] {}'
+                     }
+             },
+         'turbulenceProperties':
+             {'simulationType': 'laminar'},
+         'RASProperties':
+             {'RASModel': 'laminar',
+              'turbulence': 'off',
+              'printCoeffs': 'on'},
+         'controlDict':
+             {'application': 'simpleFoam',
+              'startFrom': 'startTime',
+              'startTime': '0',
+              'stopAt': 'endTime',
+              'endTime': '1',
+              'deltaT': '1',
+              'writeControl': 'timeStep',
+              'writeInterval': '10000',
+              'purgeWrite': '0',
+              'writeFormat': 'ascii',
+              'writePrecision': '6',
+              'writeCompression': 'no',
+              'timeFormat': 'general',
+              'runTimeModifiable': 'yes'
+              }
+         },
+     'pimpleFoam':
         {'transportProperties':
             {'transportModel': 'Newtonian',
              'nu nu     [ 0 2 -1 0 0 0 0 ]': '0.0',
@@ -65,7 +117,8 @@ dictionaryMaps = \
               'writePrecision': '6',
               'writeCompression': 'no',
               'timeFormat': 'general',
-              'runTimeModifiable': 'yes'}
+              'runTimeModifiable': 'yes'
+              }
          },
      'interFoam':
          {'transportProperties':
@@ -149,9 +202,9 @@ dictionaryMaps = \
                'value':  '( 0 0 0 )'
                }
           },
-     'driftFluxSimphonyFoam':
+     'driftFluxFoam':
          {'controlDict':
-              {'application': 'driftFluxSimphonyFoam',
+              {'application': 'driftFluxFoam',
                'startFrom': 'startTime',
                'startTime': '0',
                'stopAt': 'endTime',
@@ -241,7 +294,132 @@ dictionaryMaps = \
           }
      }
 
-dictionaryTemplates = {'pimpleFoam':
+dictionaryTemplates = {'simpleFoam':
+                       {'transportProperties':
+                           """
+transportModel Newtonian;
+
+nu nu     [ 0 2 -1 0 0 0 0 ]     0.0 ;
+rho  rho [ 1 -3 0 0 0 0 0 ]': '0.0';
+                        """,
+                           'turbulenceProperties':
+                               """
+simulationType laminar;
+                        """,
+                           'RASProperties':
+                               """
+RASModel            laminar;
+
+turbulence          off;
+
+printCoeffs         on;
+                        """,
+                        'fvSolution':
+                            """
+solvers
+{
+    p
+    {
+        solver           GAMG;
+        tolerance        1e-7;
+        relTol           0.1;
+
+        smoother        GaussSeidel;
+        nPreSweeps      0;
+        nPostSweeps     2;
+
+        cacheAgglomeration true;
+        nCellsInCoarsestLevel 10;
+        agglomerator     faceAreaPair;
+        mergeLevels      1;
+    }
+
+
+    "(U)"
+    {
+        solver          smoothSolver;
+        smoother        symGaussSeidel;
+        tolerance       1e-05;
+        relTol          0.1;
+    }
+
+}
+
+SIMPLE
+{
+    nNonOrthogonalCorrectors 0;
+
+    residualControl
+    {
+        p               1e-2;
+        U               1e-3;
+        "(k|epsilon|omega)" 1e-3;
+    }
+}
+relaxationFactors
+{
+    fields
+    {
+        p               0.3;
+    }
+    equations
+    {
+        U               0.7;
+        k               0.7;
+        epsilon         0.7;
+        R               0.7;
+        nuTilda         0.7;
+    }
+}
+                        """,
+                            'fvSchemes':
+                                """
+ddtSchemes
+{
+    default         steadyState;
+}
+
+gradSchemes
+{
+    default         Gauss linear;
+}
+
+divSchemes
+{
+    default         none;
+    div(phi,U)      bounded Gauss upwind;
+    div(phi,k)      bounded Gauss upwind;
+    div(phi,epsilon) bounded Gauss upwind;
+    div(phi,R)      bounded Gauss upwind;
+    div(R)          Gauss linear;
+    div(SigmaPrime)       Gauss linear;
+    div(phi,nuTilda) bounded Gauss upwind;
+    div((nu*dev(T(grad(U))))) Gauss linear;
+    div((nuEff*dev(T(grad(U))))) Gauss linear;
+}
+
+laplacianSchemes
+{
+    default         Gauss linear corrected;
+}
+
+interpolationSchemes
+{
+    default         linear;
+}
+
+snGradSchemes
+{
+    default         corrected;
+}
+
+fluxRequired
+{
+    default         no;
+    p               ;
+}
+                        """},
+                       'pimpleFoam':
                        {'transportProperties':
                            """
 transportModel Newtonian;
@@ -327,6 +505,7 @@ divSchemes
     div(phi,k)      bounded Gauss upwind;
     div(phi,epsilon) bounded Gauss upwind;
     div(phi,R)      bounded Gauss upwind;
+    div(SigmaPrime)       Gauss linear;
     div(R)          Gauss linear;
     div(phi,nuTilda) bounded Gauss upwind;
     div((nuEff*dev(T(grad(U))))) Gauss linear;
@@ -503,7 +682,7 @@ fluxRequired
 
 
                         """},
-                       'driftFluxSimphonyFoam':
+                       'driftFluxFoam':
                        {'transportProperties':
                             """
 phases (phase1 phase2);
@@ -812,27 +991,30 @@ def parse_map(mapContent):
     return result
 
 
-def get_rheology_model_coeffs(rheology_model):
-
+def get_rheology_model_coeffs(rheology_model, cuds):
+    material_uid = rheology_model.material
+    material = cuds.get_by_uid(material_uid)
+    density = material._data[CUBA.DENSITY]
     if isinstance(rheology_model, api.HerschelBulkleyModel):
         return {'name': 'HerschelBulkley',
-                'nu0': str(rheology_model.initial_viscosity),
-                'tau0': str(rheology_model.relaxation_time),
-                'k': str(rheology_model.linear_constant),
+                'nu0': str(rheology_model.initial_viscosity/density),
+                'tau0': str(rheology_model.relaxation_time/density),
+                'k': str(rheology_model.linear_constant/density),
                 'n': str(rheology_model.power_law_index)}
     elif isinstance(rheology_model, api.BirdCarreauModel):
         return {'name': 'BirdCarreau',
-                'nu0': str(rheology_model.initial_viscosity),
-                'nuInf': str(rheology_model.maximum_viscosity),
-                'k': str(rheology_model.linear_constant),
+                'nu0': str(rheology_model.initial_viscosity/density),
+                'nuInf': str(rheology_model.maximum_viscosity/density),
+                'k': str(rheology_model.linear_constant/density),
                 'n': str(rheology_model.power_law_index)}
     elif isinstance(rheology_model, api.CrossPowerLawModel):
         return {'name': 'CrossPowerLaw',
-                'nu0': str(rheology_model.initial_viscosity),
-                'nuInf': str(rheology_model.maximum_viscosity),
-                'm': str(rheology_model.linear_constant),
+                'nu0': str(rheology_model.initial_viscosity/density),
+                'nuInf': str(rheology_model.maximum_viscosity/density),
+                'm': str(rheology_model.linear_constant/density),
                 'n': str(rheology_model.power_law_index)}
     elif isinstance(rheology_model, api.BinghamPlasticModel):
+        # this is used in mixture model so no division by density
         return {'name': 'BinghamPlastic',
                 'coeff': str(rheology_model.linear_constant[0]),
                 'exponent': str(rheology_model.power_law_index[0]),
@@ -897,13 +1079,15 @@ def modifyNumerics(mesh, cuds, solver='pimpleFoam', io=False):
         raise ValueError(error_str)
 
     materials = list(cuds.iter(api.Material))
-    if solver == 'pimpleFoam':
+    if solver == 'pimpleFoam' or solver == 'simpleFoam':
         control = mapContent['transportProperties']
         rheology_model = cfd.rheology_model
-
+        material = materials[0]
+        control['rho rho [ 1 -3 0 0 0 0 0 ]'] = material._data[CUBA.DENSITY]
         if rheology_model is not None and not \
                 isinstance(rheology_model, api.NewtonianFluidModel):
-            rheology_model_coeffs = get_rheology_model_coeffs(rheology_model)
+            rheology_model_coeffs = get_rheology_model_coeffs(rheology_model,
+                                                              cuds)
             rheology_model_name = rheology_model_coeffs['name']
             control['transportModel'] = rheology_model_name
             vmc = rheology_model_name + 'Coeffs'
@@ -915,10 +1099,18 @@ def modifyNumerics(mesh, cuds, solver='pimpleFoam', io=False):
             control['nu nu     [ 0 2 -1 0 0 0 0 ]'] = \
                 rheology_model.initial_viscosity
         else:
-            material = materials[0]
             control['nu nu     [ 0 2 -1 0 0 0 0 ]'] = \
                 material._data[CUBA.DYNAMIC_VISCOSITY] / \
                 material._data[CUBA.DENSITY]
+
+        if not_empty(cuds.iter(api.StressModel)):
+            stress_model = get_first(cuds.iter(api.StressModel))
+            if isinstance(stress_model, api.StandardStressModel):
+                control["stressModel"] = 'standard'
+            elif isinstance(stress_model, api.MesoScopicStressModel):
+                control["stressModel"] = 'fromMesoscale'
+        else:
+            control["stressModel"] = 'standard'
 
         transportPropertiesDict = parse_map(control)
     elif solver == 'interFoam':
@@ -949,7 +1141,7 @@ def modifyNumerics(mesh, cuds, solver='pimpleFoam', io=False):
                     = material._data[CUBA.DENSITY]
             else:
                 rheology_model_coeffs = get_rheology_model_coeffs(
-                    rheology_model)
+                    rheology_model, cuds)
                 vmc = rheology_model_coeffs['name']
                 control[phase_name]['transportModel'] = vmc
                 for coeff in rheology_model_coeffs:
@@ -967,7 +1159,7 @@ def modifyNumerics(mesh, cuds, solver='pimpleFoam', io=False):
             error_str = "Surface tension not specified"
             raise ValueError(error_str)
         transportPropertiesDict = parse_map(control)
-    elif solver == 'driftFluxSimphonyFoam':
+    elif solver == 'driftFluxFoam':
         control = mapContent['transportProperties']
         for i in range(2):
             mixture_model = get_first(cuds.iter(api.MixtureModel))
@@ -997,7 +1189,7 @@ def modifyNumerics(mesh, cuds, solver='pimpleFoam', io=False):
                         rheology_model = rheology_models
             if rheology_model is not None:
                 rheology_model_coeffs = \
-                    get_rheology_model_coeffs(rheology_model)
+                    get_rheology_model_coeffs(rheology_model, cuds)
                 rheology_model_name = rheology_model_coeffs['name']
                 control[phase_name]["transportModel"] = rheology_model_name
                 vmc = rheology_model_name + 'Coeffs'
@@ -1020,7 +1212,7 @@ def modifyNumerics(mesh, cuds, solver='pimpleFoam', io=False):
             stress_model = get_first(cuds.iter(api.StressModel))
             if isinstance(stress_model, api.StandardStressModel):
                 control["stressModel"] = 'standard'
-            elif isinstance(stress_model, api.MesoScaleStressModel):
+            elif isinstance(stress_model, api.MesoScopicStressModel):
                 control["stressModel"] = 'fromMesoscale'
         else:
             error_str = "Stress model not specified"
@@ -1030,7 +1222,8 @@ def modifyNumerics(mesh, cuds, solver='pimpleFoam', io=False):
             rel_vel_model = get_first(cuds.iter(api.RelativeVelocityModel))
             if isinstance(rel_vel_model, api.SimpleRelativeVelocityModel):
                 rel_vel_model_name = 'simple'
-            elif isinstance(rel_vel_model, api.MesoScaleRelativeVelocityModel):
+            elif isinstance(rel_vel_model,
+                            api.MesoScopicRelativeVelocityModel):
                 rel_vel_model_name = 'fromMesoscale'
             else:
                 error_str = "Relative velocity model not specified"
@@ -1054,7 +1247,7 @@ def modifyNumerics(mesh, cuds, solver='pimpleFoam', io=False):
         # write numerics to case directory
         foamface.writeNumerics(mesh.name)
 
-    if solver == 'driftFluxSimphonyFoam' or solver == 'interFoam':
+    if solver == 'driftFluxFoam' or solver == 'interFoam':
         if not_empty(cuds.iter(api.GravityModel)):
             gv = get_first(cuds.iter(api.GravityModel))
             if io:
@@ -1157,45 +1350,12 @@ def modifyFields(mesh, cuds, solver='pimpleFoam'):
         bc_names.append(boundary.name)
     check_boundary_names(bc_names, mesh._boundaries.keys())
 
-    if solver == 'pimpleFoam':
-        name_pressure = 'p'
+    if solver == 'pimpleFoam' or solver == 'simpleFoam':
+        name_pressure = dataNameMap[CUBA.PRESSURE]
         ID_pressure = CUBA.PRESSURE
-    elif solver == 'driftFluxSimphonyFoam' or solver == 'interFoam':
-        name_pressure = 'p_rgh'
+    elif solver == 'driftFluxFoam' or solver == 'interFoam':
+        name_pressure = dataNameMap[CUBA.DYNAMIC_PRESSURE]
         ID_pressure = CUBA.DYNAMIC_PRESSURE
-
-    nCells = foamface.getCellCount(mesh.name)
-    p_values = [0.0 for item in range(nCells)]
-    U_values = [[0.0, 0.0, 0.0] for item in range(nCells)]
-    if solver == 'driftFluxSimphonyFoam' or solver == 'interFoam':
-        alpha_values = [0.0 for item in range(nCells)]
-    if solver == 'driftFluxSimphonyFoam':
-        vdj_values = [[0.0, 0.0, 0.0] for item in range(nCells)]
-        sigma_mu_values = [[0.0, 0.0, 0.0, 0.0, 0.0,
-                            0.0, 0.0, 0.0, 0.0] for item in range(nCells)]
-    for cell in mesh._iter_cells():
-        p_values[mesh._uuidToFoamLabel[cell.uid]] = \
-            cell.data[ID_pressure]
-        U_values[mesh._uuidToFoamLabel[cell.uid]] = \
-            list(cell.data[CUBA.VELOCITY])
-        if solver == 'driftFluxSimphonyFoam' or solver == 'interFoam':
-            alpha_values[mesh._uuidToFoamLabel[cell.uid]] = \
-                cell.data[CUBA.VOLUME_FRACTION]
-        if solver == 'driftFluxSimphonyFoam':
-            vdj_values[mesh._uuidToFoamLabel[cell.uid]] = \
-                cell.data[CUBA.RELATIVE_VELOCITY]
-            sigma_mu_values[mesh._uuidToFoamLabel[cell.uid]] = \
-                cell.data[CUBA.HOMOGENIZED_STRESS_TENSOR]
-    foamface.setAllCellData(mesh.name, name_pressure, 0, p_values,
-                            dataDimensionMap[dataKeyMap[name_pressure]])
-    foamface.setAllCellVectorData(mesh.name, "U", 0, U_values,
-                                  dataDimensionMap[dataKeyMap["U"]])
-    if solver == 'driftFluxSimphonyFoam' or solver == 'interFoam':
-        foamface.setAllCellData(mesh.name, "alpha.phase1", 0, alpha_values,
-                                dataDimensionMap[dataKeyMap["alpha.phase1"]])
-    if solver == 'driftFluxSimphonyFoam':
-        foamface.setAllCellTensorData(mesh.name, "Sigma", 0, sigma_mu_values,
-                                      dataDimensionMap[dataKeyMap["Sigma"]])
 
     # Refresh boundary conditions
 
@@ -1250,7 +1410,7 @@ def modifyFields(mesh, cuds, solver='pimpleFoam'):
 
         myDict = myDict + "}\n"
 
-    foamface.setBC(mesh.name, "U", myDict)
+    foamface.setBC(mesh.name, dataNameMap[CUBA.VELOCITY], myDict)
 
     myDict = ""
 
@@ -1284,7 +1444,7 @@ def modifyFields(mesh, cuds, solver='pimpleFoam'):
 
     foamface.setBC(mesh.name, name_pressure, myDict)
 
-    if solver == 'driftFluxSimphonyFoam' or solver == 'interFoam':
+    if solver == 'driftFluxFoam' or solver == 'interFoam':
         myDict = ""
 
         for boundary in cuds.iter(api.Boundary):
@@ -1322,7 +1482,50 @@ def modifyFields(mesh, cuds, solver='pimpleFoam'):
                     myDict = myDict + "\t limit \t gradient;\n"
                     myDict = myDict + "\t value \t uniform 0;\n"
             myDict = myDict + "}\n"
-        foamface.setBC(mesh.name, "alpha.phase1", myDict)
+        foamface.setBC(mesh.name, dataNameMap[CUBA.VOLUME_FRACTION], myDict)
+
+    nCells = foamface.getCellCount(mesh.name)
+    p_values = [0.0 for item in range(nCells)]
+    U_values = [[0.0, 0.0, 0.0] for item in range(nCells)]
+    if solver == 'driftFluxFoam' or solver == 'interFoam':
+        alpha_values = [0.0 for item in range(nCells)]
+    if solver == 'driftFluxFoam' or solver == 'simpleFoam':
+        vdj_values = [[0.0, 0.0, 0.0] for item in range(nCells)]
+        sigma_mu_values = [[0.0, 0.0, 0.0, 0.0, 0.0,
+                            0.0, 0.0, 0.0, 0.0] for item in range(nCells)]
+    for cell in mesh._iter_cells():
+        p_values[mesh._uuidToFoamLabel[cell.uid]] = \
+            cell.data[ID_pressure]
+        U_values[mesh._uuidToFoamLabel[cell.uid]] = \
+            list(cell.data[CUBA.VELOCITY])
+        if solver == 'driftFluxFoam' or solver == 'interFoam':
+            alpha_values[mesh._uuidToFoamLabel[cell.uid]] = \
+                cell.data[CUBA.VOLUME_FRACTION]
+        if solver == 'driftFluxFoam':
+            vdj_values[mesh._uuidToFoamLabel[cell.uid]] = \
+                cell.data[CUBA.RELATIVE_VELOCITY]
+        if solver == 'driftFluxFoam' or solver == 'simpleFoam':
+            sigma_mu_values[mesh._uuidToFoamLabel[cell.uid]] = \
+                cell.data[CUBA.HOMOGENIZED_STRESS_TENSOR]
+    foamface.setAllCellData(mesh.name, name_pressure, 0, p_values,
+                            dataDimensionMap[dataKeyMap[name_pressure]])
+    foamface.setAllCellVectorData(mesh.name, dataNameMap[CUBA.VELOCITY],
+                                  0, U_values,
+                                  dataDimensionMap[dataKeyMap[
+                                      dataNameMap[CUBA.VELOCITY]]])
+    if solver == 'driftFluxFoam' or solver == 'interFoam':
+        foamface.setAllCellData(mesh.name, dataNameMap[CUBA.VOLUME_FRACTION],
+                                0, alpha_values,
+                                dataDimensionMap[dataKeyMap[
+                                    dataNameMap[CUBA.VOLUME_FRACTION]]])
+    if solver == 'driftFluxFoam' or solver == 'simpleFoam':
+        foamface.setAllCellTensorData(mesh.name, dataNameMap[
+                                      CUBA.HOMOGENIZED_STRESS_TENSOR],
+                                      0, sigma_mu_values,
+                                      dataDimensionMap[dataKeyMap[
+                                          dataNameMap[
+                                              CUBA.HOMOGENIZED_STRESS_TENSOR
+                                              ]]])
 
 
 def is_empty(generator):
@@ -1349,6 +1552,14 @@ def get_first(generator):
     return generator.next()
 
 
+def get_simphony_io_solver(foam_solver):
+    simphony_solvers = {'pimpleFoam': 'pimpleSimphonyFoam',
+                        'simpleFoam': 'simpleSimphonyFoam',
+                        'interFoam': 'interFoam',
+                        'driftFluxFoam': 'driftFluxSimphonyFoam'}
+    return simphony_solvers[foam_solver]
+
+
 def get_foam_solver(cuds):
     """ gives the name of the solver
 
@@ -1359,6 +1570,11 @@ def get_foam_solver(cuds):
 
     """
 
+    if not_empty(cuds.iter(api.SolverParameter)):
+        for sp in cuds.iter(api.SolverParameter):
+            if CUBA.STEADY_STATE in sp._data:
+                solver = 'simpleFoam'
+                return solver
     if is_empty(cuds.iter(api.Cfd)):
         error_str = "CFD physics model not present in the cuds"
         raise ValueError(error_str)
@@ -1373,7 +1589,7 @@ def get_foam_solver(cuds):
         if vof:
             solver = "interFoam"
         elif mixture_model:
-            solver = "driftFluxSimphonyFoam"
+            solver = "driftFluxFoam"
         return solver
     else:
         error_str = "Solver for the model not found:\n"

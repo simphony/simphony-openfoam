@@ -495,20 +495,20 @@ std::vector<int> foam_getFacePoints(std::string name)
   
   std::vector<int> retValue(k);
 
-   k=0;
-   for(int i=0;i< faces.size();i++)
-     {
-       retValue[k]=faces[i].size();
-       k++;
-       for (int j=0;j<faces[i].size();j++) {
-	 retValue[k]=faces[i][j];
-	 k++;
-       }
-     }  
-
-   return retValue;
-
-  }
+  k=0;
+  for(int i=0;i< faces.size();i++)
+    {
+      retValue[k]=faces[i].size();
+      k++;
+      for (int j=0;j<faces[i].size();j++) {
+	retValue[k]=faces[i][j];
+	k++;
+      }
+    }  
+  
+  return retValue;
+  
+}
   
 
 std::vector<double> foam_getCellTensorData(std::string name, std::string dataname)
@@ -1132,22 +1132,28 @@ void foam_createDefaultFields(std::string name, std::string solver, bool io)
 {
     fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
     if (io) {
-      if(solver=="pimpleFoam"){
+      if(solver=="pimpleFoam" || solver=="simpleFoam"){
         #include "createFieldsPimpleFoamIO.H"
       }
-      if(solver=="interFoam"){
+      else if(solver=="interFoam"){
         #include "createFieldsInterFoamIO.H"
       }
-      if(solver=="driftFluxSimphonyFoam"){
+      else if(solver=="driftFluxFoam"){
         #include "createFieldsDriftFluxSimphonyFoamIO.H"
       }
+      else 
+	FatalErrorIn("simphonyInterface:run") << "Solver "<<solver<<" not supported for IO wrapper" <<exit(FatalError);        
+
     }else {
-      if(solver=="pimpleFoam"){
+      if(solver=="pimpleFoam" || solver=="simpleFoam"){
         #include "createFieldsPimpleFoam.H"
       }
-      if(solver=="driftFluxSimphonyFoam"){
+      else if(solver=="driftFluxFoam"){
         #include "createFieldsDriftFluxSimphonyFoam.H"
       }
+      else
+	FatalErrorIn("simphonyInterface:run") << "Solver "<<solver<<" not supported for Internal wrapper" <<exit(FatalError);        
+
     }
     return;
 }
@@ -1468,7 +1474,10 @@ double foam_run(std::string name, int nproc, std::string solver){
         if(solver=="pimpleFoam"){
             #include "pimpleFoam.H"
         }
-        if(solver=="driftFluxSimphonyFoam"){
+	if(solver=="simpleFoam") {
+            #include "simpleFoam.H"
+	}
+        if(solver=="driftFluxFoam"){
             #include "driftFluxSimphonyFoam.H"
         }
         return runTime.timeOutputValue();
