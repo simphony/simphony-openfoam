@@ -1,1 +1,1 @@
--e git+git://github.com/simphony/simphony-common.git
+-e git+git://github.com/simphony/simphony-common.git#egg=master
