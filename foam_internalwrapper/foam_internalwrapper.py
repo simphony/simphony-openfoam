@@ -115,7 +115,10 @@ class Wrapper(ABCModelingEngine):
             raise ValueError('Mesh \'{}\` already exists'.format(mesh_name))
         else:
             cuds = self.get_cuds()
-            solver = get_foam_solver(cuds)
+            if cuds:
+                solver = get_foam_solver(cuds)
+            else:
+                solver = 'pimpleFoam'
             self._meshes[mesh_name] = FoamMesh(mesh_name, cuds,
                                                solver, mesh)
             return self._meshes[mesh_name]

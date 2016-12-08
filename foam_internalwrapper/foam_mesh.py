@@ -80,15 +80,28 @@ class FoamMesh(ABCMesh):
             self.path = os.path.join(tempfile.mkdtemp(), name)
         if mesh:
             # generate uuid mapping
-            pointCoordinates = mesh._get_packed_coordinate_list()
-            i = 0
-            label = 0
-            while i < len(pointCoordinates):
-                uid = self._generate_uuid()
-                self._uuidToFoamLabel[uid] = label
-                self._foamPointLabelToUuid[label] = uid
-                label += 1
-                i += 3
+            if hasattr(mesh, '_get_packed_coordinate_list'):
+                pointCoordinates = mesh._get_packed_coordinate_list()
+                i = 0
+                label = 0
+                while i < len(pointCoordinates):
+                    uid = self._generate_uuid()
+                    self._uuidToFoamLabel[uid] = label
+                    self._foamPointLabelToUuid[label] = uid
+                    label += 1
+                    i += 3
+            else:
+                label = 0
+                pointCoordinates = []
+                pointMap = {}
+                for point in mesh._iter_points():
+                    pointMap[point.uid] = label
+                    uid = self._generate_uuid()
+                    self._uuidToFoamLabel[uid] = label
+                    self._foamPointLabelToUuid[label] = uid
+                    for coord in point.coordinates:
+                        pointCoordinates.append(coord)
+                    label += 1
 
             label = 0
             for edge in mesh._iter_edges():
@@ -97,31 +110,58 @@ class FoamMesh(ABCMesh):
                 self._foamEdgeLabelToUuid[label] = uid
                 label += 1
 
-            label = -1
             faceMap = {}
-            facePoints = mesh._get_packed_face_list()
-            i = 0
-            while i < len(facePoints):
-                label += 1
-                n_points = facePoints[i]
-                i += 1 + n_points
-                face_uid = mesh._foamFaceLabelToUuid[label]
-                faceMap[face_uid] = label
-                uid = self._generate_uuid()
-                self._uuidToFoamLabel[uid] = label
-                self._foamFaceLabelToUuid[label] = uid
+            if hasattr(mesh, '_get_packed_face_list'):
+                label = -1
+                facePoints = mesh._get_packed_face_list()
+                i = 0
+                while i < len(facePoints):
+                    label += 1
+                    n_points = facePoints[i]
+                    i += 1 + n_points
+                    face_uid = mesh._foamFaceLabelToUuid[label]
+                    faceMap[face_uid] = label
+                    uid = self._generate_uuid()
+                    self._uuidToFoamLabel[uid] = label
+                    self._foamFaceLabelToUuid[label] = uid
+            else:
+                label = 0
+                facePoints = []
+                for face in mesh.iter_faces():
+                    faceMap[face.uid] = label
+                    uid = self._generate_uuid()
+                    self._uuidToFoamLabel[uid] = label
+                    self._foamFaceLabelToUuid[label] = uid
+                    # make compressed list of faces points
+                    facePoints.append(len(face.points))
+                    for puid in face.points:
+                        facePoints.append(pointMap[puid])
+                    label += 1
 
-            cellPoints = mesh._get_packed_cell_list()
-            cell_label = -1
-            i = 0
-            while i < len(cellPoints):
-                cell_label += 1
-                n_points = cellPoints[i]
-                i += 1
-                uid = self._generate_uuid()
-                self._uuidToFoamLabel[uid] = cell_label
-                self._foamCellLabelToUuid[cell_label] = uid
-                i += n_points
+            if hasattr(mesh, '_get_packed_cell_list'):
+                cellPoints = mesh._get_packed_cell_list()
+                cell_label = -1
+                i = 0
+                while i < len(cellPoints):
+                    cell_label += 1
+                    n_points = cellPoints[i]
+                    i += 1
+                    uid = self._generate_uuid()
+                    self._uuidToFoamLabel[uid] = cell_label
+                    self._foamCellLabelToUuid[cell_label] = uid
+                    i += n_points
+            else:
+                label = 0
+                cellPoints = []
+                for cell in mesh.iter_cells():
+                    uid = self._generate_uuid()
+                    self._uuidToFoamLabel[uid] = label
+                    self._foamCellLabelToUuid[label] = uid
+                    cellPoints.append(len(cell.points))
+                    for puid in cell.points:
+                        cellPoints.append(pointMap[puid])
+                    label += 1
+                pointMap.clear()
 
             # make patch information
             patchNames = []

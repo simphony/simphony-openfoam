@@ -67,7 +67,17 @@ class FoamMeshTestCase(unittest.TestCase):
         self.cells = [
             Cell(puids,
                  data=DataContainer({CUBA.VELOCITY: [1, 0, 0],
-                                     CUBA.PRESSURE: 4.0}))
+                                     CUBA.PRESSURE: 4.0,
+                                     CUBA.STRAIN_TENSOR: [1, 0, 0,
+                                                          0, 1, 0,
+                                                          0, 0, 1],
+                                     CUBA.STRESS_TENSOR: [1, 0, 0,
+                                                          0, 1, 0,
+                                                          0, 0, 1],
+                                     CUBA.HOMOGENIZED_STRESS_TENSOR:
+                                         [1, 0, 0,
+                                          0, 1, 0,
+                                          0, 0, 1]}))
         ]
 
         self.puids = puids

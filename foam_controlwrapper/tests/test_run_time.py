@@ -3,7 +3,6 @@ import os
 import shutil
 import tempfile
 
-import foam_controlwrapper
 from foam_controlwrapper.blockmesh_utils import create_quad_mesh
 
 from simphony.api import CUDS, Simulation

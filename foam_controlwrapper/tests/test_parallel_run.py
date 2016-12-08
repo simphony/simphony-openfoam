@@ -4,8 +4,6 @@ import re
 import shutil
 import tempfile
 
-import foam_controlwrapper
-
 from simphony.api import CUDS, Simulation
 from simphony.core.cuba import CUBA
 from simphony.cuds.meta import api
