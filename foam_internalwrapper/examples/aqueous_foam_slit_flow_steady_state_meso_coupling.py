@@ -142,7 +142,7 @@ cuds.add(sim_time)
 
 start = time.time()
 
-number_of_outer_timesteps = 20
+number_of_outer_timesteps = 40
 
 for time_i in range(number_of_outer_timesteps):
     updated_cells = []

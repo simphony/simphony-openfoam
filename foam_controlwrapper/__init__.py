@@ -5,9 +5,9 @@ from simphony.engine import ABCEngineExtension
 from simphony.engine import EngineInterface
 from simphony.engine.decorators import register
 
-from .foam_controlwrapper import Wrapper as FileIOWrapper
 from foam_internalwrapper.foam_internalwrapper import (
     Wrapper as InternalWrapper)
+from foam_controlwrapper import Wrapper as FileIOWrapper
 from .io_utils import read_foammesh
 from .blockmesh_utils import (create_quad_mesh, create_block_mesh)
 

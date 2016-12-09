@@ -1,15 +1,16 @@
+
 """Example to solve 3D aqueous foam pipe flow using rheological
 Herschel-Bulkley power law for bulk and wall shear stress dependent
 slip velocity law for wall layer
 
 """
 
-import foam_controlwrapper
 from simphony.core.cuba import CUBA
 from simphony.api import CUDS, Simulation
 from simphony.cuds.meta import api
 from simphony.engine import EngineInterface
 
+from foam_controlwrapper import create_block_mesh 
 from mayavi.scripts import mayavi2
 
 import pipe_mesh
@@ -64,8 +65,8 @@ print "Time spend in initialization: ", end-start
 
 start = time.time()
 # create computational mesh
-mesh = foam_controlwrapper.create_block_mesh(tempfile.mkdtemp(), mesh_name,
-                                             pipe_mesh.blockMeshDict)
+mesh = create_block_mesh(tempfile.mkdtemp(), mesh_name,
+                         pipe_mesh.blockMeshDict)
 end = time.time()
 print "Time spend in blockmesh: ", end-start
 

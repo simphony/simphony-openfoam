@@ -6,7 +6,7 @@
    \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
-    This file is a derivativee work of OpenFOAM.
+    This file is a derivative work of OpenFOAM.
 
     OpenFOAM is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
@@ -141,8 +141,7 @@ while (simple.loop())
     (
         fvm::div(phi, U)
       - fvc::div(SigmaPrime)/rho
-      - fvm::laplacian(laminarTransport.nu(), U)
-      - fvc::div(laminarTransport.nu()*dev(T(fvc::grad(U))))
+	+ turbulence->divDevReff(U)
 	//      ==
 	//        fvOptions(U)
     );
@@ -199,7 +198,7 @@ while (simple.loop())
 
     turbulence->correct();
 
-    S = fvc::grad(U) + T(fvc::grad(U));
+    S = fvc::grad(U) + dev(T(fvc::grad(U)));
     Stress = laminarTransport.nu()*rho*S;
 
 
