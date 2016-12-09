@@ -219,7 +219,7 @@ while (runTime.run())
             turbulence->correct();
         }
 
-	S = fvc::grad(U) + T(fvc::grad(U));
+	S = fvc::grad(U) + dev(T(fvc::grad(U)));
 	Stress = laminarTransport.nu()*rho*S;
 
     }

@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
                 turbulence->correct();
             }
 
-	    S = fvc::grad(U) + T(fvc::grad(U));
+	    S = fvc::grad(U) +dev( T(fvc::grad(U)));
 	    Stress = laminarTransport.nu()*rho*S;
 
         }

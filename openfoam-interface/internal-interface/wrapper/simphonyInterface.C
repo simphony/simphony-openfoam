@@ -1242,7 +1242,22 @@ void foam_readFields(std::string name)
     for (std::vector<std::string>::size_type i=0;i<tnames.size();i++) 
       {
 	volTensorField& vT = find_Data<tensor>(mesh,tnames[i]);
-	vT.read();
+	volTensorField* vVT = new volTensorField
+	  (
+	   IOobject
+	   (
+	    word(tnames[i]),
+	    runTimes[name]->timeName(),
+	    mesh,
+	    IOobject::MUST_READ,
+	    IOobject::AUTO_WRITE,
+	    true
+	    ),
+	   mesh
+	   );
+	vT.internalField() = (*vVT).internalField();
+	vT.boundaryField() = (*vVT).boundaryField();
+
       }
 
 
