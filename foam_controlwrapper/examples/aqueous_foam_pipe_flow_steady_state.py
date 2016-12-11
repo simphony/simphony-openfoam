@@ -10,7 +10,7 @@ from simphony.api import CUDS, Simulation
 from simphony.cuds.meta import api
 from simphony.engine import EngineInterface
 
-from foam_controlwrapper import create_block_mesh 
+from foam_controlwrapper import create_block_mesh
 from mayavi.scripts import mayavi2
 
 import pipe_mesh

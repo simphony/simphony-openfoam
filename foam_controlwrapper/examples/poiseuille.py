@@ -57,7 +57,7 @@ ney = 4
 #  - boundaries have predescribed names (inlet, walls, outlet, frontAndBack)
 
 mesh = create_quad_mesh(tempfile.mkdtemp(), mesh_name,
-                                 corner_points, nex, ney, 1)
+                        corner_points, nex, ney, 1)
 cuds.add(mesh)
 
 vel_inlet = api.Dirichlet(name='vel_inlet')

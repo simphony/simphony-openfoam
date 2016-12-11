@@ -1531,25 +1531,31 @@ def modifyFields(mesh, cuds, solver='pimpleFoam'):
 def is_empty(generator):
     if generator is None:
         return True
-    empty = True
-    for _ in generator:
-        empty = False
-    return empty
+    try:
+        first = generator.next()
+        return False
+    except StopIteration:
+        return True
 
 
 def not_empty(generator):
     if generator is None:
         return False
-    not_empty = False
-    for _ in generator:
-        not_empty = True
-    return not_empty
+    try:
+        first = generator.next()
+        return True
+    except StopIteration:
+        return False
 
 
 def get_first(generator):
     if generator is None:
         return None
-    return generator.next()
+    try:
+        first = generator.next()
+        return first
+    except StopIteration:
+        return None
 
 
 def get_simphony_io_solver(foam_solver):

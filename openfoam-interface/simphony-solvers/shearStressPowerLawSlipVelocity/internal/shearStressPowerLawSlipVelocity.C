@@ -152,7 +152,7 @@ void Foam::shearStressPowerLawSlipVelocityFvPatchVectorField::updateCoeffs()
       const volTensorField& SigmaPrime = mesh.lookupObject<volTensorField>("SigmaPrime");
       dimensionedScalar rho(TPDict.lookup("rho"));
 
-      devReff = devReff - dev(twoSymm(SigmaPrime/rho)); 
+      devReff = devReff + dev(twoSymm(SigmaPrime/rho)); 
     }
    
 

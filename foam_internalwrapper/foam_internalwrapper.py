@@ -80,8 +80,8 @@ class Wrapper(ABCModelingEngine):
         ncores = 1
         if solver_parameters is not None:
             for sp in solver_parameters:
-                if CUBA.NUMBER_OF_CORES in sp.data:
-                    ncores = sp.data[CUBA.NUMBER_OF_CORES]
+                if CUBA.NUMBER_OF_CORES in sp._data:
+                    ncores = sp._data[CUBA.NUMBER_OF_CORES]
                     break
         mesh._time = foamface.run(mesh.name, ncores, solver)
 

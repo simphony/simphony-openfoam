@@ -5,5 +5,6 @@ incompressibleTwoPhaseInteractingMixture/incompressibleTwoPhaseInteractingMixtur
 fvSchemes/fvSchemes.C
 solution/solution.C
 time/TimeMod.C
+simpleControl/simpleControl.C
 
 LIB = $(FOAM_USER_LIBBIN)/libfoaminterface

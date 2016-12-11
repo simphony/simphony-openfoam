@@ -32,7 +32,8 @@ License
 #include "fvIOoptionList.H"
 */
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-#include "simpleControl.H"
+
+#include "simpleControl/simpleControl.H"
 
 #include "initContinuityErrs.H"
 
