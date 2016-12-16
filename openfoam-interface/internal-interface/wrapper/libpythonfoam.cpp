@@ -1597,6 +1597,35 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
 
 
 
+  static PyObject* extendTensorToBoundaries(PyObject *self, PyObject *args)
+  {
+    char *name;
+    char *fieldname;
+ 
+
+    if (!PyArg_ParseTuple(args,"ss",&name,&fieldname)) {
+      PyErr_SetString(PyExc_RuntimeError,"Invalid arguments");
+      return NULL;
+    }
+    try {
+      foam_extend_to_boundaries(std::string(name),std::string(fieldname));
+      return Py_BuildValue("");
+    }
+    catch (Foam::error& fErr)
+    {
+      PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
+      return NULL;
+    }
+    catch (std::exception& e) {
+      PyErr_SetString(PyExc_RuntimeError,e.what());
+      return NULL;
+    }
+    catch (...) {
+      PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
+      return NULL;
+    }
+  }
+
   static PyObject* setBC(PyObject *self, PyObject *args)
   {
     char *name;
@@ -1626,6 +1655,9 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
       return NULL;
     }
   }
+
+
+
 
 
   static PyObject* run(PyObject *self, PyObject *args)
@@ -1879,6 +1911,8 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
     {"writePathDictionary",writePathDictionary,METH_VARARGS,"Write given dictionary content to disk to path directory"},
     {"writeFields",writeFields,METH_VARARGS,"Write data fields to disk"},
     {"setBC",setBC,METH_VARARGS,"Modify boundary condition of the specified field through memory"},
+    {"extendTensorToBoundaries",extendTensorToBoundaries,METH_VARARGS,"Extend tensor values to boundary face values"},
+
     {"run",run,METH_VARARGS,"Run the required time steps"},
     {"updateData",updateData,METH_VARARGS,"Update mesh data for given time from disk"},
     {"updateTime",updateTime,METH_VARARGS,"Update mesh time to given time without data reading"},

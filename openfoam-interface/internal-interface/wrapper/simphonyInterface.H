@@ -145,6 +145,9 @@ void foam_modifyDictionary(std::string name, std::string dictionaryName, std::st
 void foam_modifyUniformDimensionedVectorField(std::string name, std::string fieldName, std::vector<double> value);
 ///modifying boundary conditions
 void foam_setBC(std::string name, std::string fieldname, std::string dict);
+//extend tensor values to boundaries
+void foam_extend_to_boundaries(std::string name, std::string fieldname);
+
 //running the time steps
 double foam_run(std::string name, int nproc, std::string solver);
 // update mesh data for given time from disk

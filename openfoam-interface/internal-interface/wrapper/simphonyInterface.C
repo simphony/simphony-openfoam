@@ -1044,6 +1044,7 @@ void foam_setCellTensorData(std::string name, std::string dataname, std::vector<
     volTensorField& field = find_tensorData(name,dataname);
     field.internalField() = Field<tensor>(UList<tensor>((tensor*)&(values[0]),values.size()/9));
     //    field.correctBoundaryConditions();
+    foam_extend_to_boundaries(name, dataname);
   }
 
 
@@ -1058,6 +1059,7 @@ void foam_setAndWriteCellTensorData(std::string name,  std::string dataname, std
       volTensorField& field = find_tensorData(name,dataname);
       field.internalField() = Field<tensor>(UList<tensor>((tensor*)&(values[0]),values.size()/9));
       //      field.correctBoundaryConditions();
+      foam_extend_to_boundaries(name, dataname);
       field.write();
     }
   else
@@ -1077,6 +1079,7 @@ void foam_setAndWriteCellTensorData(std::string name,  std::string dataname, std
 );
       field.internalField() = Field<tensor>(UList<tensor>((tensor*)&(values[0]),values.size()/9));
       //      field.correctBoundaryConditions();
+      foam_extend_to_boundaries(name, dataname);
       field.write();
 
     }
@@ -1479,8 +1482,21 @@ void foam_setBC(std::string name, std::string fieldname, std::string dict)
 		vS.boundaryField().readField(vS,IOdict);
 	}
 
+
 }
 
+
+
+void foam_extend_to_boundaries(std::string name, std::string fieldname) {
+
+  fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
+  volTensorField& vT = find_Data<tensor>(mesh,fieldname);
+  forAll(vT.boundaryField(), patchi) {
+    forAll(vT.boundaryField()[patchi], facei) {
+      vT.boundaryField()[patchi][facei] = vT.internalField()[mesh.boundaryMesh()[patchi].faceCells()[facei]];
+    }
+  }
+}
 
 double foam_run(std::string name, int nproc, std::string solver){
     if(nproc<2){

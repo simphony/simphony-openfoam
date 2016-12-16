@@ -20,18 +20,19 @@ convertToMeters 1e-3;
 vertices
 (
     (0 0 0)
-    (100 0 0)
-    (100 10 0)
+    (50 0 0)
+    (50 10 0)
     (0 10 0)
     (0 0 1)
-    (100 0 1)
-    (100 10 1)
+    (50 0 1)
+    (50 10 1)
     (0 10 1)
 );
 
 blocks
 (
-    hex (0 1 2 3 4 5 6 7) (10 3 1) simpleGrading (1 1 1)
+    hex (0 1 2 3 4 5 6 7) (2 20 1) simpleGrading (1 1 1)
+//    hex (0 1 2 3 4 5 6 7) (10 3 1) simpleGrading (1 1 1)
 );
 
 edges
