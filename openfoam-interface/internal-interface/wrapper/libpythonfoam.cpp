@@ -8,8 +8,9 @@
 
 extern "C" {
 
+
   static PyObject* init(PyObject *self, PyObject *args)
-  {   
+  {
      char *name;
      char *cD;
 
@@ -21,11 +22,14 @@ extern "C" {
       foam_init(std::string(name), std::string(cD));
       return Py_BuildValue("");
     }
+    
+    
     catch (Foam::error& fErr)
     {
       PyErr_SetString(PyExc_RuntimeError,fErr.message().c_str());
       return NULL;
     }
+    
     catch (std::exception& e) {
       PyErr_SetString(PyExc_RuntimeError,e.what());
       return NULL;
@@ -34,7 +38,9 @@ extern "C" {
       PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
       return NULL;
     }
+    
   } 
+
 
   static PyObject* init_IO(PyObject *self, PyObject *args)
   {   
@@ -563,10 +569,6 @@ extern "C" {
       return NULL;
     }
   }
-      
-  }
-
-
 
   static PyObject* getCellTensorData(PyObject *self, PyObject *args)
   {
@@ -1084,16 +1086,14 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
       try
 	{
 	  PyObject * strObj;
-	  int ncells = PyList_Size(values);
+	  int valuessize = PyList_Size(values);
 	  
-	  std::vector<double> vals(ncells*3);
-	  
-	  for (int i=0;i<ncells;i++) {
+	  std::vector<double> vals(valuessize);
+	  for (int i=0;i<valuessize;i++) {
 	    strObj = PyList_GetItem(values, i);
-	    vals[i*3] = PyFloat_AsDouble(PyList_GetItem(strObj, 0));
-	    vals[i*3+1] = PyFloat_AsDouble(PyList_GetItem(strObj, 1));
-	    vals[i*3+2] = PyFloat_AsDouble(PyList_GetItem(strObj, 2));
+	    vals[i] = PyFloat_AsDouble(strObj);
 	  }
+
 	  foam_setCellVectorData(std::string(name), std::string(dataname),vals);
 	  return Py_BuildValue("");
 	  
@@ -1116,15 +1116,12 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
       {
 	try {
 	  PyObject * strObj;
-	  int ncells = PyList_Size(values);
+	  int valuessize = PyList_Size(values);
 	  
-	  std::vector<double> vals(ncells*3);
-	  
-	  for (int i=0;i<ncells;i++) {
+	  std::vector<double> vals(valuessize);
+	  for (int i=0;i<valuessize;i++) {
 	    strObj = PyList_GetItem(values, i);
-	    vals[i*3] = PyFloat_AsDouble(PyList_GetItem(strObj, 0));
-	    vals[i*3+1] = PyFloat_AsDouble(PyList_GetItem(strObj, 1));
-	    vals[i*3+2] = PyFloat_AsDouble(PyList_GetItem(strObj, 2));
+	    vals[i] = PyFloat_AsDouble(strObj);
 	  }
 	  int dimensionsize = PyList_Size(dime);
 	  std::vector<int> dimension(dimensionsize);
@@ -1170,18 +1167,15 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
 
 	try
 	  {
-	    PyObject * strObj;
-	    int ncells = PyList_Size(values);
-	    
-	    std::vector<double> vals(ncells*9);
-	    
-	    for (int i=0;i<ncells;i++) {
-	      strObj = PyList_GetItem(values, i);
-	      for (int j=0;j<9;j++) {
-		vals[i*9+j] = PyFloat_AsDouble(PyList_GetItem(strObj, j));
-	      }
-	    }
-	    foam_setCellTensorData(std::string(name), std::string(dataname),vals);
+	  PyObject * strObj;
+	  int valuessize = PyList_Size(values);
+	  
+	  std::vector<double> vals(valuessize);
+	  for (int i=0;i<valuessize;i++) {
+	    strObj = PyList_GetItem(values, i);
+	    vals[i] = PyFloat_AsDouble(strObj);
+	  }
+	  foam_setCellTensorData(std::string(name), std::string(dataname),vals);
 	    return Py_BuildValue("");
 	    
 	  }
@@ -1203,15 +1197,12 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
       {
 	try {
 	  PyObject * strObj;
-	  int ncells = PyList_Size(values);
+	  int valuessize = PyList_Size(values);
 	  
-	  std::vector<double> vals(ncells*9);
-	  
-	  for (int i=0;i<ncells;i++) {
+	  std::vector<double> vals(valuessize);
+	  for (int i=0;i<valuessize;i++) {
 	    strObj = PyList_GetItem(values, i);
-	    for (int j=0;j<9;j++) {
-	      vals[i*9+j] = PyFloat_AsDouble(PyList_GetItem(strObj, j));
-	    }
+	    vals[i] = PyFloat_AsDouble(strObj);
 	  }
 	  int dimensionsize = PyList_Size(dime);
 	  std::vector<int> dimension(dimensionsize);
@@ -1596,7 +1587,7 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
   }
 
 
-
+  
   static PyObject* extendTensorToBoundaries(PyObject *self, PyObject *args)
   {
     char *name;
@@ -1608,7 +1599,7 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
       return NULL;
     }
     try {
-      foam_extend_to_boundaries(std::string(name),std::string(fieldname));
+      foam_extendToBoundaries(std::string(name),std::string(fieldname));
       return Py_BuildValue("");
     }
     catch (Foam::error& fErr)
@@ -1625,6 +1616,8 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
       return NULL;
     }
   }
+
+  
 
   static PyObject* setBC(PyObject *self, PyObject *args)
   {
@@ -1655,9 +1648,6 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
       return NULL;
     }
   }
-
-
-
 
 
   static PyObject* run(PyObject *self, PyObject *args)
@@ -1859,9 +1849,13 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
       PyErr_SetString(PyExc_RuntimeError,"Unknown exception");
       return NULL;
     }
+
   } 
 
 
+
+}
+  
 
   static PyMethodDef FoamMethods[] = {
     {"init",init,METH_VARARGS,"Init wrapper"},
@@ -1912,11 +1906,10 @@ static PyObject* setAllCellVectorData(PyObject *self, PyObject *args)
     {"writeFields",writeFields,METH_VARARGS,"Write data fields to disk"},
     {"setBC",setBC,METH_VARARGS,"Modify boundary condition of the specified field through memory"},
     {"extendTensorToBoundaries",extendTensorToBoundaries,METH_VARARGS,"Extend tensor values to boundary face values"},
-
     {"run",run,METH_VARARGS,"Run the required time steps"},
     {"updateData",updateData,METH_VARARGS,"Update mesh data for given time from disk"},
     {"updateTime",updateTime,METH_VARARGS,"Update mesh time to given time without data reading"},
-
+    
     {NULL, NULL, 0, NULL}        /* Sentinel */
   };
   

@@ -142,6 +142,7 @@ mesh_in_cuds = cuds.get(mesh_name)
 updated_cells = []
 for cell in mesh_in_cuds._iter_cells():
     cell.data[CUBA.VOLUME_FRACTION] = 0.001
+    cell.data[CUBA.MATERIAL] = water.uid
     cell.data[CUBA.DYNAMIC_PRESSURE] = 0.0
     cell.data[CUBA.VELOCITY] = [0.0191, 0.0, 0.0]
     updated_cells.append(cell)

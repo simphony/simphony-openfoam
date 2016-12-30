@@ -679,8 +679,6 @@ fluxRequired
     pcorr;
     alpha.phase1;
 }
-
-
                         """},
                        'driftFluxFoam':
                        {'transportProperties':
@@ -1114,9 +1112,21 @@ def modifyNumerics(mesh, cuds, solver='pimpleFoam', io=False):
 
         transportPropertiesDict = parse_map(control)
     elif solver == 'interFoam':
+        # take cell to get the material list order
+        cell = mesh._get_cell(mesh._foamPointLabelToUuid[0])
+        print cell.data
+        if not CUBA.MATERIAL in cell.data:
+            error_str = "Material must be assigned to cell data\n"
+            error_str += "Use cell.data[CUBA.MATERIAL] = material.uid"
+            raise ValueError(error_str)
+
         control = mapContent['transportProperties']
-        for i in range(2):
-            material = materials[i]
+        if materials[0].uid == cell.data[CUBA.MATERIAL]:
+            ordered_materials = materials
+        else:
+            ordered_materials = [materials[1], materials[0]]
+        i = 1
+        for material in ordered_materials:
             density = material._data[CUBA.DENSITY]
             viscosity = material._data[CUBA.DYNAMIC_VISCOSITY]
             rheology_model = None
@@ -1132,7 +1142,8 @@ def modifyNumerics(mesh, cuds, solver='pimpleFoam', io=False):
                 rheology_model_name = rheology_model.__class__.__name__
             else:
                 rheology_model_name = 'Newtonian'
-            phase_name = 'phase' + str(i + 1)
+            phase_name = 'phase' + str(i)
+            i += 1
             if rheology_model_name == 'Newtonian':
                 control[phase_name]['nu              nu [ 0 2 -1 0 0 0 0 ]']\
                     = material._data[CUBA.DYNAMIC_VISCOSITY] / \
@@ -1485,28 +1496,31 @@ def modifyFields(mesh, cuds, solver='pimpleFoam'):
         foamface.setBC(mesh.name, dataNameMap[CUBA.VOLUME_FRACTION], myDict)
 
     nCells = foamface.getCellCount(mesh.name)
-    p_values = [0.0 for item in range(nCells)]
-    U_values = [[0.0, 0.0, 0.0] for item in range(nCells)]
+    p_values = [0.0] * nCells
+    U_values = [0.0] * (nCells * 3)
     if solver == 'driftFluxFoam' or solver == 'interFoam':
-        alpha_values = [0.0 for item in range(nCells)]
+        alpha_values = [0.0] * nCells
     if solver == 'driftFluxFoam' or solver == 'simpleFoam':
-        vdj_values = [[0.0, 0.0, 0.0] for item in range(nCells)]
-        sigma_mu_values = [[0.0, 0.0, 0.0, 0.0, 0.0,
-                            0.0, 0.0, 0.0, 0.0] for item in range(nCells)]
+        vdj_values = [0.0] * (nCells * 3)
+        sigma_mu_values = [0.0] * (nCells * 9)
     for cell in mesh._iter_cells():
-        p_values[mesh._uuidToFoamLabel[cell.uid]] = \
-            cell.data[ID_pressure]
-        U_values[mesh._uuidToFoamLabel[cell.uid]] = \
-            list(cell.data[CUBA.VELOCITY])
+        label = mesh._uuidToFoamLabel[cell.uid]
+        p_values[label] = cell.data[ID_pressure]
+        
+        i = 3 * label
+        for k in range(3):
+            U_values[i + k] = cell.data[CUBA.VELOCITY][k]
         if solver == 'driftFluxFoam' or solver == 'interFoam':
-            alpha_values[mesh._uuidToFoamLabel[cell.uid]] = \
-                cell.data[CUBA.VOLUME_FRACTION]
+            alpha_values[label] = cell.data[CUBA.VOLUME_FRACTION]
         if solver == 'driftFluxFoam':
-            vdj_values[mesh._uuidToFoamLabel[cell.uid]] = \
-                cell.data[CUBA.RELATIVE_VELOCITY]
+            i = 3 * label
+            for k in range(3):
+                vdj_values[i + k] = cell.data[CUBA.RELATIVE_VELOCITY][k]
         if solver == 'driftFluxFoam' or solver == 'simpleFoam':
-            sigma_mu_values[mesh._uuidToFoamLabel[cell.uid]] = \
-                cell.data[CUBA.HOMOGENIZED_STRESS_TENSOR]
+            i = 9 * label
+            for k in range(9):
+                sigma_mu_values[i + k] = \
+                    cell.data[CUBA.HOMOGENIZED_STRESS_TENSOR]
     foamface.setAllCellData(mesh.name, name_pressure, 0, p_values,
                             dataDimensionMap[dataKeyMap[name_pressure]])
     foamface.setAllCellVectorData(mesh.name, dataNameMap[CUBA.VELOCITY],

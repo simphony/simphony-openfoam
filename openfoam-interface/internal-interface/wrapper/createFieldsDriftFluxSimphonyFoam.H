@@ -247,3 +247,18 @@ new uniformDimensionedVectorField
   ),
  dimensionedVector("g", dimensionSet(0, 1, -2, 0, 0, 0, 0), vector::zero)
  );
+
+new volScalarField
+(
+    IOobject
+    (
+        "Material",
+        runTimes[name]->timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    mesh,
+ dimensionedScalar("Material", dimensionSet(0, 0, 0, 0, 0, 0, 0), 0.0)
+);
+

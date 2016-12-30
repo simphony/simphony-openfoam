@@ -12,11 +12,11 @@ from simphony.api import CUDS, Simulation
 from simphony.cuds.meta import api
 from simphony.engine import EngineInterface
 
-
 import tube_mesh
 
 import tempfile
 
+import time
 
 case_name = 'capillary_rise'
 mesh_name = 'capillary_rise_mesh'
@@ -132,6 +132,8 @@ cuds.add(mesh)
 
 mesh_in_cuds = cuds.get(mesh_name)
 
+start = time.time()
+
 updated_cells = []
 for cell in mesh_in_cuds._iter_cells():
     ymid = sum(mesh_in_cuds.get_point(puid).coordinates[1]
@@ -141,17 +143,29 @@ for cell in mesh_in_cuds._iter_cells():
         cell.data[CUBA.VOLUME_FRACTION] = 1.0
     else:
         cell.data[CUBA.VOLUME_FRACTION] = 0.0
+    cell.data[CUBA.MATERIAL] = water.uid
 
     cell.data[CUBA.DYNAMIC_PRESSURE] = 0.0
     cell.data[CUBA.VELOCITY] = [0.0, 0.0, 0.0]
 
     updated_cells.append(cell)
 
+print "Time spend in initialization 1 : ",time.time()-start
+start = time.time()
+
 mesh_in_cuds._update_cells(updated_cells)
+
+print "Time spend in initialization 2 : ",time.time()-start
+start = time.time()
 
 sim = Simulation(cuds, 'OpenFOAM', engine_interface=EngineInterface.FileIO)
 
+print "Time spend in wrapper init: ",time.time()-start
+start = time.time()
+
 sim.run()
+print "Time spend in run: ",time.time()-start
+
 mesh_inside_wrapper = cuds.get(mesh_name)
 
 print "Case directory ", mesh_inside_wrapper.path

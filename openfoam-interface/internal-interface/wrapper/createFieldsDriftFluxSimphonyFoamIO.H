@@ -262,3 +262,17 @@ new IOdictionary
     ),
     grav()
 );
+
+new volScalarField
+(
+    IOobject
+    (
+        "Material",
+        runTimes[name]->timeName(),
+        mesh,
+        IOobject::READ_IF_PRESENT,
+        IOobject::AUTO_WRITE
+    ),
+    mesh,
+ dimensionedScalar("Material", dimensionSet(0, 0, 0, 0, 0, 0, 0), 0.0)
+);

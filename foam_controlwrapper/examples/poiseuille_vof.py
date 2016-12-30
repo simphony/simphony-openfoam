@@ -90,7 +90,7 @@ vel_inlet._data[CUBA.VARIABLE] = CUBA.VELOCITY
 
 pres_inlet = api.Dirichlet(name='pres_inlet')
 pres_inlet._data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
-pres_inlet._data[CUBA.DYNAMIC_PRESSURE] = 1.0
+pres_inlet._data[CUBA.DYNAMIC_PRESSURE] = 10.0
 
 vf_inlet = api.Dirichlet(name='vf_inlet')
 vf_inlet._data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
@@ -150,6 +150,7 @@ for cell in mesh_in_cuds.iter(item_type=CUBA.CELL):
         cell.data[CUBA.VOLUME_FRACTION] = 1.0
     else:
         cell.data[CUBA.VOLUME_FRACTION] = 0.0
+    cell.data[CUBA.MATERIAL] = water.uid
 
     cell.data[CUBA.DYNAMIC_PRESSURE] = 0.0
     cell.data[CUBA.VELOCITY] = [0.0, 0.0, 0.0]

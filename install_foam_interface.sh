@@ -16,6 +16,10 @@ cd openfoam-interface/simphony-solvers/simpleSimphonyFoam
 wmake
 popd
 pushd .
+cd openfoam-interface/simphony-solvers/interSimphonyFoam
+wmake
+popd
+pushd .
 cd openfoam-interface/internal-interface/libs
 ./Allwmake
 popd

@@ -24,20 +24,14 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-/*
-#include "fvCFD.H"
-#include "singlePhaseTransportModel.H"
-#include "RASModel.H"
-#include "simpleControl.H"
-#include "fvIOoptionList.H"
-*/
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#include "simpleControl/simpleControl.H"
+#include "simpleControl/simpleControlMod.H"
 
 #include "initContinuityErrs.H"
 
-simpleControl simple(mesh);
+simpleControlMod simple(mesh);
 
 std::string pName = "p";
 std::string UName = "U";

@@ -3,6 +3,8 @@
 """
 import simphonyfoaminterface as foamface
 
+from simphony.core.cuba import CUBA
+
 from foam_controlwrapper.foam_variables import (dataTypeMap, dataKeyMap)
 from foam_controlwrapper.foam_variables import dataDimensionMap
 from foam_controlwrapper.foam_variables import cellDataTypes
@@ -28,16 +30,15 @@ def create_dummy_celldata(name, data_name, io=False):
         if dataTypeMap[dataKeyMap[data_name]] in cellDataTypes:
             dimension = dataDimensionMap[dataKeyMap[data_name]]
             if dataTypeMap[dataKeyMap[data_name]] == 'vector':
-                values = [[0.0, 0.0, 0.0] for item in range(nCells)]
+                values = [0.0] * (3 * nCells)
                 foamface.setAllCellVectorData(name, data_name, 1, values,
                                               dimension)
             elif dataTypeMap[dataKeyMap[data_name]] == 'scalar':
-                values = [0.0 for item in range(nCells)]
+                values = [0.0] * nCells
                 foamface.setAllCellData(name, data_name, 1, values,
                                         dimension)
             elif dataTypeMap[dataKeyMap[data_name]] == 'tensor':
-                values = [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-                          for item in range(nCells)]
+                values = [0.0] * (nCells * 9)
                 foamface.setAllCellTensorData(name, data_name, 1, values,
                                               dimension)
 
@@ -45,16 +46,15 @@ def create_dummy_celldata(name, data_name, io=False):
         if dataTypeMap[dataKeyMap[data_name]] in cellDataTypes:
             dimension = dataDimensionMap[dataKeyMap[data_name]]
             if dataTypeMap[dataKeyMap[data_name]] == 'vector':
-                values = [[0.0, 0.0, 0.0] for item in range(nCells)]
+                values = [0.0] * (3 * nCells)
                 foamface.setAllCellVectorData(name, data_name, 0, values,
                                               dimension)
             elif dataTypeMap[dataKeyMap[data_name]] == 'scalar':
-                values = [0.0 for item in range(nCells)]
+                values = [0.0] * nCells
                 foamface.setAllCellData(name, data_name, 0, values,
                                         dimension)
             elif dataTypeMap[dataKeyMap[data_name]] == 'tensor':
-                values = [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-                          for item in range(nCells)]
+                values = [0.0] * (nCells * 9)
                 foamface.setAllCellTensorData(name, data_name, 0, values,
                                               dimension)
 
@@ -66,8 +66,8 @@ def set_cells_data(name, cells, dataNameKeyMap, io=False):
     ----------
     name : str
         name of mesh
-    cells : iterator Cell
-        set of Cells
+    cells : list Cell
+        list of Cells
     io : boolean
         if True write data to disk
 
@@ -79,29 +79,46 @@ def set_cells_data(name, cells, dataNameKeyMap, io=False):
         dimension = dataDimensionMap[dataKey]
         if io:
             if dataTypeMap[dataKey] in cellDataTypes:
-                data = []
-                for cell in cells:
-                    data.append(cell.data[dataKey])
+                print "set: ",dataName," ",dataTypeMap[dataKey]
                 if dataTypeMap[dataKey] == "scalar":
+                    data = []
+                    for cell in cells:
+                        data.append(cell.data[dataKey])
                     foamface.setAllCellData(name, dataName, 1,
                                             data, dimension)
                 elif dataTypeMap[dataKey] == "vector":
+                    data = []
+                    for cell in cells:
+                        for val in cell.data[dataKey]:
+                            data.append(val)
                     foamface.setAllCellVectorData(name, dataName, 1,
                                                   data, dimension)
                 elif dataTypeMap[dataKey] == "tensor":
+                    data = []
+                    for cell in cells:
+                        for val in cell.data[dataKey]:
+                            data.append(val)
                     foamface.setAllCellTensorData(name, dataName, 1,
                                                   data, dimension)
         else:
             if dataTypeMap[dataKey] in cellDataTypes:
-                data = []
-                for cell in cells:
-                    data.append(cell.data[dataKey])
                 if dataTypeMap[dataKey] == "scalar":
+                    data = []
+                    for cell in cells:
+                        data.append(cell.data[dataKey])
                     foamface.setAllCellData(name, dataName, 0,
                                             data, dimension)
                 elif dataTypeMap[dataKey] == "vector":
+                    data = []
+                    for cell in cells:
+                        for val in cell.data[dataKey]:
+                            data.append(val)
                     foamface.setAllCellVectorData(name, dataName, 0,
                                                   data, dimension)
                 elif dataTypeMap[dataKey] == "tensor":
+                    data = []
+                    for cell in cells:
+                        for val in cell.data[dataKey]:
+                            data.append(val)
                     foamface.setAllCellTensorData(name, dataName, 0,
                                                   data, dimension)

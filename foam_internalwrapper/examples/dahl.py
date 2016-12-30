@@ -7,8 +7,7 @@ from simphony.api import CUDS, Simulation
 from simphony.cuds.meta import api
 from simphony.engine import EngineInterface
 
-
-# from mayavi.scripts import mayavi2
+from mayavi.scripts import mayavi2
 
 import dahl_mesh
 import tempfile
@@ -150,6 +149,7 @@ mesh_in_cuds = cuds.get(mesh_name)
 updated_cells = []
 for cell in mesh_in_cuds._iter_cells():
     cell.data[CUBA.VOLUME_FRACTION] = 0.001
+    cell.data[CUBA.MATERIAL] = sludge.uid
     cell.data[CUBA.DYNAMIC_PRESSURE] = 0.0
     cell.data[CUBA.VELOCITY] = [0.0191, 0.0, 0.0]
     updated_cells.append(cell)
@@ -170,7 +170,6 @@ average_vf /= len(mesh_inside_wrapper._boundaries[outlet.name])
 print "Average volume fraction on outlet: ", average_vf
 
 
-"""
 @mayavi2.standalone
 def view():
     from mayavi.modules.surface import Surface
@@ -185,4 +184,4 @@ def view():
 
 if __name__ == '__main__':
     view()
-"""
+

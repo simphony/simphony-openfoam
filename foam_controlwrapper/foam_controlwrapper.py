@@ -93,7 +93,9 @@ class Wrapper(ABCModelingEngine):
         # save timestep to mesh
         mesh._time = runner.get_last_time()
         # update time and data to Foam objectRegistry
+        print "to update"
         simphonyfoaminterface.updateData(mesh.name, float(mesh._time))
+        print "from update"
 
     def add_dataset(self, mesh, name=None):
         """Add a CUDS container to the OpenFoam modeling engine.
@@ -131,6 +133,7 @@ class Wrapper(ABCModelingEngine):
             cuds = self.get_cuds()
             if cuds is not None and not_empty(cuds.iter(api.Boundary)):
                 solver = get_foam_solver(cuds)
+                print "add dataset ",solver
                 self._meshes[mesh_name] = FoamMesh(mesh_name, cuds,
                                                    solver, mesh)
             else:
