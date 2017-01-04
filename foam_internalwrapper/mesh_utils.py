@@ -4,6 +4,7 @@
 import simphonyfoaminterface as foamface
 
 from simphony.core.cuba import CUBA
+from simphony.cuds.mesh import Cell
 
 from foam_controlwrapper.foam_variables import (dataTypeMap, dataKeyMap)
 from foam_controlwrapper.foam_variables import dataDimensionMap
@@ -79,7 +80,6 @@ def set_cells_data(name, cells, dataNameKeyMap, io=False):
         dimension = dataDimensionMap[dataKey]
         if io:
             if dataTypeMap[dataKey] in cellDataTypes:
-                print "set: ",dataName," ",dataTypeMap[dataKey]
                 if dataTypeMap[dataKey] == "scalar":
                     data = []
                     for cell in cells:
@@ -122,3 +122,41 @@ def set_cells_data(name, cells, dataNameKeyMap, io=False):
                             data.append(val)
                     foamface.setAllCellTensorData(name, dataName, 0,
                                                   data, dimension)
+
+
+def get_cells_in_range(args):
+    """ get list of cells on given label range
+
+    Parameters
+    ----------
+    args: list
+       list of parameters
+       args[0] - cell start label
+       args[1] - cell end label
+       args[2] - packed list of all cells point indices
+       args[3] - mesh
+    """
+    cell_start = args[0]
+    cell_end = args[1]
+    cells_puids = args[2]
+    data_map = args[3]
+    mesh = args[4]
+    cells = []
+    for cell_label in range(cell_start, cell_end + 1, 1):
+        cell = Cell(cells_puids[cell_label],
+                    mesh._foamCellLabelToUuid[cell_label])
+        for dataKey, data in data_map.iteritems():
+            if dataTypeMap[dataKey] == "scalar":
+                if dataKey == CUBA.MATERIAL:
+                    cell.data[dataKey] = \
+                        mesh._foamMaterialLabelToUuid
+                else:
+                    cell.data[dataKey] = data[cell_label]
+            elif dataTypeMap[dataKey] == "vector":
+                cell.data[dataKey] = \
+                    [data[cell_label * 3 + k] for k in range(3)]
+            elif dataTypeMap[dataKey] == "tensor":
+                cell.data[dataKey] = \
+                    [data[cell_label * 9 + k] for k in range(9)]
+        cells.append(cell)
+    return cells

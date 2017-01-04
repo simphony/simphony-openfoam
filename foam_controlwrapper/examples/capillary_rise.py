@@ -6,7 +6,7 @@
 import foam_controlwrapper
 from simphony.core.cuba import CUBA
 
-# from mayavi.scripts import mayavi2
+from mayavi.scripts import mayavi2
 
 from simphony.api import CUDS, Simulation
 from simphony.cuds.meta import api
@@ -135,7 +135,7 @@ mesh_in_cuds = cuds.get(mesh_name)
 start = time.time()
 
 updated_cells = []
-for cell in mesh_in_cuds._iter_cells():
+for cell in mesh_in_cuds._iter_cells_parallell():
     ymid = sum(mesh_in_cuds.get_point(puid).coordinates[1]
                for puid in cell.points)
     ymid /= sum(1.0 for _ in cell.points)
@@ -170,7 +170,7 @@ mesh_inside_wrapper = cuds.get(mesh_name)
 
 print "Case directory ", mesh_inside_wrapper.path
 
-"""
+
 @mayavi2.standalone
 def view():
     from mayavi.modules.surface import Surface
@@ -185,4 +185,4 @@ def view():
 
 if __name__ == '__main__':
     view()
-"""
+
