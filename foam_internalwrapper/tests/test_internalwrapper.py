@@ -215,11 +215,15 @@ class WrapperRunTestCase(unittest.TestCase):
             old_pres = cell.data[CUBA.PRESSURE]
             cell_uid = cell.uid
             print cell
+            print cell_uid
 
         print self.wrapper
-        print cell_uid
         self.wrapper.run()
 
+        for elem in self.mesh_inside_wrapper.iter():
+            print elem, elem.uid
+
+        print cell_uid
         cell = self.mesh_inside_wrapper.get(cell_uid)
         print cell
         print cell.data
