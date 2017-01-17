@@ -225,6 +225,9 @@ class WrapperRunTestCase(unittest.TestCase):
 
         print cell_uid
         cell = self.mesh_inside_wrapper.get(cell_uid)
+        print self.mesh_inside_wrapper
+        print self.mesh_inside_wrapper._points
+        print self.mesh_inside_wrapper._cells
         print cell
         print cell.uid
         print cell.data
