@@ -119,16 +119,16 @@ class WrapperTestCase(unittest.TestCase):
         self.assertEqual(self.mesh.name, mesh_inside_wrapper.name)
 
         label = 0
-        for point in self.mesh.iter_points():
+        for point in self.mesh.iter(item_type=CUBA.POINT):
             puid = mesh_inside_wrapper._foamPointLabelToUuid[label]
-            point_f = mesh_inside_wrapper.get_point(puid)
+            point_f = mesh_inside_wrapper.get(puid)
             self.assertEqual(point.coordinates, point_f.coordinates)
             label += 1
 
         label = 0
-        for cell in self.mesh.iter_cells():
+        for cell in self.mesh.iter(item_type=CUBA.CELL):
             cuid = mesh_inside_wrapper._foamCellLabelToUuid[label]
-            cell_f = mesh_inside_wrapper.get_cell(cuid)
+            cell_f = mesh_inside_wrapper.get(cuid)
             self.assertEqual(cell.data[CUBA.PRESSURE],
                              cell_f.data[CUBA.PRESSURE])
             self.assertEqual(cell.data[CUBA.VELOCITY],
@@ -164,8 +164,8 @@ class WrapperTestCase(unittest.TestCase):
         mesh_inside_wrapper2 = wrapper.get_dataset(mesh2.name)
 
         self.assertEqual(
-            sum(1 for _ in mesh_inside_wrapper1.iter_points()),
-            sum(1 for _ in mesh_inside_wrapper2.iter_points()))
+            sum(1 for _ in mesh_inside_wrapper1.iter(item_type=CUBA.POINT)),
+            sum(1 for _ in mesh_inside_wrapper2.iter(item_type=CUBA.POINT)))
 
 
 class WrapperRunTestCase(unittest.TestCase):
@@ -210,7 +210,7 @@ class WrapperRunTestCase(unittest.TestCase):
 
         self.wrapper.run()
 
-        for cell in self.mesh_inside_wrapper.iter_cells():
+        for cell in self.mesh_inside_wrapper.iter(item_type=CUBA.CELL):
             old_vel = cell.data[CUBA.VELOCITY]
             old_pres = cell.data[CUBA.PRESSURE]
             cell_uid = cell.uid

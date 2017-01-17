@@ -59,7 +59,7 @@ mesh_inside_wrapper = wrapper.get_dataset(name)
 print "Case directory ", mesh_inside_wrapper.path
 
 updated_cells = []
-for cell in mesh_inside_wrapper.iter_cells():
+for cell in mesh_inside_wrapper.iter(item_type=CUBA.CELL):
     ymid = sum(mesh_inside_wrapper.get_point(puid).coordinates[1]
                for puid in cell.points)
     ymid /= sum(1.0 for _ in cell.points)

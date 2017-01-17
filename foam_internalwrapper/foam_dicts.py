@@ -1060,7 +1060,7 @@ def modifyFields(mesh, BC, solver='pimpleFoam'):
         vdj_values = [[0.0, 0.0, 0.0] for item in range(nCells)]
         sigma_mu_values = [[0.0, 0.0, 0.0, 0.0, 0.0,
                             0.0, 0.0, 0.0, 0.0] for item in range(nCells)]
-    for cell in mesh.iter_cells():
+    for cell in mesh.iter(item_type=CUBA.CELL):
         p_values[mesh._uuidToFoamLabel[cell.uid]] = \
             cell.data[ID_pressure]
         U_values[mesh._uuidToFoamLabel[cell.uid]] = \

@@ -68,7 +68,7 @@ openfoam_file_io.create_block_mesh(tempfile.mkdtemp(), name, wrapper,
 mesh_inside_wrapper = wrapper.get_dataset(name)
 
 updated_cells = []
-for cell in mesh_inside_wrapper.iter_cells():
+for cell in mesh_inside_wrapper.iter(item_type=CUBA.CELL):
     cell.data[CUBA.VOLUME_FRACTION] = 0.001
     cell.data[CUBA.DYNAMIC_PRESSURE] = 0.0
     cell.data[CUBA.VELOCITY] = [0.0191, 0.0, 0.0]
@@ -91,7 +91,7 @@ for time_i in range(number_of_outer_timesteps):
     print " Update relative velocity"
 
     updated_cells = []
-    for cell in mesh_inside_wrapper.iter_cells():
+    for cell in mesh_inside_wrapper.iter(item_type=CUBA.CELL):
         alphad = cell.data[CUBA.VOLUME_FRACTION]
         vr = [V*pow(10.0, -a*max(alphad, 0.0))/(1-alphad) for V in V0]
         cell.data[CUBA.RELATIVE_VELOCITY] = vr
