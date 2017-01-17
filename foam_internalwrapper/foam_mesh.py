@@ -598,6 +598,11 @@ class FoamMesh(ABCMesh):
                 cell = self._get_cell(uid)
                 yield cell
 
+    def _has_points(self):
+        """Returns False if there are no points.
+        """
+        return foamface.getPointCount(self.name) > 0
+
     def _has_edges(self):
         """ Return false while edges are not supported yet
 
