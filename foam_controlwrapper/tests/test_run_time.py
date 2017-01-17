@@ -61,7 +61,7 @@ class WrapperRunTestCase(unittest.TestCase):
 
         self.wrapper.run()
 
-        cell = self.mesh_inside_wrapper.get_cell(cell_uid)
+        cell = self.mesh_inside_wrapper.get(cell_uid)
         new_vel = cell.data[CUBA.VELOCITY]
         new_pres = cell.data[CUBA.PRESSURE]
 
