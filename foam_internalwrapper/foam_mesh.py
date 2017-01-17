@@ -211,14 +211,10 @@ class FoamMesh(ABCMesh):
 
         """
 
-        try:
-            coords = foamface.getPointCoordinates(self.name,
-                                                  self._uuidToFoamLabel[uuid])
-            point = Point(coords, uuid)
-            return point
-        except KeyError:
-            error_str = "Trying to get an non-existing point with uuid: {}"
-            raise ValueError(error_str.format(uuid))
+        coords = foamface.getPointCoordinates(self.name,
+                                              self._uuidToFoamLabel[uuid])
+        point = Point(coords, uuid)
+        return point
 
     def _get_edge(self, uuid):
         """ Returns an edge with a given uuid.
@@ -270,16 +266,12 @@ class FoamMesh(ABCMesh):
 
         """
 
-        try:
-            pointLabels = foamface.getFacePoints(self.name,
-                                                 self._uuidToFoamLabel[uuid])
-            puids = [self._foamPointLabelToUuid[lbl] for lbl in pointLabels]
+        pointLabels = foamface.getFacePoints(self.name,
+                                             self._uuidToFoamLabel[uuid])
+        puids = [self._foamPointLabelToUuid[lbl] for lbl in pointLabels]
 
-            face = Face(puids, uuid)
-            return face
-        except KeyError:
-            error_str = "Trying to get an non-existing edge with uuid: {}"
-            raise ValueError(error_str.format(uuid))
+        face = Face(puids, uuid)
+        return face
 
     def get_boundary_cells(self, boundary):
         """Returns boundar cells for a given boundary.
@@ -333,39 +325,34 @@ class FoamMesh(ABCMesh):
 
         """
 
-        try:
+        pointLabels = foamface.getCellPoints(self.name,
+                                             self._uuidToFoamLabel[uuid])
+        puids = [self._foamPointLabelToUuid[lbl] for lbl in pointLabels]
+        cell = Cell(puids, uuid)
+        label = self._uuidToFoamLabel[uuid]
 
-            pointLabels = foamface.getCellPoints(self.name,
-                                                 self._uuidToFoamLabel[uuid])
-            puids = [self._foamPointLabelToUuid[lbl] for lbl in pointLabels]
-            cell = Cell(puids, uuid)
-            label = self._uuidToFoamLabel[uuid]
+        dataNames = foamface.getCellDataNames(self.name)
+        dataNames += foamface.getCellVectorDataNames(self.name)
+        dataNames += foamface.getCellTensorDataNames(self.name)
+        for dataName in set(dataKeyMap.keys()).intersection(dataNames):
+            if dataTypeMap[dataKeyMap[dataName]] == "scalar":
+                cell.data[dataKeyMap[dataName]] = \
+                    foamface.getCellData(self.name,
+                                         label,
+                                         dataName)
+            elif dataTypeMap[dataKeyMap[dataName]] == "vector":
+                cell.data[dataKeyMap[dataName]] = \
+                    foamface.getCellVectorData(self.name,
+                                               label,
+                                               dataName)
+            elif dataTypeMap[dataKeyMap[dataName]] == "tensor":
+                cell.data[dataKeyMap[dataName]] = \
+                    foamface.getCellTensorData(self.name,
+                                               label,
+                                               dataName)
 
-            dataNames = foamface.getCellDataNames(self.name)
-            dataNames += foamface.getCellVectorDataNames(self.name)
-            dataNames += foamface.getCellTensorDataNames(self.name)
-            for dataName in set(dataKeyMap.keys()).intersection(dataNames):
-                if dataTypeMap[dataKeyMap[dataName]] == "scalar":
-                    cell.data[dataKeyMap[dataName]] = \
-                        foamface.getCellData(self.name,
-                                             label,
-                                             dataName)
-                elif dataTypeMap[dataKeyMap[dataName]] == "vector":
-                    cell.data[dataKeyMap[dataName]] = \
-                        foamface.getCellVectorData(self.name,
-                                                   label,
-                                                   dataName)
-                elif dataTypeMap[dataKeyMap[dataName]] == "tensor":
-                    cell.data[dataKeyMap[dataName]] = \
-                        foamface.getCellTensorData(self.name,
-                                                   label,
-                                                   dataName)
+        return cell
 
-            return cell
-
-        except KeyError:
-            error_str = "Trying to get an non-existing cell with uuid: {}"
-            raise ValueError(error_str.format(uuid))
 
     def _add_points(self, points):
         message = 'Points addition not supported yet'
