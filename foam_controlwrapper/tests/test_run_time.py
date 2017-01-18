@@ -55,9 +55,6 @@ class WrapperRunTestCase(unittest.TestCase):
         self.wrapper.run()
 
         for cell in self.mesh_inside_wrapper.iter(item_type=CUBA.CELL):
-            print cell
-
-        for cell in self.mesh_inside_wrapper.iter(item_type=CUBA.CELL):
             old_vel = cell.data[CUBA.VELOCITY]
             old_pres = cell.data[CUBA.PRESSURE]
             cell_uid = cell.uid
