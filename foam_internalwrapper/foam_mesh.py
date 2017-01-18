@@ -45,8 +45,8 @@ class FoamMesh(ABCMesh):
         name of mesh
     data : DataContainer
         DataContainer to store mesh global data (midpoint, ...).
-    _uuidToFoamLabel : dictionary
-        Mapping from uuid to OpenFoam label number
+    _uuidToFoamLabelAndType : dictionary
+        Mapping from uuid to OpenFoam label number and type
     _foamCellLabelToUuid : dictionary
         Mapping from OpenFoam cell label number to uuid
     _foamFaceLabelToUuid : dictionary
@@ -64,7 +64,7 @@ class FoamMesh(ABCMesh):
         super(FoamMesh, self).__init__()
         self.name = name
         self.data = dc.DataContainer()
-        self._uuidToFoamLabel = {}
+        self._uuidToFoamLabelAndType = {}
         self._foamCellLabelToUuid = {}
         self._foamFaceLabelToUuid = {}
         self._foamEdgeLabelToUuid = {}
@@ -85,7 +85,7 @@ class FoamMesh(ABCMesh):
             for point in mesh.iter(item_type=CUBA.POINT):
                 pointMap[point.uid] = label
                 uid = self._generate_uuid()
-                self._uuidToFoamLabel[uid] = label
+                self._uuidToFoamLabelAndType[uid] = (label, CUBA.POINT)
                 self._foamPointLabelToUuid[label] = uid
                 for coord in point.coordinates:
                     pointCoordinates.append(coord)
@@ -94,7 +94,7 @@ class FoamMesh(ABCMesh):
             label = 0
             for edge in mesh.iter(item_type=CUBA.EDGE):
                 uid = self._generate_uuid()
-                self._uuidToFoamLabel[uid] = label
+                self._uuidToFoamLabelAndType[uid] = (label, CUBA.EDGE)
                 self._foamEdgeLabelToUuid[label] = uid
                 label += 1
 
@@ -104,7 +104,7 @@ class FoamMesh(ABCMesh):
             for face in mesh.iter(item_type=CUBA.FACE):
                 faceMap[face.uid] = label
                 uid = self._generate_uuid()
-                self._uuidToFoamLabel[uid] = label
+                self._uuidToFoamLabelAndType[uid] = (label, CUBA.FACE)
                 self._foamFaceLabelToUuid[label] = uid
                 # make compressed list of faces points
                 facePoints.append(len(face.points))
@@ -116,7 +116,7 @@ class FoamMesh(ABCMesh):
             cellPoints = []
             for cell in mesh.iter(item_type=CUBA.CELL):
                 uid = self._generate_uuid()
-                self._uuidToFoamLabel[uid] = label
+                self._uuidToFoamLabelAndType[uid] = (label, CUBA.CELL)
                 self._foamCellLabelToUuid[label] = uid
                 cellPoints.append(len(cell.points))
                 for puid in cell.points:
@@ -211,12 +211,8 @@ class FoamMesh(ABCMesh):
 
         """
 
-        label = self._uuidToFoamLabel[uuid]
-        print uuid
-        print label
-        print self._uuidToFoamLabel
-        print self._foamPointLabelToUuid
-        if label not in self._foamPointLabelToUuid:
+        label, type = self._uuidToFoamLabelAndType[uuid]
+        if type != CUBA.POINT:
             raise KeyError("No point with uuid {}".format(uuid))
 
         coords = foamface.getPointCoordinates(self.name, label)
@@ -273,8 +269,8 @@ class FoamMesh(ABCMesh):
 
         """
 
-        label = self._uuidToFoamLabel[uuid]
-        if label not in self._foamFaceLabelToUuid:
+        label, type = self._uuidToFoamLabelAndType[uuid]
+        if type != CUBA.FACE:
             raise KeyError("No face with uuid {}".format(uuid))
 
         pointLabels = foamface.getFacePoints(self.name, label)
@@ -335,14 +331,14 @@ class FoamMesh(ABCMesh):
 
         """
 
-        label = self._uuidToFoamLabel[uuid]
-        if label not in self._foamCellLabelToUuid:
+        label, type = self._uuidToFoamLabelAndType[uuid]
+        if type != CUBA.CELL:
             raise KeyError("No Cell with uuid {}".format(uuid))
 
         pointLabels = foamface.getCellPoints(self.name, label)
         puids = [self._foamPointLabelToUuid[lbl] for lbl in pointLabels]
         cell = Cell(puids, uuid)
-        label = self._uuidToFoamLabel[uuid]
+        label, _ = self._uuidToFoamLabelAndType[uuid]
 
         dataNames = foamface.getCellDataNames(self.name)
         dataNames += foamface.getCellVectorDataNames(self.name)
@@ -438,7 +434,7 @@ class FoamMesh(ABCMesh):
             create_dummy_celldata(self.name, dataName)
 
         for cell in cellList:
-            if cell.uid not in self._uuidToFoamLabel:
+            if cell.uid not in self._uuidToFoamLabelAndType:
                 error_str = "Trying to update a non-existing cell with uuid: "\
                     + str(cell.uid)
                 raise KeyError(error_str)
@@ -446,7 +442,7 @@ class FoamMesh(ABCMesh):
             # if points are changed raise warning
             pointLabels = \
                 foamface.getCellPoints(self.name,
-                                       self._uuidToFoamLabel[cell.uid])
+                                       self._uuidToFoamLabelAndType[cell.uid][0])
             puids = [self._foamPointLabelToUuid[lbl] for lbl in pointLabels]
             if set(puids) != set(cell.points):
                 raise Warning("Cell points can't be updated")
@@ -675,22 +671,22 @@ class FoamMesh(ABCMesh):
 
         for point in range(nPoints):
             uuid = self._generate_uuid()
-            self._uuidToFoamLabel[uuid] = point
+            self._uuidToFoamLabelAndType[uuid] = (point, CUBA.POINT)
             self._foamPointLabelToUuid[point] = uuid
 
         for edge in range(nEdges):
             uuid = self._generate_uuid()
-            self._uuidToFoamLabel[uuid] = edge
+            self._uuidToFoamLabelAndType[uuid] = (edge, CUBA.EDGE)
             self._foamEdgeLabelToUuid[edge] = uuid
 
         for face in range(nFaces):
             uuid = self._generate_uuid()
-            self._uuidToFoamLabel[uuid] = face
+            self._uuidToFoamLabelAndType[uuid] = (face, CUBA.FACE)
             self._foamFaceLabelToUuid[face] = uuid
 
         for cell in range(nCells):
             uuid = self._generate_uuid()
-            self._uuidToFoamLabel[uuid] = cell
+            self._uuidToFoamLabelAndType[uuid] = (cell, CUBA.CELL)
             self._foamCellLabelToUuid[cell] = uuid
 
     def _generate_uuid(self):
