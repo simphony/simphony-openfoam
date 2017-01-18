@@ -73,7 +73,7 @@ mesh_inside_wrapper = wrapper.get_dataset(name)
 print mesh_inside_wrapper.path
 
 updated_cells = []
-for cell in mesh_inside_wrapper.iter_cells():
+for cell in mesh_inside_wrapper.iter(item_type=CUBA.CELL):
     cell.data[CUBA.VOLUME_FRACTION] = 0.001
     cell.data[CUBA.DYNAMIC_PRESSURE] = 0.0
     cell.data[CUBA.VELOCITY] = [0.0191, 0.0, 0.0]

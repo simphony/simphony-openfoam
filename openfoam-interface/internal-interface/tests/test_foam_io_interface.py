@@ -47,7 +47,7 @@ class FoamInterfaceTestCase(unittest.TestCase):
                 (0.0, 1.0, 1.0))
         ]
 
-        puids = [self.mesh.add_point(point) for point in self.points]
+        puids = [self.mesh.add(point) for point in self.points]
 
         self.faces = [
             Face([puids[0], puids[3], puids[7], puids[4]],
@@ -65,7 +65,7 @@ class FoamInterfaceTestCase(unittest.TestCase):
 
         ]
 
-        [self.mesh.add_face(face) for face in self.faces]
+        [self.mesh.add(face) for face in self.faces]
 
         self.cells = [
             Cell(puids)
@@ -73,70 +73,70 @@ class FoamInterfaceTestCase(unittest.TestCase):
 
         self.puids = puids
 
-        [self.mesh.add_cell(cell) for cell in self.cells]
+        [self.mesh.add(cell) for cell in self.cells]
 
-        self._uuidToFoamLabel = {}
+        self._uuidToFoamLabelAndType = {}
         self._foamCellLabelToUuid = {}
         self._foamFaceLabelToUuid = {}
         self._foamEdgeLabelToUuid = {}
         self._foamPointLabelToUuid = {}
         # generate uuid mapping
         label = 0
-        for point in self.mesh.iter_points():
+        for point in self.mesh.iter(item_type=CUBA.POINT):
             uid = point.uid
-            self._uuidToFoamLabel[uid] = label
+            self._uuidToFoamLabelAndType[uid] = (label, CUBA.POINT)
             self._foamPointLabelToUuid[label] = uid
             label += 1
 
         label = 0
-        for edge in self.mesh.iter_edges():
+        for edge in self.mesh.iter(item_type=CUBA.EDGE):
             uid = edge.uid
-            self._uuidToFoamLabel[uid] = label
+            self._uuidToFoamLabelAndType[uid] = (label, CUBA.EDGE)
             self._foamEdgeLabelToUuid[label] = uid
             label += 1
 
         label = 0
-        for face in self.mesh.iter_faces():
+        for face in self.mesh.iter(item_type=CUBA.FACE):
             uid = face.uid
-            self._uuidToFoamLabel[uid] = label
+            self._uuidToFoamLabelAndType[uid] = (label, CUBA.FACE)
             self._foamFaceLabelToUuid[label] = uid
             label += 1
 
         label = 0
-        for cell in self.mesh.iter_cells():
+        for cell in self.mesh.iter(item_type=CUBA.CELL):
             uid = cell.uid
-            self._uuidToFoamLabel[uid] = label
+            self._uuidToFoamLabelAndType[uid] = (label, CUBA.CELL)
             self._foamCellLabelToUuid[label] = uid
             label += 1
 
         # find out boundary patches
         patchNameFacesMap = OrderedDict()
         self.facePoints = []
-        for face in self.mesh.iter_faces():
+        for face in self.mesh.iter(item_type=CUBA.FACE):
             if CUBA.LABEL in face.data:
                 boundary = 'boundary' + str(face.data[CUBA.LABEL])
                 if boundary not in patchNameFacesMap:
                     patchNameFacesMap[boundary] = []
                 patchNameFacesMap[boundary].append(
-                    self._uuidToFoamLabel[face.uid])
+                    self._uuidToFoamLabelAndType[face.uid][0])
 
             # make compressed list of faces points
             self.facePoints.append(len(face.points))
             for puid in face.points:
-                self.facePoints.append(self._uuidToFoamLabel[puid])
+                self.facePoints.append(self._uuidToFoamLabelAndType[puid][0])
 
         # make points coordinate list
         self.pointCoordinates = []
-        for point in self.mesh.iter_points():
+        for point in self.mesh.iter(item_type=CUBA.POINT):
             for coord in point.coordinates:
                 self.pointCoordinates.append(coord)
 
         # make compressed list of cells points
         self.cellPoints = []
-        for cell in self.mesh.iter_cells():
+        for cell in self.mesh.iter(item_type=CUBA.CELL):
             self.cellPoints.append(len(cell.points))
             for puid in cell.points:
-                self.cellPoints.append(self._uuidToFoamLabel[puid])
+                self.cellPoints.append(self._uuidToFoamLabelAndType[puid][0])
 
         # make patch information
         self.patchNames = []
@@ -210,7 +210,7 @@ class FoamInterfaceTestCase(unittest.TestCase):
         for point in self.points:
             coords = foamface.getPointCoordinates(
                 self.name,
-                self._uuidToFoamLabel[point.uid])
+                self._uuidToFoamLabelAndType[point.uid][0])
             self.assertEqual(point.coordinates, tuple(coords))
 
     def test_get_face_points(self):
@@ -224,7 +224,7 @@ class FoamInterfaceTestCase(unittest.TestCase):
         for face in self.faces:
             pointLabels = foamface.getFacePoints(
                 self.name,
-                self._uuidToFoamLabel[face.uid])
+                self._uuidToFoamLabelAndType[face.uid][0])
             puids = [self._foamPointLabelToUuid[lbl] for lbl in pointLabels]
             self.assertEqual(puids, face.points)
 
@@ -239,7 +239,7 @@ class FoamInterfaceTestCase(unittest.TestCase):
         for cell in self.cells:
             pointLabels = foamface.getCellPoints(
                 self.name,
-                self._uuidToFoamLabel[cell.uid])
+                self._uuidToFoamLabelAndType[cell.uid][0])
             puids = [self._foamPointLabelToUuid[lbl] for lbl in pointLabels]
             self.assertEqual(set(puids), set(cell.points))
 
@@ -273,7 +273,7 @@ class FoamInterfaceTestCase(unittest.TestCase):
         for face in self.faces:
             self.assertEqual(
                 face.data[CUBA.LABEL],
-                facePatchMap[self._uuidToFoamLabel[face.uid]])
+                facePatchMap[self._uuidToFoamLabelAndType[face.uid][0]])
 
     def test_get_face_count(self):
         """Test getFaceCount method

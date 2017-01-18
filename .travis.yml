@@ -4,12 +4,11 @@ python:
 virtualenv:
   system_site_packages: false
 env:
-  - SIMPHONY_VERSION=0.4.0
+  - SIMPHONY_VERSION=0.5.0
   - SIMPHONY_VERSION=master
 matrix:
   allow_failures:
     - env: SIMPHONY_VERSION=master
-
 before_install:
   - sudo sh -c "echo deb http://www.openfoam.org/download/ubuntu precise main > /etc/apt/sources.list.d/openfoam.list"
   - sudo apt-get update -qq

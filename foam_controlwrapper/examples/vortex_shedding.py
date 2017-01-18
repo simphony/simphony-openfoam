@@ -50,12 +50,12 @@ wrapper.run()
 
 # compute velocity magnitude (volume fraction here)
 updated_cells = []
-for cell in mesh_inside_wrapper.iter_cells():
+for cell in mesh_inside_wrapper.iter(item_type=CUBA.CELL):
     velo = cell.data[CUBA.VELOCITY]
     cell.data[CUBA.VOLUME_FRACTION] = math.sqrt(sum(velo[i]*velo[i]
                                                     for i in range(3)))
     updated_cells.append(cell)
-mesh_inside_wrapper.update_cells(updated_cells)
+mesh_inside_wrapper.update(updated_cells)
 
 
 @mayavi2.standalone

@@ -9,10 +9,11 @@ import unittest
 import os
 import tempfile
 
+from simphony.core.cuba import CUBA
+
 from foam_controlwrapper.foam_controlwrapper import Wrapper
 from foam_controlwrapper.blockmesh_utils import create_quad_mesh
 from foam_controlwrapper.io_utils import read_foammesh
-from simphony.core.cuds_item import CUDSItem
 
 
 class IOUtilsTestCase(unittest.TestCase):
@@ -36,15 +37,15 @@ class IOUtilsTestCase(unittest.TestCase):
 
         mesh_from_file = read_foammesh(self.name, self.path)
 
-        item_type = CUDSItem.POINT
+        item_type = CUBA.POINT
         self.assertEqual(mesh_from_file.count_of(item_type),
                          self.mesh.count_of(item_type))
 
-        item_type = CUDSItem.FACE
+        item_type = CUBA.FACE
         self.assertEqual(mesh_from_file.count_of(item_type),
                          self.mesh.count_of(item_type))
 
-        item_type = CUDSItem.CELL
+        item_type = CUBA.CELL
         self.assertEqual(mesh_from_file.count_of(item_type),
                          self.mesh.count_of(item_type))
 
