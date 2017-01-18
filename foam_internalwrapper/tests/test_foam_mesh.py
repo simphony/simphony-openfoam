@@ -94,7 +94,7 @@ class FoamMeshTestCase(unittest.TestCase):
         """
 
         foam_mesh = FoamMesh('test_mesh', {}, self.solver, self.mesh)
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaises(KeyError):
             foam_mesh.get(self.edges[0].uid)
 
     def test_get_face(self):
