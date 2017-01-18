@@ -211,8 +211,11 @@ class FoamMesh(ABCMesh):
 
         """
 
-        coords = foamface.getPointCoordinates(self.name,
-                                              self._uuidToFoamLabel[uuid])
+        label = self._uuidToFoamLabel[uuid]
+        if label not in self._foamPointLabelToUuid:
+            raise KeyError("No point with uuid {}".format(uuid))
+
+        coords = foamface.getPointCoordinates(self.name, label)
         point = Point(coords, uuid)
         return point
 
@@ -266,8 +269,11 @@ class FoamMesh(ABCMesh):
 
         """
 
-        pointLabels = foamface.getFacePoints(self.name,
-                                             self._uuidToFoamLabel[uuid])
+        label = self._uuidToFoamLabel[uuid]
+        if label not in self._foamFaceLabelToUuid:
+            raise KeyError("No face with uuid {}".format(uuid))
+
+        pointLabels = foamface.getFacePoints(self.name, label)
         puids = [self._foamPointLabelToUuid[lbl] for lbl in pointLabels]
 
         face = Face(puids, uuid)
@@ -325,8 +331,11 @@ class FoamMesh(ABCMesh):
 
         """
 
-        pointLabels = foamface.getCellPoints(self.name,
-                                             self._uuidToFoamLabel[uuid])
+        label = self._uuidToFoamLabel[uuid]
+        if label not in self._foamCellLabelToUuid:
+            raise KeyError("No Cell with uuid {}".format(uuid))
+
+        pointLabels = foamface.getCellPoints(self.name, label)
         puids = [self._foamPointLabelToUuid[lbl] for lbl in pointLabels]
         cell = Cell(puids, uuid)
         label = self._uuidToFoamLabel[uuid]
@@ -352,7 +361,6 @@ class FoamMesh(ABCMesh):
                                                dataName)
 
         return cell
-
 
     def _add_points(self, points):
         message = 'Points addition not supported yet'
