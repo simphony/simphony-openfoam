@@ -214,23 +214,10 @@ class WrapperRunTestCase(unittest.TestCase):
             old_vel = cell.data[CUBA.VELOCITY]
             old_pres = cell.data[CUBA.PRESSURE]
             cell_uid = cell.uid
-            print cell
-            print cell_uid
 
-        print self.wrapper
         self.wrapper.run()
 
-        for elem in self.mesh_inside_wrapper.iter():
-            print elem, elem.uid
-
-        print cell_uid
         cell = self.mesh_inside_wrapper.get(cell_uid)
-        print self.mesh_inside_wrapper
-        print self.mesh_inside_wrapper._points
-        print self.mesh_inside_wrapper._cells
-        print cell
-        print cell.uid
-        print cell.data
         new_vel = cell.data[CUBA.VELOCITY]
         new_pres = cell.data[CUBA.PRESSURE]
 
