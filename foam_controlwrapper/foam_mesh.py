@@ -248,8 +248,9 @@ class FoamMesh(ABCMesh):
             If the edge identified by uuid was not found
 
         """
-        message = "Edges are not supported yet in OpenFoam engine"
-        raise NotImplementedError(message)
+
+        # Edges are not supported yet in OpenFoam engine
+        raise KeyError("Edge not found for uuid {}".format(uuid))
 
     def _get_face(self, uuid):
         """Returns a face with a given uuid.

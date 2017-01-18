@@ -258,7 +258,7 @@ class FoamMeshTestCase(unittest.TestCase):
 
         foam_mesh = FoamMesh('test_mesh', {}, self.solver, self.mesh)
         for cell_f in foam_mesh.iter(item_type=CUBA.CELL):
-            label = foam_mesh._uuidToFoamLabel[cell_f.uid]
+            label = foam_mesh._uuidToFoamLabelAndType[cell_f.uid]
             cell = self.cells[label]
             self.assertEqual(cell.data[CUBA.VELOCITY],
                              cell_f.data[CUBA.VELOCITY])
