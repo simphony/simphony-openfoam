@@ -1061,17 +1061,17 @@ def modifyFields(mesh, BC, solver='pimpleFoam'):
         sigma_mu_values = [[0.0, 0.0, 0.0, 0.0, 0.0,
                             0.0, 0.0, 0.0, 0.0] for item in range(nCells)]
     for cell in mesh.iter(item_type=CUBA.CELL):
-        p_values[mesh._uuidToFoamLabel[cell.uid]] = \
+        p_values[mesh._uuidToFoamLabelAndType[cell.uid][0]] = \
             cell.data[ID_pressure]
-        U_values[mesh._uuidToFoamLabel[cell.uid]] = \
+        U_values[mesh._uuidToFoamLabelAndType[cell.uid][0]] = \
             list(cell.data[CUBA.VELOCITY])
         if solver == 'driftFluxSimphonyFoam' or solver == 'interFoam':
-            alpha_values[mesh._uuidToFoamLabel[cell.uid]] = \
+            alpha_values[mesh._uuidToFoamLabelAndType[cell.uid][0]] = \
                 cell.data[CUBA.VOLUME_FRACTION]
         if solver == 'driftFluxSimphonyFoam':
-            vdj_values[mesh._uuidToFoamLabel[cell.uid]] = \
+            vdj_values[mesh._uuidToFoamLabelAndType[cell.uid][0]] = \
                 cell.data[CUBA.RELATIVE_VELOCITY]
-            sigma_mu_values[mesh._uuidToFoamLabel[cell.uid]] = \
+            sigma_mu_values[mesh._uuidToFoamLabelAndType[cell.uid][0]] = \
                 cell.data[CUBA.HOMOGENIZED_STRESS_TENSOR]
     foamface.setAllCellData(mesh.name, name_pressure, 0, p_values,
                             dataDimensionMap[dataKeyMap[name_pressure]])

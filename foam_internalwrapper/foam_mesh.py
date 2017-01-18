@@ -441,8 +441,9 @@ class FoamMesh(ABCMesh):
 
             # if points are changed raise warning
             pointLabels = \
-                foamface.getCellPoints(self.name,
-                                       self._uuidToFoamLabelAndType[cell.uid][0])
+                foamface.getCellPoints(
+                    self.name,
+                    self._uuidToFoamLabelAndType[cell.uid][0])
             puids = [self._foamPointLabelToUuid[lbl] for lbl in pointLabels]
             if set(puids) != set(cell.points):
                 raise Warning("Cell points can't be updated")
