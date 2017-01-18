@@ -96,7 +96,7 @@ class FoamMeshTestCase(unittest.TestCase):
         """
 
         foam_mesh = FoamMesh('test_mesh', {}, self.solver, self.mesh)
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaises(KeyError):
             foam_mesh.get(self.edges[0].uid)
 
     def test_get_face(self):
@@ -258,7 +258,7 @@ class FoamMeshTestCase(unittest.TestCase):
 
         foam_mesh = FoamMesh('test_mesh', {}, self.solver, self.mesh)
         for cell_f in foam_mesh.iter(item_type=CUBA.CELL):
-            label = foam_mesh._uuidToFoamLabelAndType[cell_f.uid]
+            label = foam_mesh._uuidToFoamLabelAndType[cell_f.uid][0]
             cell = self.cells[label]
             self.assertEqual(cell.data[CUBA.VELOCITY],
                              cell_f.data[CUBA.VELOCITY])
