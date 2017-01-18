@@ -1,6 +1,11 @@
 Simphony-OpenFOAM CHANGELOG
 ======================
 
+Release 0.3.0
+----------------
+
+* Build against simphony-common 0.5.0
+
 Release 0.2.4
 ----------------
 
