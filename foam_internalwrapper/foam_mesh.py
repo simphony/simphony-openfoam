@@ -212,6 +212,10 @@ class FoamMesh(ABCMesh):
         """
 
         label = self._uuidToFoamLabel[uuid]
+        print uuid
+        print label
+        print self._uuidToFoamLabel
+        print self._foamPointLabelToUuid
         if label not in self._foamPointLabelToUuid:
             raise KeyError("No point with uuid {}".format(uuid))
 
