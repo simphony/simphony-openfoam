@@ -206,7 +206,7 @@ class FoamMesh(ABCMesh):
 
         Raises
         ------
-        Exception
+        KeyError
             If the point identified by uuid was not found
 
         """
@@ -238,7 +238,7 @@ class FoamMesh(ABCMesh):
 
         Raises
         ------
-        Exception
+        KeyError
             If the edge identified by uuid was not found
 
         """
@@ -264,7 +264,7 @@ class FoamMesh(ABCMesh):
 
         Raises
         ------
-        Exception
+        KeyError
             If the face identified by uuid was not found
 
         """
@@ -326,7 +326,7 @@ class FoamMesh(ABCMesh):
 
         Raises
         ------
-        Exception
+        KeyError
             If the cell identified by uuid was not found
 
         """
