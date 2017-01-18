@@ -217,6 +217,9 @@ class FoamMesh(ABCMesh):
             If the point identified by uuid was not found
 
         """
+        label = self._uuidToFoamLabel[uuid]
+        if label not in self._foamPointLabelToUuid:
+            raise KeyError("No point with uuid {}".format(uuid))
 
         coords = foamface.getPointCoordinates(self.name,
                                               self._uuidToFoamLabel[uuid])
@@ -272,6 +275,9 @@ class FoamMesh(ABCMesh):
             If the face identified by uuid was not found
 
         """
+        label = self._uuidToFoamLabel[uuid]
+        if label not in self._foamFaceLabelToUuid:
+            raise KeyError("No face with uuid {}".format(uuid))
 
         pointLabels = foamface.getFacePoints(self.name,
                                              self._uuidToFoamLabel[uuid])
@@ -332,6 +338,9 @@ class FoamMesh(ABCMesh):
             If the cell identified by uuid was not found
 
         """
+        label = self._uuidToFoamLabel[uuid]
+        if label not in self._foamCellLabelToUuid:
+            raise KeyError("No Cell with uuid {}".format(uuid))
 
         pointLabels = foamface.getCellPoints(self.name,
                                              self._uuidToFoamLabel[uuid])
