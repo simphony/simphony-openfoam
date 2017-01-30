@@ -7,7 +7,7 @@ from setuptools.command.install import install
 with open('README.rst', 'r') as readme:
     README_TEXT = readme.read()
 
-VERSION = '0.3.0'
+VERSION = '0.3.1'
 
 
 class CleanCommand(Command):
@@ -63,7 +63,7 @@ setup(
     description='Implementation of OpenFoam wrappers',
     long_description=README_TEXT,
     packages=find_packages(),
-    install_requires=['simphony[H5IO, CUBAGen]~=0.5'],
+    install_requires=['simphony[H5IO, CUBAGen]>=0.5'],
     entry_points={'simphony.engine':
                   ['openfoam_file_io = foam_controlwrapper',
                    'openfoam_internal = foam_internalwrapper']},
