@@ -26,6 +26,10 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "simphonyInterface.H"
+
+#include "solution/solution.H"
+#include "time/TimeMod.H"
+
 #include "pointFields.H"
 #include "volPointInterpolation.H"
 #include "error.H"
@@ -36,7 +40,6 @@ License
 #include "preservePatchTypes.H"
 #include "OFstream.H"
 
-//CIMEC adds 
 #include "RASModel.H"
 #include "kEpsilon.H"
 #include "laminar.H"
@@ -46,12 +49,13 @@ License
 #include "dictionaryEntry.H"
 #include "UList.H"
 #include "mpi.h"
-#include "fvSchemes/fvSchemes.H"
 #include "CMULES.H"
 #include "subCycle.H"
 #include "fixedFluxPressureFvPatchScalarField.H"
 #include "hashedWordList.H"
+
 #include <map>
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -62,6 +66,7 @@ std::map<std::string,Foam::Time *> runTimes;
 void foam_init(std::string caseName,std::string cD)
 {
 
+  
     dictionary controlDict_(dictionary::null,IStringStream
     (
         cD
@@ -69,8 +74,8 @@ void foam_init(std::string caseName,std::string cD)
 
     Foam::Time *runTime = new Foam::TimeMod(controlDict_);
     runTimes[caseName] = runTime;
-
 }
+
 
 
 void foam_init_IO(std::string caseName, std::string rootPath,std::string cD)
@@ -495,20 +500,20 @@ std::vector<int> foam_getFacePoints(std::string name)
   
   std::vector<int> retValue(k);
 
-   k=0;
-   for(int i=0;i< faces.size();i++)
-     {
-       retValue[k]=faces[i].size();
-       k++;
-       for (int j=0;j<faces[i].size();j++) {
-	 retValue[k]=faces[i][j];
-	 k++;
-       }
-     }  
-
-   return retValue;
-
-  }
+  k=0;
+  for(int i=0;i< faces.size();i++)
+    {
+      retValue[k]=faces[i].size();
+      k++;
+      for (int j=0;j<faces[i].size();j++) {
+	retValue[k]=faces[i][j];
+	k++;
+      }
+    }  
+  
+  return retValue;
+  
+}
   
 
 std::vector<double> foam_getCellTensorData(std::string name, std::string dataname)
@@ -976,7 +981,7 @@ void foam_setAndWriteCellData(std::string name,std::string dataname, std::vector
       }
     else
       {
-	volScalarField field
+	new volScalarField
 	(
 	 IOobject
 	 (
@@ -989,6 +994,7 @@ void foam_setAndWriteCellData(std::string name,std::string dataname, std::vector
 	 mesh,
 	 dimensionedScalar(word(dataname), dimensionSet(dimension[0], dimension[1], dimension[2], dimension[3], dimension[4], dimension[5], dimension[6]), 0)
 	 );
+	volScalarField& field = find_scalarData(name,dataname);
 	field.internalField() = Field<scalar>(UList<scalar>(&(values[0]),values.size()));
 	//	field.correctBoundaryConditions();
 	field.write();
@@ -1018,7 +1024,7 @@ void foam_setAndWriteCellVectorData(std::string name, std::string dataname, std:
     }
   else
     {
-      volVectorField field
+      new volVectorField
 	(
 	 IOobject
 	 (
@@ -1031,6 +1037,8 @@ void foam_setAndWriteCellVectorData(std::string name, std::string dataname, std:
 	 mesh,
 	 dimensionedVector(word(dataname), dimensionSet(dimension[0], dimension[1], dimension[2], dimension[3], dimension[4], dimension[5], dimension[6]), vector::zero)
 );
+      volVectorField& field = find_vectorData(name,dataname);
+
       field.internalField() = Field<vector>(UList<vector>((vector*)&(values[0]),values.size()/3));
       //      field.correctBoundaryConditions();
       field.write();
@@ -1044,6 +1052,7 @@ void foam_setCellTensorData(std::string name, std::string dataname, std::vector<
     volTensorField& field = find_tensorData(name,dataname);
     field.internalField() = Field<tensor>(UList<tensor>((tensor*)&(values[0]),values.size()/9));
     //    field.correctBoundaryConditions();
+    foam_extendToBoundaries(name, dataname);
   }
 
 
@@ -1058,11 +1067,12 @@ void foam_setAndWriteCellTensorData(std::string name,  std::string dataname, std
       volTensorField& field = find_tensorData(name,dataname);
       field.internalField() = Field<tensor>(UList<tensor>((tensor*)&(values[0]),values.size()/9));
       //      field.correctBoundaryConditions();
+      foam_extendToBoundaries(name, dataname);
       field.write();
     }
   else
     {
-      volTensorField field
+      new volTensorField
 	(
 	 IOobject
 	 (
@@ -1075,8 +1085,10 @@ void foam_setAndWriteCellTensorData(std::string name,  std::string dataname, std
 	 mesh,
 	 dimensionedTensor(word(dataname), dimensionSet(dimension[0], dimension[1], dimension[2], dimension[3], dimension[4], dimension[5], dimension[6]), tensor::zero)
 );
+      volTensorField& field = find_tensorData(name,dataname);
       field.internalField() = Field<tensor>(UList<tensor>((tensor*)&(values[0]),values.size()/9));
       //      field.correctBoundaryConditions();
+      foam_extendToBoundaries(name, dataname);
       field.write();
 
     }
@@ -1132,24 +1144,29 @@ void foam_createDefaultFields(std::string name, std::string solver, bool io)
 {
     fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
     if (io) {
-      if(solver=="pimpleFoam"){
+      if(solver=="pimpleFoam" || solver=="simpleFoam"){
         #include "createFieldsPimpleFoamIO.H"
       }
-      if(solver=="interFoam"){
+      else if(solver=="interFoam"){
         #include "createFieldsInterFoamIO.H"
       }
-      if(solver=="driftFluxSimphonyFoam"){
+      else if(solver=="driftFluxFoam"){
         #include "createFieldsDriftFluxSimphonyFoamIO.H"
       }
+      else 
+	FatalErrorIn("simphonyInterface:run") << "Solver "<<solver<<" not supported for IO wrapper" <<exit(FatalError);        
+
     }else {
-      if(solver=="pimpleFoam"){
+      if(solver=="pimpleFoam" || solver=="simpleFoam"){
         #include "createFieldsPimpleFoam.H"
       }
-      if(solver=="driftFluxSimphonyFoam"){
+      else if(solver=="driftFluxFoam"){
         #include "createFieldsDriftFluxSimphonyFoam.H"
       }
+      else
+	FatalErrorIn("simphonyInterface:run") << "Solver "<<solver<<" not supported for Internal wrapper" <<exit(FatalError);        
+
     }
-    return;
 }
 
 void foam_writeFields(std::string name)
@@ -1178,7 +1195,6 @@ void foam_writeFields(std::string name)
 	volTensorField& vT = find_Data<tensor>(mesh,tnames[i]);
 	vT.write();
       }
-
 
 }
 
@@ -1236,7 +1252,22 @@ void foam_readFields(std::string name)
     for (std::vector<std::string>::size_type i=0;i<tnames.size();i++) 
       {
 	volTensorField& vT = find_Data<tensor>(mesh,tnames[i]);
-	vT.read();
+	volTensorField* vVT = new volTensorField
+	  (
+	   IOobject
+	   (
+	    word(tnames[i]),
+	    runTimes[name]->timeName(),
+	    mesh,
+	    IOobject::MUST_READ,
+	    IOobject::AUTO_WRITE,
+	    true
+	    ),
+	   mesh
+	   );
+	vT.internalField() = (*vVT).internalField();
+	vT.boundaryField() = (*vVT).boundaryField();
+
       }
 
 
@@ -1461,6 +1492,17 @@ void foam_setBC(std::string name, std::string fieldname, std::string dict)
 }
 
 
+void foam_extendToBoundaries(std::string name, std::string fieldname) {
+
+  fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
+  volTensorField& vT = find_Data<tensor>(mesh,fieldname);
+  forAll(vT.boundaryField(), patchi) {
+    forAll(vT.boundaryField()[patchi], facei) {
+      vT.boundaryField()[patchi][facei] = vT.internalField()[mesh.boundaryMesh()[patchi].faceCells()[facei]];
+    }
+  }
+}
+
 double foam_run(std::string name, int nproc, std::string solver){
     if(nproc<2){
         Time& runTime = *(runTimes[name]);
@@ -1468,15 +1510,16 @@ double foam_run(std::string name, int nproc, std::string solver){
         if(solver=="pimpleFoam"){
             #include "pimpleFoam.H"
         }
-        if(solver=="driftFluxSimphonyFoam"){
+	if(solver=="simpleFoam") {
+            #include "simpleFoam.H"
+	}
+        if(solver=="driftFluxFoam"){
             #include "driftFluxSimphonyFoam.H"
         }
         return runTime.timeOutputValue();
     }else{
-    
-        FatalErrorIn("simphonyInterface:run") << "Parallel OpenFOAM Internal Interface not implemented yet" <<exit(FatalError);        
-
-        return 0.0;         
+        FatalErrorIn("simphonyInterface:run") << "Parallel OpenFOAM Internal Interface not implemented yet" <<exit(FatalError);
+	return 0.0;
     }
 
 }

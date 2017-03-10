@@ -7,22 +7,24 @@ and modify a mesh and related data
 import uuid
 import tempfile
 import os
+from multiprocessing import Pool, cpu_count
 
+from simphony.cuds.mesh import Mesh
+from simphony.cuds.mesh_items import Point, Face, Cell
 
-from simphony.cuds.abc_mesh import ABCMesh
-from simphony.cuds.mesh import Point, Face, Cell
 from simphony.core.cuba import CUBA
 
-import simphony.core.data_container as dc
 import simphonyfoaminterface as foamface
 
-from .foam_dicts import (get_dictionary_maps, parse_map, check_boundary_names)
-from foam_controlwrapper.foam_variables import dataNameMap
-from foam_controlwrapper.foam_variables import (dataKeyMap, dataTypeMap)
-from .mesh_utils import (create_dummy_celldata, set_cells_data)
+from .foam_dicts import (get_dictionary_maps, parse_map, check_boundary_names,
+                         get_foam_boundary_condition)
+from foam_controlwrapper.foam_variables import (dataNameMap, dataKeyMap,
+                                                dataTypeMap, dataDimensionMap)
+from .mesh_utils import (create_dummy_celldata, set_cells_data,
+                         get_cells_in_range)
 
 
-class FoamMesh(ABCMesh):
+class FoamMesh(Mesh):
     """ Proxy class to communicate with OpenFoam engines mesh data.
 
     Parameters
@@ -60,10 +62,9 @@ class FoamMesh(ABCMesh):
 
     """
 
-    def __init__(self, name, BC, solver, mesh=None, path=None):
-        super(FoamMesh, self).__init__()
-        self.name = name
-        self.data = dc.DataContainer()
+    def __init__(self, name, cuds, solver, mesh=None, path=None):
+        super(FoamMesh, self).__init__(name)
+
         self._uuidToFoamLabelAndType = {}
         self._foamCellLabelToUuid = {}
         self._foamFaceLabelToUuid = {}
@@ -71,25 +72,36 @@ class FoamMesh(ABCMesh):
         self._foamPointLabelToUuid = {}
         self._boundaries = {}
         self._time = 0.0
+        self._foamMaterialLabelToUuid = None
 
         if path:
             self.path = path
         else:
             self.path = os.path.join(tempfile.mkdtemp(), name)
         if mesh:
-
             # generate uuid mapping
-            label = 0
-            pointCoordinates = []
-            pointMap = {}
-            for point in mesh.iter(item_type=CUBA.POINT):
-                pointMap[point.uid] = label
-                uid = self._generate_uuid()
-                self._uuidToFoamLabelAndType[uid] = (label, CUBA.POINT)
-                self._foamPointLabelToUuid[label] = uid
-                for coord in point.coordinates:
-                    pointCoordinates.append(coord)
-                label += 1
+            if hasattr(mesh, '_get_packed_coordinate_list'):
+                pointCoordinates = mesh._get_packed_coordinate_list()
+                i = 0
+                label = 0
+                while i < len(pointCoordinates):
+                    uid = self._generate_uuid()
+                    self._uuidToFoamLabelAndType[uid] = (label, CUBA.POINT)
+                    self._foamPointLabelToUuid[label] = uid
+                    label += 1
+                    i += 3
+            else:
+                label = 0
+                pointCoordinates = []
+                pointMap = {}
+                for point in mesh.iter(item_type=CUBA.POINT):
+                    pointMap[point.uid] = label
+                    uid = self._generate_uuid()
+                    self._uuidToFoamLabelAndType[uid] = (label, CUBA.POINT)
+                    self._foamPointLabelToUuid[label] = uid
+                    for coord in point.coordinates:
+                        pointCoordinates.append(coord)
+                    label += 1
 
             label = 0
             for edge in mesh.iter(item_type=CUBA.EDGE):
@@ -98,32 +110,92 @@ class FoamMesh(ABCMesh):
                 self._foamEdgeLabelToUuid[label] = uid
                 label += 1
 
-            label = 0
-            facePoints = []
             faceMap = {}
-            for face in mesh.iter(item_type=CUBA.FACE):
-                faceMap[face.uid] = label
-                uid = self._generate_uuid()
-                self._uuidToFoamLabelAndType[uid] = (label, CUBA.FACE)
-                self._foamFaceLabelToUuid[label] = uid
-                # make compressed list of faces points
-                facePoints.append(len(face.points))
-                for puid in face.points:
-                    facePoints.append(pointMap[puid])
-                label += 1
 
-            label = 0
-            cellPoints = []
-            for cell in mesh.iter(item_type=CUBA.CELL):
-                uid = self._generate_uuid()
-                self._uuidToFoamLabelAndType[uid] = (label, CUBA.CELL)
-                self._foamCellLabelToUuid[label] = uid
-                cellPoints.append(len(cell.points))
-                for puid in cell.points:
-                    cellPoints.append(pointMap[puid])
-                label += 1
+            if hasattr(mesh, '_get_packed_face_list'):
+                label = -1
+                facePoints = mesh._get_packed_face_list()
+                i = 0
+                while i < len(facePoints):
+                    label += 1
+                    n_points = facePoints[i]
+                    i += 1 + n_points
+                    face_uid = mesh._foamFaceLabelToUuid[label]
+                    faceMap[face_uid] = label
+                    uid = self._generate_uuid()
+                    self._uuidToFoamLabelAndType[uid] = (label, CUBA.FACE)
+                    self._foamFaceLabelToUuid[label] = uid
+            else:
+                label = 0
+                facePoints = []
+                for face in mesh.iter(item_type=CUBA.FACE):
+                    faceMap[face.uid] = label
+                    uid = self._generate_uuid()
+                    self._uuidToFoamLabelAndType[uid] = (label, CUBA.FACE)
+                    self._foamFaceLabelToUuid[label] = uid
+                    # make compressed list of faces points
+                    facePoints.append(len(face.points))
+                    for puid in face.points:
+                        facePoints.append(pointMap[puid])
+                    label += 1
 
-            pointMap.clear()
+            if hasattr(mesh, '_get_packed_cell_list'):
+                cellPoints = mesh._get_packed_cell_list()
+                cell_label = -1
+                i = 0
+                while i < len(cellPoints):
+                    cell_label += 1
+                    n_points = cellPoints[i]
+                    i += 1
+                    uid = self._generate_uuid()
+                    self._uuidToFoamLabelAndType[uid] = (cell_label, CUBA.CELL)
+                    self._foamCellLabelToUuid[cell_label] = uid
+                    i += n_points
+            else:
+                label = 0
+                cellPoints = []
+                cellMap = {}
+                for cell in mesh.iter(item_type=CUBA.CELL):
+                    uid = self._generate_uuid()
+                    cellMap[cell.uid] = uid
+                    self._uuidToFoamLabelAndType[uid] = (label, CUBA.CELL)
+                    self._foamCellLabelToUuid[label] = uid
+                    cellPoints.append(len(cell.points))
+                    for puid in cell.points:
+                        cellPoints.append(pointMap[puid])
+                    label += 1
+                pointMap.clear()
+
+            if hasattr(mesh, '_get_cell_data_map'):
+                cell_data_map = mesh._get_cell_data_map()
+                self._foamMaterialLabelToUuid = mesh._foamMaterialLabelToUuid
+            else:
+                cell_data_map = {}
+                nCells = mesh.count_of(CUBA.CELL)
+                for cell in mesh.iter(item_type=CUBA.CELL):
+                    label, _ = self._uuidToFoamLabelAndType[cellMap[cell.uid]]
+                    for key in cell.data:
+                        if key not in cell_data_map:
+                            if dataTypeMap[key] == "scalar":
+                                cell_data_map[key] = [0] * nCells
+                            elif dataTypeMap[key] == "vector":
+                                cell_data_map[key] = [0] * (nCells * 3)
+                            elif dataTypeMap[key] == "tensor":
+                                cell_data_map[key] = [0] * (nCells * 9)
+                        if key == CUBA.MATERIAL:
+                            self._foamMaterialLabelToUuid = cell.data[key]
+                            cell_data_map[key][label] = 0
+                        else:
+                            if dataTypeMap[key] == "scalar":
+                                cell_data_map[key][label] = cell.data[key]
+                            elif dataTypeMap[key] == "vector":
+                                for i in range(len(cell.data[key])):
+                                    k = 3 * label + i
+                                    cell_data_map[key][k] = cell.data[key][i]
+                            elif dataTypeMap[key] == "tensor":
+                                for i in range(len(cell.data[key])):
+                                    k = 9 * label + i
+                                    cell_data_map[key][k] = cell.data[key][i]
 
             # make patch information
             patchNames = []
@@ -142,16 +214,20 @@ class FoamMesh(ABCMesh):
             faceMap.clear()
 
             patchTypes = []
-            for patchName in patchNames:
-                if BC:
-                    first_key = BC.keys()[0]
-                    check_boundary_names(BC[first_key].keys(), patchNames,
-                                         first_key)
-                    if BC[first_key][patchName] == "empty":
+            if cuds:
+                bcs = {}
+                for boundary in cuds.iter(item_type=CUBA.BOUNDARY):
+                    bcs[boundary.name] = \
+                        get_foam_boundary_condition(boundary.condition[0])
+                check_boundary_names(bcs.keys(), patchNames)
+
+                for patchName in patchNames:
+                    if patchName in bcs and bcs[patchName] == "empty":
                         patchTypes.append("empty")
                     else:
                         patchTypes.append("patch")
-                else:
+            else:
+                for patchName in patchNames:
                     patchTypes.append("patch")
 
             mapContent = get_dictionary_maps(solver, False)
@@ -168,7 +244,10 @@ class FoamMesh(ABCMesh):
             foamface.createDefaultFields(name, solver, False)
 
             # write possible cell data to time directory
-            self.copy_cells(mesh.iter(item_type=CUBA.CELL))
+
+            self.copy_cells(cell_data_map)
+            cell_data_map.clear()
+
             # correct boundary face labels
             patchNames = foamface.getBoundaryPatchNames(name)
             patchFaces = foamface.getBoundaryPatchFaces(name)
@@ -338,17 +417,20 @@ class FoamMesh(ABCMesh):
         pointLabels = foamface.getCellPoints(self.name, label)
         puids = [self._foamPointLabelToUuid[lbl] for lbl in pointLabels]
         cell = Cell(puids, uuid)
-        label, _ = self._uuidToFoamLabelAndType[uuid]
 
         dataNames = foamface.getCellDataNames(self.name)
         dataNames += foamface.getCellVectorDataNames(self.name)
         dataNames += foamface.getCellTensorDataNames(self.name)
         for dataName in set(dataKeyMap.keys()).intersection(dataNames):
             if dataTypeMap[dataKeyMap[dataName]] == "scalar":
-                cell.data[dataKeyMap[dataName]] = \
-                    foamface.getCellData(self.name,
-                                         label,
-                                         dataName)
+                if dataKeyMap[dataName] == CUBA.MATERIAL:
+                    cell.data[dataKeyMap[dataName]] = \
+                        self._foamMaterialLabelToUuid
+                else:
+                    cell.data[dataKeyMap[dataName]] = \
+                        foamface.getCellData(self.name,
+                                             label,
+                                             dataName)
             elif dataTypeMap[dataKeyMap[dataName]] == "vector":
                 cell.data[dataKeyMap[dataName]] = \
                     foamface.getCellVectorData(self.name,
@@ -433,7 +515,12 @@ class FoamMesh(ABCMesh):
         for dataName in newDataNames:
             create_dummy_celldata(self.name, dataName)
 
+        if CUBA.MATERIAL in cellList[0].data:
+                self._foamMaterialLabelToUuid = cellList[0].data[CUBA.MATERIAL]
+
         for cell in cellList:
+            if CUBA.MATERIAL in cell.data:
+                    cell.data[CUBA.MATERIAL] = 0
             if cell.uid not in self._uuidToFoamLabelAndType:
                 error_str = "Trying to update a non-existing cell with uuid: "\
                     + str(cell.uid)
@@ -450,7 +537,7 @@ class FoamMesh(ABCMesh):
 
         set_cells_data(self.name, cellList, dataNameKeyMap)
 
-    def copy_cells(self, cells):
+    def copy_cells(self, cell_data_map):
         """ Copy the information of a set of cells.
 
         Gets the mesh cell and copy its data
@@ -459,16 +546,9 @@ class FoamMesh(ABCMesh):
 
         Parameters
         ----------
-        cells : iterable of Cell
-            Cell set to be updated
-
-        Raises
-        ------
-        KeyError
-            If the cell was not found in the mesh
-
-        TypeError
-            If the object provided is not a cell
+        cell_data_map : dictionary
+             map from data key to cell data values in
+             mesh internal order
 
         """
 
@@ -478,22 +558,28 @@ class FoamMesh(ABCMesh):
 
         # if cell data does not exists in the mesh at all, initialize it
         newDataNames = []
-        dataNameKeyMap = {}
-        cellList = list(cells)
-        for cell in cellList:
-            for data in cell.data:
-                if data not in dataNameMap:
-                    error_str = "Data named "+data+" not supported"
-                    raise NotImplementedError(error_str)
-                dataName = dataNameMap[data]
-                if dataName not in dataNameKeyMap:
-                    dataNameKeyMap[dataName] = data
-                if dataName not in dataNames and dataName not in newDataNames:
-                    newDataNames.append(dataName)
+        for key in cell_data_map:
+            if key not in dataNameMap:
+                error_str = "Data named " + key + " not supported"
+                raise NotImplementedError(error_str)
+            dataName = dataNameMap[key]
+            if dataName not in dataNames and dataName not in newDataNames:
+                newDataNames.append(dataName)
         for dataName in newDataNames:
-            create_dummy_celldata(self.name, dataName)
+            create_dummy_celldata(self.name, dataName, True)
 
-        set_cells_data(self.name, cellList, dataNameKeyMap)
+        for key, data in cell_data_map.iteritems():
+            dimension = dataDimensionMap[key]
+            dataName = dataNameMap[key]
+            if dataTypeMap[key] == "scalar":
+                foamface.setAllCellData(self.name, dataName, 0,
+                                        data, dimension)
+            elif dataTypeMap[key] == "vector":
+                foamface.setAllCellVectorData(self.name, dataName, 0,
+                                              data, dimension)
+            elif dataTypeMap[key] == "tensor":
+                foamface.setAllCellTensorData(self.name, dataName, 0,
+                                              data, dimension)
 
     def _iter_points(self, point_uuids=None):
         """ Returns an iterator over the selected points.
@@ -517,10 +603,14 @@ class FoamMesh(ABCMesh):
         """
 
         if point_uuids is None:
-            pointCount = foamface.getPointCount(self.name)
-            for label in range(pointCount):
-                point = self._get_point(self._foamPointLabelToUuid[label])
-                yield Point.from_point(point)
+            point_coordinates = foamface.getAllPointCoordinates(self.name)
+            i = 0
+            label = 0
+            while i < len(point_coordinates):
+                yield Point(point_coordinates[i:i+3],
+                            self._foamPointLabelToUuid[label])
+                label += 1
+                i += 3
         else:
             for uid in point_uuids:
                 point = self._get_point(uid)
@@ -555,14 +645,82 @@ class FoamMesh(ABCMesh):
         """
 
         if face_uuids is None:
-            faceCount = foamface.getFaceCount(self.name)
-            for label in range(faceCount):
-                face = self._get_face(self._foamFaceLabelToUuid[label])
-                yield Face.from_face(face)
+            pointLabels = foamface.getAllFacePoints(self.name)
+            face_label = -1
+            i = 0
+            while i < len(pointLabels):
+                face_label += 1
+                n_points = pointLabels[i]
+                i += 1
+                puids = []
+                for j in range(n_points):
+                    puids.append(self._foamPointLabelToUuid[pointLabels[i]])
+                    i += 1
+                yield Face(puids, self._foamFaceLabelToUuid[face_label])
         else:
             for uid in face_uuids:
                 face = self._get_face(uid)
                 yield Face.from_face(face)
+
+    def _iter_cells_parallell(self, cell_uuids=None):
+        """Returns an iterator over the selected cells.
+
+        Returns an iterator over the cells with uuid in
+        cell_uuids. If none of the uuids in cell_uuids exists,
+        an empty iterator is returned. If there is no uuids
+        inside cell_uuids, a iterator over all cells of
+        the mesh is returned instead. In this case cell instances are
+        made parallell.
+
+        Parameters
+        ----------
+        cell_uuids : list of uuids, optional
+            Uuids of the desired cell, default empty
+
+        Returns
+        -------
+        iter
+            Iterator over the selected cells
+
+        """
+
+        if cell_uuids is None:
+            pointLabels = foamface.getAllCellPoints(self.name)
+            data_map = self._get_cell_data_map()
+
+            n_jobs = cpu_count()
+            cells_puids = self._find_cells_puids(pointLabels)
+
+            n_cells = len(cells_puids)
+            group_size = n_cells / (n_jobs - 1)
+            last_group_size = n_cells % (n_jobs - 1)
+            cell_indeces = []
+            for i in range(n_jobs - 1):
+                cellis = []
+                cellis.append(i * group_size)
+                cellis.append((i+1) * group_size - 1)
+                cell_indeces.append(cellis)
+            cellis = []
+            cellis.append((n_jobs - 1) * group_size)
+            cellis.append((n_jobs - 1) * group_size + last_group_size - 1)
+            cell_indeces.append(cellis)
+
+            pool = Pool(n_jobs)
+            results = pool.map(get_cells_in_range,
+                               [(cell_indeces[i][0],
+                                 cell_indeces[i][1],
+                                 cells_puids,
+                                 data_map, self)
+                                for i in range(n_jobs)])
+            for res in results:
+                for item in res:
+                    yield item
+            pool.close()
+            data_map.clear()
+        else:
+            for uid in cell_uuids:
+                cell = self._get_cell(uid)
+                yield cell
 
     def _iter_cells(self, cell_uuids=None):
         """ Returns an iterator over the selected cells.
@@ -586,9 +744,34 @@ class FoamMesh(ABCMesh):
         """
 
         if cell_uuids is None:
-            cellCount = foamface.getCellCount(self.name)
-            for label in range(cellCount):
-                yield self._get_cell(self._foamCellLabelToUuid[label])
+            pointLabels = foamface.getAllCellPoints(self.name)
+            data_map = self._get_cell_data_map()
+            cell_label = -1
+            i = 0
+            while i < len(pointLabels):
+                cell_label += 1
+                n_points = pointLabels[i]
+                i += 1
+                puids = []
+                for j in range(n_points):
+                    puids.append(self._foamPointLabelToUuid[pointLabels[i]])
+                    i += 1
+                cell = Cell(puids, self._foamCellLabelToUuid[cell_label])
+                for dataKey, data in data_map.iteritems():
+                    if dataTypeMap[dataKey] == "scalar":
+                        if dataKey == CUBA.MATERIAL:
+                            cell.data[dataKey] = \
+                                self._foamMaterialLabelToUuid
+                        else:
+                            cell.data[dataKey] = data[cell_label]
+                    elif dataTypeMap[dataKey] == "vector":
+                        cell.data[dataKey] = \
+                            [data[cell_label * 3 + k] for k in range(3)]
+                    elif dataTypeMap[dataKey] == "tensor":
+                        cell.data[dataKey] = \
+                            [data[cell_label * 9 + k] for k in range(9)]
+                yield cell
+            data_map.clear()
         else:
             for uid in cell_uuids:
                 cell = self._get_cell(uid)
@@ -639,6 +822,7 @@ class FoamMesh(ABCMesh):
         ----------
         item_type : CUBA item
             The CUBA enum of the type of the items to return the count of.
+
 
         Returns
         -------
@@ -707,9 +891,45 @@ class FoamMesh(ABCMesh):
             if bname not in self._boundaries:
                 self.boundaries[bname] = blist
 
-    def get_boundaries(self):
+    def _get_boundaries(self):
         """ get boundaries
 
         """
 
         return self._boundaries
+
+    def _get_packed_coordinate_list(self):
+        """ get packed list of points coordinate values
+        """
+        return foamface.getAllPointCoordinates(self.name)
+
+    def _get_packed_face_list(self):
+        """ get packed list of faces point labels
+        """
+        return foamface.getAllFacePoints(self.name)
+
+    def _get_packed_cell_list(self):
+        """ get packed list of celsl point labels
+        """
+        return foamface.getAllCellPoints(self.name)
+
+    def _get_cell_data_map(self):
+        """ get map for mesh data
+        """
+
+        dataNames = foamface.getCellDataNames(self.name)
+        dataNames += foamface.getCellVectorDataNames(self.name)
+        dataNames += foamface.getCellTensorDataNames(self.name)
+
+        dataMap = {}
+        for dataName in set(dataKeyMap.keys()).intersection(dataNames):
+            if dataTypeMap[dataKeyMap[dataName]] == "scalar":
+                dataMap[dataKeyMap[dataName]] = \
+                    foamface.getAllCellData(self.name, dataName)
+            elif dataTypeMap[dataKeyMap[dataName]] == "vector":
+                dataMap[dataKeyMap[dataName]] = \
+                    foamface.getAllCellVectorData(self.name, dataName)
+            elif dataTypeMap[dataKeyMap[dataName]] == "tensor":
+                dataMap[dataKeyMap[dataName]] = \
+                    foamface.getAllCellTensorData(self.name, dataName)
+        return dataMap

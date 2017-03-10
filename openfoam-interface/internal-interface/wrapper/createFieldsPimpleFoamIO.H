@@ -26,6 +26,8 @@ License
 
 \*---------------------------------------------------------------------------*/
 
+std::string Sigma_muName = "Sigma";
+
 new volScalarField
 (
     IOobject
@@ -40,7 +42,8 @@ new volScalarField
     dimensionedScalar("p", dimensionSet(0, 2, -2, 0, 0, 0, 0), 0)
 );
 
-new volVectorField
+
+volVectorField* U = new volVectorField
 (
     IOobject
     (
@@ -52,6 +55,22 @@ new volVectorField
     ),
     mesh,
     dimensionedVector("U", dimensionSet(0, 1, -1, 0, 0, 0, 0), vector::zero)
+);
+
+
+Info<< "Calculating face flux field phi\n" << endl;
+
+new surfaceScalarField
+(
+    IOobject
+    (
+        "phi",
+        runTimes[name]->timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    linearInterpolate(*U) & mesh.Sf()
 );
 
 IStringStream TP
@@ -130,3 +149,44 @@ new IOdictionary
     deC()
 );
 
+new volTensorField
+(
+    IOobject
+    (
+        Sigma_muName,
+        runTimes[name]->timeName(),
+        mesh,
+        IOobject::READ_IF_PRESENT,
+        IOobject::AUTO_WRITE
+    ),
+    mesh,
+    dimensionedTensor(Sigma_muName, dimensionSet(1, -1, -2, 0, 0, 0, 0), tensor::zero)
+);
+
+new volTensorField
+(
+    IOobject
+    (
+        "S",
+        runTimes[name]->timeName(),
+        mesh,
+        IOobject::READ_IF_PRESENT,
+        IOobject::AUTO_WRITE
+    ),
+    mesh,
+    dimensionedTensor("S", dimensionSet(0, 0, -1, 0, 0, 0, 0), tensor::zero)
+);
+
+new volTensorField
+(
+ IOobject
+ (
+  "Stress",
+  runTimes[name]->timeName(),
+  mesh,
+  IOobject::READ_IF_PRESENT,
+  IOobject::AUTO_WRITE
+  ),
+ mesh,
+ dimensionedTensor("Stress", dimensionSet(1, -1, -2, 0, 0, 0, 0), tensor::zero)
+ );

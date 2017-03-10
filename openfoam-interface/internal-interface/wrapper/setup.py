@@ -32,13 +32,12 @@ module = Extension('simphonyfoaminterface',
                               'incompressibleTransportModels',
                               'genericPatchFields'],
                    library_dirs=[openfoam_user_libbin, openfoam_libbin],
-                   extra_compile_args=['-Dlinux64 -DWM_DP -DNoRepository'],
+                   extra_compile_args=['-Dlinux64 -DWM_DP -DNoRepository -g'],
                    sources=['libpythonfoam.cpp'])
 setup(name='FoamInterface',
       version='0.2.4.dev0',
-      description='Foam interface to Python',
-      author='Juan Marcelo Gimenez and \
+      description='OpenFOAM interface to Python',
+      author='Juan Marcelo Gimenez and Kai Hiltunen and\
       Santiago Marquez Damian and Norberto Nigro',
-      author_email='jmarcelogimenez@gmail.com',
-      url='http://www.cimec.org.ar',
+      url='http://www.simphony-project.eu/',
       ext_modules=[module])

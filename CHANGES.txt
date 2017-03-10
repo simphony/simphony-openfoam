@@ -1,6 +1,14 @@
 Simphony-OpenFOAM CHANGELOG
 ======================
 
+Release 0.4.0
+----------------
+
+* Various changes to speed up mesh treatment
+* simpleFoam solver added
+* simpleFoam and pimpleFoam solvers support for mesoscopic stress coupling
+* Pressure treatment changed to obey SI units (not anymore density scaled)
+
 Release 0.3.0
 ----------------
 
@@ -10,6 +18,7 @@ Release 0.2.4
 ----------------
 
 * Build against simphony-common 0.4
+
 
 Release 0.2.2
 ----------------

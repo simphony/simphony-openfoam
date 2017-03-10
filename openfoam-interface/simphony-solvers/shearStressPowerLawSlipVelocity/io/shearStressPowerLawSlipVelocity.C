@@ -132,8 +132,17 @@ void Foam::shearStressPowerLawSlipVelocityFvPatchVectorField::updateCoeffs()
        new incompressible::RASModels::laminar(U, phi, laminarTransport)
        );
 	
-    const volSymmTensorField devReff(model->devReff());
+    volSymmTensorField devReff(model->devReff());
+ 
+    dictionary& TPDict = const_cast<dictionary&>(mesh.lookupObject<dictionary>(word("transportProperties")));
+    word stressModelType(TPDict.lookup("stressModel"));
+    if(stressModelType != word("fromMesoscale")){
+      const volTensorField& SigmaPrime = mesh.lookupObject<volTensorField>("SigmaPrime");
+      dimensionedScalar rho(TPDict.lookup("rho"));
 
+      devReff = devReff + dev(twoSymm(SigmaPrime/rho)); 
+    }
+ 
 
     // compute the slip velocity
 

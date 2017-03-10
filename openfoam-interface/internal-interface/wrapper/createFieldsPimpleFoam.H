@@ -26,6 +26,8 @@ License
 
 \*---------------------------------------------------------------------------*/
 
+std::string Sigma_muName = "Sigma";
+
 Info<< "Creating field p\n" << endl;
 new volScalarField
 (
@@ -40,6 +42,8 @@ new volScalarField
     mesh,
     dimensionedScalar("p", dimensionSet(0, 2, -2, 0, 0, 0, 0), 0)
 );
+
+
 
 Info<< "Creating field U\n" << endl;
 volVectorField* U = new volVectorField
@@ -109,3 +113,47 @@ new IOdictionary
     ),
     RaP()
 );
+
+
+Info<< "Creating field Sigma" << endl;
+new volTensorField
+(
+    IOobject
+    (
+        Sigma_muName,
+        runTimes[name]->timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    mesh,
+    dimensionedTensor(Sigma_muName, dimensionSet(1, -1, -2, 0, 0, 0, 0), tensor::zero)
+);
+
+new volTensorField
+(
+    IOobject
+    (
+        "S",
+        runTimes[name]->timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    mesh,
+    dimensionedTensor("S", dimensionSet(0, 0, -1, 0, 0, 0, 0), tensor::zero)
+);
+
+new volTensorField
+(
+ IOobject
+ (
+  "Stress",
+  runTimes[name]->timeName(),
+  mesh,
+  IOobject::NO_READ,
+  IOobject::NO_WRITE
+  ),
+ mesh,
+ dimensionedTensor("Stress", dimensionSet(1, -1, -2, 0, 0, 0, 0), tensor::zero)
+ );

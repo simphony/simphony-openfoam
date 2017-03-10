@@ -29,11 +29,9 @@ License
 #define simphonyInterface_H
 
 #include "fvSchemes/fvSchemes.H"
-#include "solution/solution.H"
 #include "fvCFD.H"
-#include "simpleControl.H"
+#include "simpleControl/simpleControlMod.H"
 #include "pimpleControl.H"
-#include "time/TimeMod.H"
 
 #include<vector>
 #include<string>
@@ -45,7 +43,6 @@ using namespace Foam;
 // init dictionary for II wrapper
 void foam_init(std::string name, std::string cD);
 // init Foam mesh name (case name)  and rootPath for IO wrapper
-//void foam_init_IO(std::string name, std::string rootPath);
 void foam_init_IO(std::string name, std::string rootPath,std::string cD);
 // read Foam mesh from case named name to wrapper
 void foam_readMesh(std::string name);
@@ -145,6 +142,9 @@ void foam_modifyDictionary(std::string name, std::string dictionaryName, std::st
 void foam_modifyUniformDimensionedVectorField(std::string name, std::string fieldName, std::vector<double> value);
 ///modifying boundary conditions
 void foam_setBC(std::string name, std::string fieldname, std::string dict);
+//extend tensor values to boundaries
+void foam_extendToBoundaries(std::string name, std::string fieldname);
+
 //running the time steps
 double foam_run(std::string name, int nproc, std::string solver);
 // update mesh data for given time from disk

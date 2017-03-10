@@ -8,6 +8,14 @@ cd openfoam-interface/simphony-solvers/driftFluxSimphonyFoam
 ./Allwmake
 popd
 pushd .
+cd openfoam-interface/simphony-solvers/pimpleSimphonyFoam
+wmake
+popd
+pushd .
+cd openfoam-interface/simphony-solvers/simpleSimphonyFoam
+wmake
+popd
+pushd .
 cd openfoam-interface/internal-interface/libs
 ./Allwmake
 popd

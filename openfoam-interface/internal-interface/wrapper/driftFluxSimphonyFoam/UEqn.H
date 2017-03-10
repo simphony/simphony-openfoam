@@ -5,7 +5,7 @@
         fvm::ddt(rho, U)
       + fvm::div(rhoPhi, U)
       + fvc::div(UdmModel.tauDm())
-      + fvc::div(SigmaPrime)
+      - fvc::div(SigmaPrime)
       //+ turbulence->divDevRhoReff(U)
       - fvm::laplacian(mixture.mu(), U)
       - fvc::div(mixture.mu()*dev(T(fvc::grad(U))))

@@ -34,10 +34,18 @@ pimpleControl pimple(mesh);
 
 std::string pName = "p";
 std::string UName = "U";
+std::string Sigma_muName = "Sigma";
+std::string SName = "S";
+std::string StressName = "Stress";
+
 volScalarField& p = find_Data<scalar>(mesh,pName);
+
 volVectorField& U = find_Data<vector>(mesh,UName);
 surfaceScalarField& phi = const_cast<surfaceScalarField&>(mesh.lookupObject<surfaceScalarField>(word("phi"))); 
 
+volTensorField& Sigma_mu = find_Data<tensor>(mesh,Sigma_muName);
+volTensorField& S = find_Data<tensor>(mesh,SName);
+volTensorField& Stress = find_Data<tensor>(mesh,StressName);
 
 label pRefCell = 0;
 scalar pRefValue = 0.0;
@@ -74,7 +82,33 @@ autoPtr<incompressible::RASModel> turbulence
 );
 
 
+word stressModelType(TPDict.lookup("stressModel"));
+Info<< "Stressmodel is "<< stressModelType<<"\n" << endl;
+
+dimensionedScalar rho(TPDict.lookup("rho"));
+
+Info<< "Creating field SigmaPrime\n" << endl;
+volTensorField SigmaPrime
+(
+    IOobject
+    (
+        "SigmaPrime",
+        runTimes[name]->timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    Sigma_mu - Stress
+);
+
+
 Info<< "\nStarting time loop\n" << endl;
+
+// scale pressure
+
+dimensionedScalar dimlessRho = dimensionedScalar("dimlessRho",dimensionSet(0,0,0,0,0,0,0),rho.value());
+
+p=p/dimlessRho;
 
 U.storePrevIter();
 p.storePrevIter();
@@ -93,11 +127,20 @@ while (runTime.run())
     while (pimple.loop())
     {
         // Solve the Momentum equation
+      if(stressModelType != word("fromMesoscale")){
+	// do SigmaPrime = Sigma_mu-Sigma
+	//microscale tensor is selected as the same in macroscale 
+	// in order to obtain SigmaPrime=0
+	Sigma_mu = Stress;
+      }
 
+      SigmaPrime = Sigma_mu - Stress;
+      //      Info << SigmaPrime <<endl;
         tmp<fvVectorMatrix> UEqn
         (
             fvm::ddt(U)
           + fvm::div(phi, U)
+	  - fvc::div(SigmaPrime)/rho
           + turbulence->divDevReff(U)
         // ==
         //    fvOptions(U)
@@ -175,14 +218,22 @@ while (runTime.run())
         {
             turbulence->correct();
         }
+
+	S = fvc::grad(U) + dev(T(fvc::grad(U)));
+	Stress = laminarTransport.nu()*rho*S;
+
     }
 
+ 
     //runTime.write();
 
     Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
         << "  ClockTime = " << runTime.elapsedClockTime() << " s"
         << nl << endl;
-}
+ }
+
+// scale pressure
+p = p*dimlessRho;
 
 Info<< "End\n" << endl;
 

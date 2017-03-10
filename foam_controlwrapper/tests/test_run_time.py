@@ -1,47 +1,89 @@
 import unittest
 import os
 import shutil
+import tempfile
 
-from simphony.core.cuba import CUBA
-from foam_controlwrapper.foam_controlwrapper import Wrapper
-from foam_controlwrapper.cuba_extension import CUBAExt
 from foam_controlwrapper.blockmesh_utils import create_quad_mesh
+
+from simphony.api import CUDS, Simulation
+from simphony.core.cuba import CUBA
+from simphony.cuds.meta import api
+from simphony.engine import EngineInterface
 
 
 class WrapperRunTestCase(unittest.TestCase):
     def setUp(self):
-        wrapper = Wrapper()
-        self.path = "test_path_io"
-        name = "simplemeshIO"
-        wrapper.CM[CUBA.NAME] = name
-        wrapper.CM_extensions[CUBAExt.GE] = (CUBAExt.INCOMPRESSIBLE,
-                                             CUBAExt.LAMINAR_MODEL)
-        wrapper.SP[CUBA.TIME_STEP] = 1
-        wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 1
-        wrapper.SP[CUBA.DENSITY] = 1.0
-        wrapper.SP[CUBA.DYNAMIC_VISCOSITY] = 1.0
-        wrapper.BC[CUBA.VELOCITY] = {'inlet': ('fixedValue', (0.1, 0, 0)),
-                                     'outlet': 'zeroGradient',
-                                     'walls': ('fixedValue', (0, 0, 0)),
-                                     'frontAndBack': 'empty'}
-        wrapper.BC[CUBA.PRESSURE] = {'inlet': 'zeroGradient',
-                                     'outlet': ('fixedValue', 0),
-                                     'walls': 'zeroGradient',
-                                     'frontAndBack': 'empty'}
-        self.wrapper = wrapper
+
+        case_name = "simplemeshIO"
+        mesh_name = "simplemeshIO_mesh"
+
+        cuds = CUDS(name=case_name)
+        # physics model
+        cfd = api.Cfd(name='default model')
+        cuds.add([cfd])
+
+        self.sim_time = api.IntegrationTime(name='simulation_time',
+                                            current=0.0,
+                                            final=1.0,
+                                            size=0.5)
+        cuds.add([self.sim_time])
+
+        mat = api.Material(name='a_material')
+        mat._data[CUBA.DENSITY] = 1.0
+        mat._data[CUBA.DYNAMIC_VISCOSITY] = 1.0
+        cuds.add([mat])
+
+        vel_inlet = api.Dirichlet(name='vel_inlet')
+        vel_inlet._data[CUBA.VARIABLE] = CUBA.VELOCITY
+        vel_inlet._data[CUBA.VELOCITY] = (0.1, 0, 0)
+        pres_inlet = api.Neumann(name='pres_inlet')
+        pres_inlet._data[CUBA.VARIABLE] = CUBA.PRESSURE
+
+        vel_outlet = api.Neumann(name='vel_outlet')
+        vel_outlet._data[CUBA.VARIABLE] = CUBA.VELOCITY
+        pres_outlet = api.Dirichlet(name='pres_outlet')
+        pres_outlet._data[CUBA.VARIABLE] = CUBA.PRESSURE
+        pres_outlet._data[CUBA.PRESSURE] = 0.0
+
+        vel_walls = api.Dirichlet(name='vel_walls')
+        vel_walls._data[CUBA.VARIABLE] = CUBA.VELOCITY
+        vel_walls._data[CUBA.VELOCITY] = (0, 0, 0)
+        pres_walls = api.Neumann(name='pres_walls')
+        pres_walls._data[CUBA.VARIABLE] = CUBA.PRESSURE
+
+        vel_frontAndBack = api.Empty(name='vel_frontAndBack')
+        vel_frontAndBack._data[CUBA.VARIABLE] = CUBA.VELOCITY
+        pres_frontAndBack = api.Empty(name='pres_frontAndBack')
+        pres_frontAndBack._data[CUBA.VARIABLE] = CUBA.PRESSURE
+
+        inlet = api.Boundary(name='inlet', condition=[vel_inlet, pres_inlet])
+        walls = api.Boundary(name='walls', condition=[vel_walls, pres_walls])
+        outlet = api.Boundary(name='outlet', condition=[vel_outlet,
+                                                        pres_outlet])
+        frontAndBack = api.Boundary(name='frontAndBack',
+                                    condition=[vel_frontAndBack,
+                                               pres_frontAndBack])
+
+        cuds.add([inlet, walls, outlet, frontAndBack])
 
         corner_points = [(0.0, 0.0, 0.0), (5.0, 0.0, 0.0),
                          (5.0, 5.0, 0.0), (0.0, 5.0, 0.0),
                          (0.0, 0.0, 1.0), (5.0, 0.0, 1.0),
                          (5.0, 5.0, 1.0), (0.0, 5.0, 1.0)]
-        create_quad_mesh(self.path, name, self.wrapper, corner_points, 5, 5, 5)
-        self.mesh_inside_wrapper = self.wrapper.get_dataset(name)
+        self.mesh_path = tempfile.mkdtemp()
+        mesh = create_quad_mesh(self.mesh_path, mesh_name,
+                                corner_points, 5, 5, 5)
+        cuds.add([mesh])
+        self.cuds = cuds
+        self.sim = Simulation(cuds, 'OpenFOAM',
+                              engine_interface=EngineInterface.FileIO)
+        self.mesh_in_cuds = self.cuds.get_by_name(mesh_name)
 
     def tearDown(self):
-        if os.path.exists(self.mesh_inside_wrapper.path):
-            shutil.rmtree(self.mesh_inside_wrapper.path)
-        if os.path.exists(self.path):
-            shutil.rmtree(self.path)
+        if os.path.exists(self.mesh_in_cuds.path):
+            shutil.rmtree(self.mesh_in_cuds.path)
+        if os.path.exists(self.mesh_path):
+            shutil.rmtree(self.mesh_path)
 
     def test_run_time(self):
         """Test that field variable value is changed after
@@ -49,19 +91,16 @@ class WrapperRunTestCase(unittest.TestCase):
 
         """
 
-        self.wrapper.SP[CUBA.TIME_STEP] = 1
-        self.wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 2
+        self.sim.run()
 
-        self.wrapper.run()
-
-        for cell in self.mesh_inside_wrapper.iter(item_type=CUBA.CELL):
+        for cell in self.mesh_in_cuds.iter(item_type=CUBA.CELL):
             old_vel = cell.data[CUBA.VELOCITY]
             old_pres = cell.data[CUBA.PRESSURE]
             cell_uid = cell.uid
 
-        self.wrapper.run()
+        self.sim.run()
 
-        cell = self.mesh_inside_wrapper.get(cell_uid)
+        cell = self.mesh_in_cuds.get(cell_uid)
         new_vel = cell.data[CUBA.VELOCITY]
         new_pres = cell.data[CUBA.PRESSURE]
 
