@@ -1105,7 +1105,7 @@ def modifyNumerics(mesh, cuds, solver='pimpleFoam', io=False):
             stress_model = get_first(cuds.iter(item_type=CUBA.STRESS_MODEL))
             if isinstance(stress_model, api.StandardStressModel):
                 control["stressModel"] = 'standard'
-            elif isinstance(stress_model, api.MesoScopicStressModel):
+            elif isinstance(stress_model, api.MesoscopicStressModel):
                 control["stressModel"] = 'fromMesoscale'
         else:
             control["stressModel"] = 'standard'
@@ -1223,7 +1223,7 @@ def modifyNumerics(mesh, cuds, solver='pimpleFoam', io=False):
             stress_model = get_first(cuds.iter(item_type=CUBA.STRESS_MODEL))
             if isinstance(stress_model, api.StandardStressModel):
                 control["stressModel"] = 'standard'
-            elif isinstance(stress_model, api.MesoScopicStressModel):
+            elif isinstance(stress_model, api.MesoscopicStressModel):
                 control["stressModel"] = 'fromMesoscale'
         else:
             error_str = "Stress model not specified"
@@ -1235,7 +1235,7 @@ def modifyNumerics(mesh, cuds, solver='pimpleFoam', io=False):
             if isinstance(rel_vel_model, api.SimpleRelativeVelocityModel):
                 rel_vel_model_name = 'simple'
             elif isinstance(rel_vel_model,
-                            api.MesoScopicRelativeVelocityModel):
+                            api.MesoscopicRelativeVelocityModel):
                 rel_vel_model_name = 'fromMesoscale'
             else:
                 error_str = "Relative velocity model not specified"

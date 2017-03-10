@@ -118,7 +118,7 @@ sim.run()
 mesh_in_engine = cuds.get_by_name(mesh_name)
 
 
-sm = api.MesoScopicStressModel(name='meso_stress_model')
+sm = api.MesoscopicStressModel(name='meso_stress_model')
 cuds.add([sm])
 
 cuds.remove('simulation_time')
