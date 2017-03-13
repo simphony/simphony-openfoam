@@ -19,7 +19,6 @@ Release 0.2.4
 
 * Build against simphony-common 0.4
 
-
 Release 0.2.2
 ----------------
 
