@@ -88,7 +88,7 @@ cuds.add([mesh])
 vel_inlet = api.Neumann(water, name='vel_inlet')
 vel_inlet.data[CUBA.VARIABLE] = CUBA.VELOCITY
 
-#pres_inlet = api.ConstantPressureCondition(10.0, water, name='pres_inlet')
+# pres_inlet = api.ConstantPressureCondition(10.0, water, name='pres_inlet')
 pres_inlet = api.Dirichlet(water, name='pres_inlet')
 pres_inlet.data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
 pres_inlet.data[CUBA.DYNAMIC_PRESSURE] = 10.0
@@ -141,11 +141,12 @@ cuds.add([inlet, walls, outlet, frontAndBack])
 mesh_in_cuds = cuds.get_by_name(mesh_name)
 updated_cells = []
 zero_water = api.PhaseVolumeFraction(water, 0)
-zero_air= api.PhaseVolumeFraction(air, 0)
+zero_air = api.PhaseVolumeFraction(air, 0)
 one_water = api.PhaseVolumeFraction(water, 1)
 one_air = api.PhaseVolumeFraction(air, 1)
+
+# for cell in mesh_in_cuds._iter_cells_parallel():
 for cell in mesh_in_cuds.iter(item_type=CUBA.CELL):
-#for cell in mesh_in_cuds._iter_cells_parallel():
     xmid = sum(mesh_in_cuds._get_point(puid).coordinates[0]
                for puid in cell.points)
     xmid /= sum(1.0 for _ in cell.points)
@@ -184,4 +185,3 @@ def view():
 
 if __name__ == '__main__':
     view()
-

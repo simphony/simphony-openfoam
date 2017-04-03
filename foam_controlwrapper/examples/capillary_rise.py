@@ -36,13 +36,13 @@ cuds.add([cfd])
 
 # materials
 water = api.Material(name='water')
-water._data[CUBA.DENSITY] = 1000.0
-water._data[CUBA.DYNAMIC_VISCOSITY] = 0.001
+water.data[CUBA.DENSITY] = 1000.0
+water.data[CUBA.DYNAMIC_VISCOSITY] = 0.001
 cuds.add([water])
 
 air = api.Material(name='air')
-air._data[CUBA.DENSITY] = 1.0
-air._data[CUBA.DYNAMIC_VISCOSITY] = 1.0e-5
+air.data[CUBA.DENSITY] = 1.0
+air.data[CUBA.DYNAMIC_VISCOSITY] = 1.0e-5
 cuds.add([air])
 
 # surface tension
@@ -65,7 +65,7 @@ cuds.add([sim_time])
 
 # solver parameters
 sp = api.SolverParameter(name='solver_parameters')
-sp._data[CUBA.MAXIMUM_COURANT_NUMBER] = 0.2
+sp.data[CUBA.MAXIMUM_COURANT_NUMBER] = 0.2
 cuds.add([sp])
 
 gm = api.GravityModel(name='gravitation')
@@ -74,39 +74,38 @@ cuds.add([gm])
 
 # boundary conditions
 vel_inlet = api.InletOutlet(name='vel_inlet')
-vel_inlet._data[CUBA.VARIABLE] = CUBA.VELOCITY
-vel_inlet._data[CUBA.VELOCITY] = (0, 0, 0)
-pres_inlet = api.Dirichlet(name='pres_inlet')
-pres_inlet._data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
-pres_inlet._data[CUBA.DYNAMIC_PRESSURE] = 0.0
+vel_inlet.data[CUBA.VARIABLE] = CUBA.VELOCITY
+vel_inlet.data[CUBA.VELOCITY] = (0, 0, 0)
+pres_inlet = api.Dirichlet(water, name='pres_inlet')
+pres_inlet.data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
+pres_inlet.data[CUBA.DYNAMIC_PRESSURE] = 0.0
 vf_inlet = api.InletOutlet(name='vf_inlet')
-vf_inlet._data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
-vf_inlet._data[CUBA.VOLUME_FRACTION] = 1.0
+vf_inlet.data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
+vf_inlet.data[CUBA.VOLUME_FRACTION] = 1.0
 
 vel_atm = api.InletOutlet(name='vel_atm')
-vel_atm._data[CUBA.VARIABLE] = CUBA.VELOCITY
-vel_atm._data[CUBA.VELOCITY] = (0, 0, 0)
-pres_atm = api.Dirichlet(name='pres_atm')
-pres_atm._data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
-pres_atm._data[CUBA.DYNAMIC_PRESSURE] = 0.0
-vf_atm = api.Neumann(name='vf_atm')
-vf_atm._data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
+vel_atm.data[CUBA.VARIABLE] = CUBA.VELOCITY
+vel_atm.data[CUBA.VELOCITY] = (0, 0, 0)
+pres_atm = api.Dirichlet(water, name='pres_atm')
+pres_atm.data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
+pres_atm.data[CUBA.DYNAMIC_PRESSURE] = 0.0
+vf_atm = api.Neumann(water, name='vf_atm')
+vf_atm.data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
 
-vel_walls = api.Dirichlet(name='vel_walls')
-vel_walls._data[CUBA.VARIABLE] = CUBA.VELOCITY
-vel_walls._data[CUBA.VELOCITY] = (0, 0, 0)
-pres_walls = api.Neumann(name='pres_walls')
-pres_walls._data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
-vf_walls = api.WettingAngle(name='vf_walls')
-vf_walls.contact_angle = 45.0
-vf_walls._data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
+vel_walls = api.Dirichlet(water, name='vel_walls')
+vel_walls.data[CUBA.VARIABLE] = CUBA.VELOCITY
+vel_walls.data[CUBA.VELOCITY] = (0, 0, 0)
+pres_walls = api.Neumann(water, name='pres_walls')
+pres_walls.data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
+vf_walls = api.WettingAngle([water, air], contact_angle=45.0, name='vf_walls')
+vf_walls.data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
 
-vel_frontAndBack = api.Empty(name='vel_frontAndBack')
-vel_frontAndBack._data[CUBA.VARIABLE] = CUBA.VELOCITY
-pres_frontAndBack = api.Empty(name='pres_frontAndBack')
-pres_frontAndBack._data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
-vf_frontAndBack = api.Empty(name='vf_frontAndBack')
-vf_frontAndBack._data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
+vel_frontAndBack = api.EmptyCondition(name='vel_frontAndBack')
+vel_frontAndBack.data[CUBA.VARIABLE] = CUBA.VELOCITY
+pres_frontAndBack = api.EmptyCondition(name='pres_frontAndBack')
+pres_frontAndBack.data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
+vf_frontAndBack = api.EmptyCondition(name='vf_frontAndBack')
+vf_frontAndBack.data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
 
 inlet = api.Boundary(name='inlet', condition=[vel_inlet, pres_inlet, vf_inlet])
 walls = api.Boundary(name='walls', condition=[vel_walls, pres_walls, vf_walls])
@@ -128,18 +127,21 @@ mesh_in_cuds = cuds.get_by_name(mesh_name)
 start = time.time()
 
 updated_cells = []
+zero_water = api.PhaseVolumeFraction(water, 0)
+zero_air = api.PhaseVolumeFraction(air, 0)
+one_water = api.PhaseVolumeFraction(water, 1)
+one_air = api.PhaseVolumeFraction(air, 1)
 
 # initial state. In VOF only one velocity and pressure field
-#for cell in mesh_in_cuds._iter_cells_parallell():
+# for cell in mesh_in_cuds._iter_cells_parallell():
 for cell in mesh_in_cuds.iter(item_type=CUBA.CELL):
     ymid = sum(mesh_in_cuds._get_point(puid).coordinates[1]
                for puid in cell.points)
     ymid /= sum(1.0 for _ in cell.points)
     if ymid < 8e-3:
-        cell.data[CUBA.VOLUME_FRACTION] = 1.0
+        cell.data[CUBA.VOLUME_FRACTION] = [one_water, zero_air]
     else:
-        cell.data[CUBA.VOLUME_FRACTION] = 0.0
-    cell.data[CUBA.MATERIAL] = water.uid
+        cell.data[CUBA.VOLUME_FRACTION] = [zero_water, one_air]
 
     cell.data[CUBA.DYNAMIC_PRESSURE] = 0.0
     cell.data[CUBA.VELOCITY] = [0.0, 0.0, 0.0]

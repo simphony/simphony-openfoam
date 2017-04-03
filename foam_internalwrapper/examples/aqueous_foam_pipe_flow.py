@@ -85,9 +85,9 @@ pres_outlet.data[CUBA.VARIABLE] = CUBA.PRESSURE
 pres_outlet.data[CUBA.PRESSURE] = 0.0
 
 vel_walls = api.ShearStressPowerLawSlipVelocity(foam,
-                                                density = 250.0,
-                                                linear_constant = 3.1e-3,
-                                                power_law_index = 1.16,
+                                                density=250.0,
+                                                linear_constant=3.1e-3,
+                                                power_law_index=1.16,
                                                 name='vel_walls')
 vel_walls.data[CUBA.VARIABLE] = CUBA.VELOCITY
 pres_walls = api.Neumann(foam, name='pres_walls')

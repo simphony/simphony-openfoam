@@ -135,7 +135,7 @@ mesh_in_cuds = cuds.get_by_name(mesh_name)
 
 updated_cells = []
 vf_sludge = api.PhaseVolumeFraction(sludge, 0.001)
-vf_water= api.PhaseVolumeFraction(water, 1-0.001)
+vf_water = api.PhaseVolumeFraction(water, 1 - 0.001)
 
 for cell in mesh_in_cuds.iter(item_type=CUBA.CELL):
     cell.data[CUBA.VOLUME_FRACTION] = [vf_sludge, vf_water]

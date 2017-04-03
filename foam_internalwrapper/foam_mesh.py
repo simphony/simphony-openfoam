@@ -170,7 +170,6 @@ class FoamMesh(Mesh):
                     label += 1
                 pointMap.clear()
 
-            
             if cuds and not_empty(cuds.iter(item_type=CUBA.MATERIAL)):
                 materials = list(cuds.iter(item_type=CUBA.MATERIAL))
                 im = 0

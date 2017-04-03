@@ -110,7 +110,7 @@ pres_walls.data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
 vf_walls = api.Neumann(water, name='vf_walls')
 vf_walls.data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
 
-vel_top = api.SlipVelocity([0, 0, 0 ], water, name='vel_top')
+vel_top = api.SlipVelocity([0, 0, 0], water, name='vel_top')
 vel_top.data[CUBA.VARIABLE] = CUBA.VELOCITY
 pres_top = api.Neumann(water, name='pres_top')
 pres_top.data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
@@ -144,7 +144,7 @@ mesh_in_cuds = cuds.get_by_name(mesh_name)
 
 updated_cells = []
 vf_sludge = api.PhaseVolumeFraction(sludge, 0.001)
-vf_water= api.PhaseVolumeFraction(water, 1-0.001)
+vf_water = api.PhaseVolumeFraction(water, 1 - 0.001)
 
 for cell in mesh_in_cuds.iter(item_type=CUBA.CELL):
     cell.data[CUBA.VOLUME_FRACTION] = [vf_sludge, vf_water]

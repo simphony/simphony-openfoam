@@ -189,5 +189,6 @@ class WrapperTestCase(unittest.TestCase):
             sum(1 for _ in mesh_inside_wrapper1.iter(item_type=CUBA.POINT)),
             sum(1 for _ in mesh_inside_wrapper2.iter(item_type=CUBA.POINT)))
 
+
 if __name__ == '__main__':
     unittest.main()
