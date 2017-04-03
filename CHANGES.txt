@@ -8,7 +8,8 @@ Release 0.4.0
 * simpleFoam solver added
 * simpleFoam and pimpleFoam solvers support for mesoscopic stress coupling
 * Pressure treatment changed to obey SI units (not anymore density scaled)
-
+* Build agains simphony-common 0.6.0
+bg
 Release 0.3.0
 ----------------
 

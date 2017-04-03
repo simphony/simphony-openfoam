@@ -15,7 +15,7 @@ from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
 import simphonyfoaminterface as foamface
 
-from foam_controlwrapper import foam_files
+from foam_internalwrapper.foam_dicts import get_dictionary_maps, parse_map
 
 
 class FoamInterfaceTestCase(unittest.TestCase):
@@ -47,7 +47,7 @@ class FoamInterfaceTestCase(unittest.TestCase):
                 (0.0, 1.0, 1.0))
         ]
 
-        puids = [self.mesh.add(point) for point in self.points]
+        puids = self.mesh.add(self.points)
 
         self.faces = [
             Face([puids[0], puids[3], puids[7], puids[4]],
@@ -65,7 +65,7 @@ class FoamInterfaceTestCase(unittest.TestCase):
 
         ]
 
-        [self.mesh.add(face) for face in self.faces]
+        self.mesh.add(self.faces)
 
         self.cells = [
             Cell(puids)
@@ -73,7 +73,7 @@ class FoamInterfaceTestCase(unittest.TestCase):
 
         self.puids = puids
 
-        [self.mesh.add(cell) for cell in self.cells]
+        self.mesh.add(self.cells)
 
         self._uuidToFoamLabelAndType = {}
         self._foamCellLabelToUuid = {}
@@ -141,11 +141,14 @@ class FoamInterfaceTestCase(unittest.TestCase):
         # make patch information
         self.patchNames = []
         self.patchFaces = []
+        self.patchTypes = []
+
         for patchName in patchNameFacesMap:
             self.patchNames.append(patchName)
             self.patchFaces.append(len(patchNameFacesMap[patchName]))
             for face in patchNameFacesMap[patchName]:
                 self.patchFaces.append(face)
+            self.patchTypes.append("patch")
 
         if not self.patchNames:
             error_str = 'Could not initialize with mesh  {}. '
@@ -153,11 +156,12 @@ class FoamInterfaceTestCase(unittest.TestCase):
             raise ValueError(error_str.format(self.mesh.name))
 
         # this to have controlDict file for mesh definition
-        foam_files.write_default_files(
-            self.path, 'simpleFoam', self.time, False)
+        mapContent = get_dictionary_maps('simpleFoam', False)
+        controlDict = parse_map(mapContent['controlDict'])
 
-        foamface.init(self.name, os.path.abspath(os.path.join(self.path,
-                                                              os.pardir)))
+        foamface.init_IO(self.name, os.path.abspath(os.path.join(self.path,
+                                                                 os.pardir)),
+                         controlDict)
 
     def tearDown(self):
         if os.path.exists(self.test_dir):
@@ -170,7 +174,8 @@ class FoamInterfaceTestCase(unittest.TestCase):
 
         foamface.addMesh(self.name, self.pointCoordinates,
                          self.cellPoints, self.facePoints,
-                         self.patchNames, self.patchFaces)
+                         self.patchNames, self.patchFaces,
+                         self.patchTypes)
         pointCoordinates = foamface.getAllPointCoordinates(self.name)
         self.assertEqual(self.pointCoordinates, pointCoordinates)
         cellPoints = foamface.getAllCellPoints(self.name)
@@ -189,7 +194,8 @@ class FoamInterfaceTestCase(unittest.TestCase):
 
         foamface.addMesh(self.name, self.pointCoordinates,
                          self.cellPoints, self.facePoints,
-                         self.patchNames, self.patchFaces)
+                         self.patchNames, self.patchFaces,
+                         self.patchTypes)
         foamface.writeMesh(self.name)
         meshpath = os.path.join(self.test_dir, self.name,
                                 'constant', 'polyMesh')
@@ -206,7 +212,8 @@ class FoamInterfaceTestCase(unittest.TestCase):
 
         foamface.addMesh(self.name, self.pointCoordinates,
                          self.cellPoints, self.facePoints,
-                         self.patchNames, self.patchFaces)
+                         self.patchNames, self.patchFaces,
+                         self.patchTypes)
         for point in self.points:
             coords = foamface.getPointCoordinates(
                 self.name,
@@ -220,7 +227,8 @@ class FoamInterfaceTestCase(unittest.TestCase):
 
         foamface.addMesh(self.name, self.pointCoordinates,
                          self.cellPoints, self.facePoints,
-                         self.patchNames, self.patchFaces)
+                         self.patchNames, self.patchFaces,
+                         self.patchTypes)
         for face in self.faces:
             pointLabels = foamface.getFacePoints(
                 self.name,
@@ -235,7 +243,8 @@ class FoamInterfaceTestCase(unittest.TestCase):
 
         foamface.addMesh(self.name, self.pointCoordinates,
                          self.cellPoints, self.facePoints,
-                         self.patchNames, self.patchFaces)
+                         self.patchNames, self.patchFaces,
+                         self.patchTypes)
         for cell in self.cells:
             pointLabels = foamface.getCellPoints(
                 self.name,
@@ -250,7 +259,8 @@ class FoamInterfaceTestCase(unittest.TestCase):
 
         foamface.addMesh(self.name, self.pointCoordinates,
                          self.cellPoints, self.facePoints,
-                         self.patchNames, self.patchFaces)
+                         self.patchNames, self.patchFaces,
+                         self.patchTypes)
         patchNames = foamface.getBoundaryPatchNames(self.name)
         patchFaces = foamface.getBoundaryPatchFaces(self.name)
         i = 0
@@ -282,7 +292,8 @@ class FoamInterfaceTestCase(unittest.TestCase):
 
         foamface.addMesh(self.name, self.pointCoordinates,
                          self.cellPoints, self.facePoints,
-                         self.patchNames, self.patchFaces)
+                         self.patchNames, self.patchFaces,
+                         self.patchTypes)
         nFaces = foamface.getFaceCount(self.name)
         self.assertEqual(nFaces, len(self.faces))
 
@@ -293,7 +304,8 @@ class FoamInterfaceTestCase(unittest.TestCase):
 
         foamface.addMesh(self.name, self.pointCoordinates,
                          self.cellPoints, self.facePoints,
-                         self.patchNames, self.patchFaces)
+                         self.patchNames, self.patchFaces,
+                         self.patchTypes)
         nPoints = foamface.getPointCount(self.name)
         self.assertEqual(nPoints, len(self.points))
 
@@ -304,7 +316,8 @@ class FoamInterfaceTestCase(unittest.TestCase):
 
         foamface.addMesh(self.name, self.pointCoordinates,
                          self.cellPoints, self.facePoints,
-                         self.patchNames, self.patchFaces)
+                         self.patchNames, self.patchFaces,
+                         self.patchTypes)
         nCells = foamface.getCellCount(self.name)
         self.assertEqual(nCells, len(self.cells))
 

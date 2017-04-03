@@ -21,7 +21,7 @@ cuds = CUDS(name=case_name)
 # physics model
 cfd = api.Cfd(name='default model')
 
-# these are already bt default set in CFD
+# these are already by default set in CFD
 cfd.thermal_model = api.IsothermalModel(name='isothermal')
 cfd.turbulence_model = api.LaminarFlowModel(name='laminar')
 cfd.compressibility_model = api.IncompressibleFluidModel(name='incompressible')
@@ -43,13 +43,13 @@ cuds.add([mesh])
 
 # materials
 sludge = api.Material(name='sludge')
-sludge._data[CUBA.DENSITY] = 1900.0
-sludge._data[CUBA.DYNAMIC_VISCOSITY] = 0.01
+sludge.data[CUBA.DENSITY] = 1900.0
+sludge.data[CUBA.DYNAMIC_VISCOSITY] = 0.01
 cuds.add([sludge])
 
 water = api.Material(name='water')
-water._data[CUBA.DENSITY] = 1000.0
-water._data[CUBA.DYNAMIC_VISCOSITY] = 1.0e-3
+water.data[CUBA.DENSITY] = 1000.0
+water.data[CUBA.DYNAMIC_VISCOSITY] = 1.0e-3
 cuds.add([water])
 
 # mixture model
@@ -82,47 +82,47 @@ gm.acceleration = (0, -9.81, 0)
 cuds.add([gm])
 
 # boundary condtitions
-vel_inlet = api.Dirichlet(name='vel_inlet')
-vel_inlet._data[CUBA.VARIABLE] = CUBA.VELOCITY
-vel_inlet._data[CUBA.VELOCITY] = (0.0191, 0, 0)
-pres_inlet = api.Neumann(name='pres_inlet')
-pres_inlet._data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
-vf_inlet = api.Dirichlet(name='vf_inlet')
-vf_inlet._data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
-vf_inlet._data[CUBA.VOLUME_FRACTION] = 0.001
+vel_inlet = api.Dirichlet(water, name='vel_inlet')
+vel_inlet.data[CUBA.VARIABLE] = CUBA.VELOCITY
+vel_inlet.data[CUBA.VELOCITY] = (0.0191, 0, 0)
+pres_inlet = api.Neumann(water, name='pres_inlet')
+pres_inlet.data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
+vf_inlet = api.Dirichlet(water, name='vf_inlet')
+vf_inlet.data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
+vf_inlet.data[CUBA.VOLUME_FRACTION] = 0.001
 
 vel_outlet = api.InletOutlet(name='vel_outlet')
-vel_outlet._data[CUBA.VARIABLE] = CUBA.VELOCITY
-vel_outlet._data[CUBA.VELOCITY] = (0, 0, 0)
+vel_outlet.data[CUBA.VARIABLE] = CUBA.VELOCITY
+vel_outlet.data[CUBA.VELOCITY] = (0, 0, 0)
 
-pres_outlet = api.Dirichlet(name='pres_outlet')
-pres_outlet._data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
-pres_outlet._data[CUBA.DYNAMIC_PRESSURE] = 0.0
+pres_outlet = api.Dirichlet(water, name='pres_outlet')
+pres_outlet.data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
+pres_outlet.data[CUBA.DYNAMIC_PRESSURE] = 0.0
 vf_outlet = api.InletOutlet(name='vf_outlet')
-vf_outlet._data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
-vf_outlet._data[CUBA.VOLUME_FRACTION] = 0.001
+vf_outlet.data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
+vf_outlet.data[CUBA.VOLUME_FRACTION] = 0.001
 
-vel_walls = api.Dirichlet(name='vel_walls')
-vel_walls._data[CUBA.VARIABLE] = CUBA.VELOCITY
-vel_walls._data[CUBA.VELOCITY] = (0, 0, 0)
-pres_walls = api.Neumann(name='pres_walls')
-pres_walls._data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
-vf_walls = api.Neumann(name='vf_walls')
-vf_walls._data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
+vel_walls = api.Dirichlet(water, name='vel_walls')
+vel_walls.data[CUBA.VARIABLE] = CUBA.VELOCITY
+vel_walls.data[CUBA.VELOCITY] = (0, 0, 0)
+pres_walls = api.Neumann(water, name='pres_walls')
+pres_walls.data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
+vf_walls = api.Neumann(water, name='vf_walls')
+vf_walls.data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
 
-vel_top = api.SlipVelocity(name='vel_top')
-vel_top._data[CUBA.VARIABLE] = CUBA.VELOCITY
-pres_top = api.Neumann(name='pres_top')
-pres_top._data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
-vf_top = api.Neumann(name='vf_top')
-vf_top._data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
+vel_top = api.SlipVelocity([0, 0, 0 ], water, name='vel_top')
+vel_top.data[CUBA.VARIABLE] = CUBA.VELOCITY
+pres_top = api.Neumann(water, name='pres_top')
+pres_top.data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
+vf_top = api.Neumann(water, name='vf_top')
+vf_top.data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
 
-vel_frontAndBack = api.Empty(name='vel_frontAndBack')
-vel_frontAndBack._data[CUBA.VARIABLE] = CUBA.VELOCITY
-pres_frontAndBack = api.Empty(name='pres_frontAndBack')
-pres_frontAndBack._data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
-vf_frontAndBack = api.Empty(name='vf_frontAndBack')
-vf_frontAndBack._data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
+vel_frontAndBack = api.EmptyCondition(name='vel_frontAndBack')
+vel_frontAndBack.data[CUBA.VARIABLE] = CUBA.VELOCITY
+pres_frontAndBack = api.EmptyCondition(name='pres_frontAndBack')
+pres_frontAndBack.data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
+vf_frontAndBack = api.EmptyCondition(name='vf_frontAndBack')
+vf_frontAndBack.data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
 
 # boundaries
 inlet = api.Boundary(name='inlet', condition=[vel_inlet, pres_inlet, vf_inlet])
@@ -143,10 +143,11 @@ cuds.add([inlet, bottom_wall, end_wall, top, outlet, frontAndBack])
 mesh_in_cuds = cuds.get_by_name(mesh_name)
 
 updated_cells = []
+vf_sludge = api.PhaseVolumeFraction(sludge, 0.001)
+vf_water= api.PhaseVolumeFraction(water, 1-0.001)
 
 for cell in mesh_in_cuds.iter(item_type=CUBA.CELL):
-    cell.data[CUBA.VOLUME_FRACTION] = 0.001
-    cell.data[CUBA.MATERIAL] = sludge.uid
+    cell.data[CUBA.VOLUME_FRACTION] = [vf_sludge, vf_water]
     cell.data[CUBA.DYNAMIC_PRESSURE] = 0.0
     cell.data[CUBA.VELOCITY] = [0.0191, 0.0, 0.0]
     updated_cells.append(cell)
@@ -159,10 +160,15 @@ sim.run()
 
 mesh_in_engine = cuds.get_by_name(mesh_name)
 
+print "Working directory: ", mesh_in_engine.path
 
 average_vf = 0.0
 for cell in mesh_in_engine.get_boundary_cells(outlet.name):
-    average_vf += cell.data[CUBA.VOLUME_FRACTION]
+    pvf = cell.data[CUBA.VOLUME_FRACTION]
+    i = 0
+    if pvf[1].material == sludge:
+        i = 1
+    average_vf += pvf[i].volume_fraction
 
 average_vf /= len(mesh_in_engine._boundaries[outlet.name])
 

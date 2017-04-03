@@ -32,8 +32,8 @@ cuds.add([cfd])
 
 # material
 mat = api.Material(name='a_material')
-mat._data[CUBA.DENSITY] = 1.0
-mat._data[CUBA.DYNAMIC_VISCOSITY] = 1.0
+mat.data[CUBA.DENSITY] = 1.0
+mat.data[CUBA.DYNAMIC_VISCOSITY] = 1.0
 cuds.add([mat])
 
 # time setting
@@ -60,28 +60,26 @@ mesh = create_quad_mesh(tempfile.mkdtemp(), mesh_name,
                         corner_points, nex, ney, 1)
 cuds.add([mesh])
 
-vel_inlet = api.Dirichlet(name='vel_inlet')
-vel_inlet._data[CUBA.VARIABLE] = CUBA.VELOCITY
-vel_inlet._data[CUBA.VELOCITY] = (0.1, 0, 0)
-pres_inlet = api.Neumann(name='pres_inlet')
-pres_inlet._data[CUBA.VARIABLE] = CUBA.PRESSURE
+vel_inlet = api.ConstantVelocityCondition((0.1, 0, 0), mat, name='vel_inlet')
+pres_inlet = api.ZeroGradientPressureCondition(0.0, mat, name='pres_inlet')
+vel_inlet.data[CUBA.VARIABLE] = CUBA.VELOCITY
+pres_inlet.data[CUBA.VARIABLE] = CUBA.PRESSURE
 
-vel_outlet = api.Neumann(name='vel_outlet')
-vel_outlet._data[CUBA.VARIABLE] = CUBA.VELOCITY
-pres_outlet = api.Dirichlet(name='pres_outlet')
-pres_outlet._data[CUBA.VARIABLE] = CUBA.PRESSURE
-pres_outlet._data[CUBA.PRESSURE] = 0.0
+vel_outlet = api.ZeroGradientVelocityCondition((0.0, 0.0, 0.0), mat,
+                                               name='vel_outlet')
+pres_outlet = api.ConstantPressureCondition(0.0, mat, name='pres_outlet')
+vel_outlet.data[CUBA.VARIABLE] = CUBA.VELOCITY
+pres_outlet.data[CUBA.VARIABLE] = CUBA.PRESSURE
 
-vel_walls = api.Dirichlet(name='vel_walls')
-vel_walls._data[CUBA.VARIABLE] = CUBA.VELOCITY
-vel_walls._data[CUBA.VELOCITY] = (0, 0, 0)
-pres_walls = api.Neumann(name='pres_walls')
-pres_walls._data[CUBA.VARIABLE] = CUBA.PRESSURE
+vel_walls = api.ConstantVelocityCondition((0, 0, 0), mat, name='vel_walls')
+pres_walls = api.ZeroGradientPressureCondition(0.0, mat, name='pres_walls')
+vel_walls.data[CUBA.VARIABLE] = CUBA.VELOCITY
+pres_walls.data[CUBA.VARIABLE] = CUBA.PRESSURE
 
-vel_frontAndBack = api.Empty(name='vel_frontAndBack')
-vel_frontAndBack._data[CUBA.VARIABLE] = CUBA.VELOCITY
-pres_frontAndBack = api.Empty(name='pres_frontAndBack')
-pres_frontAndBack._data[CUBA.VARIABLE] = CUBA.PRESSURE
+vel_frontAndBack = api.EmptyCondition(name='vel_frontAndBack')
+vel_frontAndBack.data[CUBA.VARIABLE] = CUBA.VELOCITY
+pres_frontAndBack = api.EmptyCondition(name='pres_frontAndBack')
+pres_frontAndBack.data[CUBA.VARIABLE] = CUBA.PRESSURE
 
 
 inlet = api.Boundary(name='inlet', condition=[vel_inlet, pres_inlet])

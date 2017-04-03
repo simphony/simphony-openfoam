@@ -50,7 +50,7 @@ class FoamInterfaceTestCase(unittest.TestCase):
                 (0.0, 1.0, 1.0))
         ]
 
-        puids = [self.mesh.add(point) for point in self.points]
+        puids = self.mesh.add(self.points)
 
         self.faces = [
             Face([puids[0], puids[3], puids[7], puids[4]],
@@ -68,7 +68,7 @@ class FoamInterfaceTestCase(unittest.TestCase):
 
         ]
 
-        [self.mesh.add(face) for face in self.faces]
+        self.mesh.add(self.faces)
 
         self.cells = [
             Cell(puids)
@@ -76,7 +76,7 @@ class FoamInterfaceTestCase(unittest.TestCase):
 
         self.puids = puids
 
-        [self.mesh.add(cell) for cell in self.cells]
+        self.mesh.add(self.cells)
 
         self._uuidToFoamLabelAndType = {}
         self._foamCellLabelToUuid = {}
@@ -165,8 +165,7 @@ class FoamInterfaceTestCase(unittest.TestCase):
         controlDict = foam_dicts.parse_map(mapContent['controlDict'])
 
         # init objectRegistry and map to mesh name
-        foamface.init(self.name, os.path.abspath(os.path.join(self.path,
-                      os.pardir)), controlDict)
+        foamface.init(self.name, controlDict)
 
         # add mesh to objectRegisty
         foamface.addMesh(self.name,
@@ -177,7 +176,7 @@ class FoamInterfaceTestCase(unittest.TestCase):
                          self.patchFaces,
                          self.patchTypes)
 
-        foamface.createDefaultFields(self.name, 'pimpleFoam')
+        foamface.createDefaultFields(self.name, 'pimpleFoam', True)
 
     def tearDown(self):
         if os.path.exists(self.test_dir):

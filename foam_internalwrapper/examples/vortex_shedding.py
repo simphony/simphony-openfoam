@@ -35,8 +35,8 @@ cuds.add([cfd])
 
 # material
 mat = api.Material(name='a_material')
-mat._data[CUBA.DENSITY] = 1.0
-mat._data[CUBA.DYNAMIC_VISCOSITY] = 2.0e-2
+mat.data[CUBA.DENSITY] = 1.0
+mat.data[CUBA.DYNAMIC_VISCOSITY] = 2.0e-2
 cuds.add([mat])
 
 # time setting
@@ -53,38 +53,38 @@ cuds.add([mesh])
 
 vel_b = [None]*6
 pres_b = [None]*6
-vel_b[0] = api.Dirichlet(name='vel_b0')
-vel_b[0]._data[CUBA.VARIABLE] = CUBA.VELOCITY
-vel_b[0]._data[CUBA.VELOCITY] = (1.0, 0, 0)
-pres_b[0] = api.Neumann(name='pres_b0')
-pres_b[0]._data[CUBA.VARIABLE] = CUBA.PRESSURE
+vel_b[0] = api.Dirichlet(mat, name='vel_b0')
+vel_b[0].data[CUBA.VARIABLE] = CUBA.VELOCITY
+vel_b[0].data[CUBA.VELOCITY] = (1.0, 0, 0)
+pres_b[0] = api.Neumann(mat, name='pres_b0')
+pres_b[0].data[CUBA.VARIABLE] = CUBA.PRESSURE
 
-vel_b[1] = api.Neumann(name='vel_b1')
-vel_b[1]._data[CUBA.VARIABLE] = CUBA.VELOCITY
-pres_b[1] = api.Dirichlet(name='pres_b1')
-pres_b[1]._data[CUBA.VARIABLE] = CUBA.PRESSURE
-pres_b[1]._data[CUBA.PRESSURE] = 0.0
+vel_b[1] = api.Neumann(mat, name='vel_b1')
+vel_b[1].data[CUBA.VARIABLE] = CUBA.VELOCITY
+pres_b[1] = api.Dirichlet(mat, name='pres_b1')
+pres_b[1].data[CUBA.VARIABLE] = CUBA.PRESSURE
+pres_b[1].data[CUBA.PRESSURE] = 0.0
 
-vel_b[2] = api.SlipVelocity(name='vel_b2')
-vel_b[2]._data[CUBA.VARIABLE] = CUBA.VELOCITY
-pres_b[2] = api.Neumann(name='pres_b2')
-pres_b[2]._data[CUBA.VARIABLE] = CUBA.PRESSURE
+vel_b[2] = api.SlipVelocity([0.0, 0.0, 0.0], mat, name='vel_b2')
+vel_b[2].data[CUBA.VARIABLE] = CUBA.VELOCITY
+pres_b[2] = api.Neumann(mat, name='pres_b2')
+pres_b[2].data[CUBA.VARIABLE] = CUBA.PRESSURE
 
-vel_b[3] = api.SlipVelocity(name='vel_b3')
-vel_b[3]._data[CUBA.VARIABLE] = CUBA.VELOCITY
-pres_b[3] = api.Neumann(name='pres_b3')
-pres_b[3]._data[CUBA.VARIABLE] = CUBA.PRESSURE
+vel_b[3] = api.SlipVelocity([0.0, 0.0, 0.0], mat, name='vel_b3')
+vel_b[3].data[CUBA.VARIABLE] = CUBA.VELOCITY
+pres_b[3] = api.Neumann(mat, name='pres_b3')
+pres_b[3].data[CUBA.VARIABLE] = CUBA.PRESSURE
 
-vel_b[4] = api.Neumann(name='vel_b4')
-vel_b[4]._data[CUBA.VARIABLE] = CUBA.VELOCITY
-pres_b[4] = api.Dirichlet(name='pres_b4')
-pres_b[4]._data[CUBA.VARIABLE] = CUBA.PRESSURE
-pres_b[4]._data[CUBA.PRESSURE] = 0.0
+vel_b[4] = api.Dirichlet(mat, name='vel_b4')
+vel_b[4].data[CUBA.VARIABLE] = CUBA.VELOCITY
+vel_b[4].data[CUBA.VELOCITY] = (0, 0, 0)
+pres_b[4] = api.Neumann(mat, name='pres_b4')
+pres_b[4].data[CUBA.VARIABLE] = CUBA.PRESSURE
 
-vel_b[5] = api.Empty(name='vel_b5')
-vel_b[5]._data[CUBA.VARIABLE] = CUBA.VELOCITY
-pres_b[5] = api.Empty(name='pres_b5')
-pres_b[5]._data[CUBA.VARIABLE] = CUBA.PRESSURE
+vel_b[5] = api.EmptyCondition(name='vel_b5')
+vel_b[5].data[CUBA.VARIABLE] = CUBA.VELOCITY
+pres_b[5] = api.EmptyCondition(name='pres_b5')
+pres_b[5].data[CUBA.VARIABLE] = CUBA.PRESSURE
 
 boundaries = []
 for i in range(6):
@@ -98,6 +98,7 @@ sim.run()
 
 mesh_in_engine = cuds.get_by_name(mesh_name)
 
+print "Case directory ", mesh_in_engine.path
 
 # compute velocity magnitude for visualization
 updated_cells = []

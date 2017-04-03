@@ -34,15 +34,15 @@ cfd.compressibility_model = api.IncompressibleFluidModel(name='incompressible')
 
 # material
 foam = api.Material(name='foam')
-foam._data[CUBA.DENSITY] = 250.0
-foam._data[CUBA.DYNAMIC_VISCOSITY] = 4.37  # initial_viscosity of HB model
+foam.data[CUBA.DENSITY] = 250.0
+foam.data[CUBA.DYNAMIC_VISCOSITY] = 4.37  # initial_viscosity of HB model
 cuds.add([foam])
 
 # use Herschel Bulkley viscosity model for aqueous foam
 hb = api.HerschelBulkleyModel(name='foam_rheology')
-hb.initial_viscosity = 0.01748 * foam._data[CUBA.DENSITY]
-hb.relaxation_time = 0.0148 * foam._data[CUBA.DENSITY]
-hb.linear_constant = 0.00268 * foam._data[CUBA.DENSITY]
+hb.initial_viscosity = 0.01748 * foam.data[CUBA.DENSITY]
+hb.relaxation_time = 0.0148 * foam.data[CUBA.DENSITY]
+hb.linear_constant = 0.00268 * foam.data[CUBA.DENSITY]
 hb.power_law_index = 0.5
 hb.material = cuds.get_by_name('foam').uid
 
@@ -52,7 +52,7 @@ cuds.add([cfd])
 
 
 sol_par = api.SolverParameter(name='steady_state')
-sol_par._data[CUBA.STEADY_STATE] = True
+sol_par.data[CUBA.STEADY_STATE] = True
 cuds.add([sol_par])
 
 end = time.time()
@@ -72,30 +72,31 @@ print "Time spend in add mesh to cuds: ", end-start
 
 start = time.time()
 # boundary conditions
-vel_inlet = api.Dirichlet(name='vel_inlet')
-vel_inlet._data[CUBA.VARIABLE] = CUBA.VELOCITY
-vel_inlet._data[CUBA.VELOCITY] = (0.53, 0, 0)
-pres_inlet = api.Neumann(name='pres_inlet')
-pres_inlet._data[CUBA.VARIABLE] = CUBA.PRESSURE
+vel_inlet = api.Dirichlet(foam, name='vel_inlet')
+vel_inlet.data[CUBA.VARIABLE] = CUBA.VELOCITY
+vel_inlet.data[CUBA.VELOCITY] = (0.53, 0, 0)
+pres_inlet = api.Neumann(foam, name='pres_inlet')
+pres_inlet.data[CUBA.VARIABLE] = CUBA.PRESSURE
 
-vel_outlet = api.Neumann(name='vel_outlet')
-vel_outlet._data[CUBA.VARIABLE] = CUBA.VELOCITY
-pres_outlet = api.Dirichlet(name='pres_outlet')
-pres_outlet._data[CUBA.VARIABLE] = CUBA.PRESSURE
-pres_outlet._data[CUBA.PRESSURE] = 0.0
+vel_outlet = api.Neumann(foam, name='vel_outlet')
+vel_outlet.data[CUBA.VARIABLE] = CUBA.VELOCITY
+pres_outlet = api.Dirichlet(foam, name='pres_outlet')
+pres_outlet.data[CUBA.VARIABLE] = CUBA.PRESSURE
+pres_outlet.data[CUBA.PRESSURE] = 0.0
 
-vel_walls = api.ShearStressPowerLawSlipVelocity(name='vel_walls')
-vel_walls.density = 250.0
-vel_walls.linear_constant = 3.1e-3
-vel_walls.power_law_index = 1.16
-vel_walls._data[CUBA.VARIABLE] = CUBA.VELOCITY
+vel_walls = api.ShearStressPowerLawSlipVelocity(foam, 
+                                                density = 250.0,
+                                                linear_constant = 3.1e-3,
+                                                power_law_index = 1.16,
+                                                name='vel_walls')
+vel_walls.data[CUBA.VARIABLE] = CUBA.VELOCITY
 pres_walls = api.Neumann(name='pres_walls')
-pres_walls._data[CUBA.VARIABLE] = CUBA.PRESSURE
+pres_walls.data[CUBA.VARIABLE] = CUBA.PRESSURE
 
 vel_frontAndBack = api.Empty(name='vel_frontAndBack')
-vel_frontAndBack._data[CUBA.VARIABLE] = CUBA.VELOCITY
+vel_frontAndBack.data[CUBA.VARIABLE] = CUBA.VELOCITY
 pres_frontAndBack = api.Empty(name='pres_frontAndBack')
-pres_frontAndBack._data[CUBA.VARIABLE] = CUBA.PRESSURE
+pres_frontAndBack.data[CUBA.VARIABLE] = CUBA.PRESSURE
 
 
 inlet = api.Boundary(name='inlet', condition=[vel_inlet, pres_inlet])

@@ -972,6 +972,7 @@ void foam_setAndWriteCellData(std::string name,std::string dataname, std::vector
 
     const fvMesh & mesh = getMeshFromDb(name);
     hashedWordList names(mesh.names());
+ 
     if (names.contains(word(dataname)))
       {
 	volScalarField& field = find_scalarData(name,dataname);
@@ -1174,6 +1175,7 @@ void foam_writeFields(std::string name)
     fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
 
     std::vector<std::string> names = foam_getCellDataNames(name);
+
 
     for (std::vector<std::string>::size_type i=0;i<names.size();i++) 
       {
@@ -1469,25 +1471,23 @@ void foam_modifyUniformDimensionedVectorField(std::string name, std::string fiel
 
 void foam_setBC(std::string name, std::string fieldname, std::string dict)
 {
-
       fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
 
+      IStringStream dictIS(dict.c_str());
 
-	IStringStream dictIS(dict.c_str());
-
-	Time& runTime = *(runTimes[name]);
-
-	IOdictionary IOdict(runTime, dictIS);
-
-	if(fieldname=="U"){
-		volVectorField& vF = find_Data<vector>(mesh,fieldname);
-		vF.boundaryField().readField(vF,IOdict);
-	}
-	
-	if(fieldname=="p" || fieldname=="p_rgh" || fieldname=="alpha.phase1"){
-		volScalarField& vS = find_Data<scalar>(mesh,fieldname);
-		vS.boundaryField().readField(vS,IOdict);
-	}
+      Time& runTime = *(runTimes[name]);
+      
+      IOdictionary IOdict(runTime, dictIS);
+      
+      if(fieldname=="U"){
+	volVectorField& vF = find_Data<vector>(mesh,fieldname);
+	vF.boundaryField().readField(vF,IOdict);
+      }
+      
+      if(fieldname=="p" || fieldname=="p_rgh" || fieldname=="alpha.phase1"){
+	volScalarField& vS = find_Data<scalar>(mesh,fieldname);
+	vS.boundaryField().readField(vS,IOdict);
+      }
 
 }
 

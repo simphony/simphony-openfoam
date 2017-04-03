@@ -38,27 +38,27 @@ class WrapperRunTestCase(unittest.TestCase):
         mat._data[CUBA.DYNAMIC_VISCOSITY] = 1.0
         cuds.add([mat])
 
-        vel_inlet = api.Dirichlet(name='vel_inlet')
+        vel_inlet = api.Dirichlet(mat, name='vel_inlet')
         vel_inlet._data[CUBA.VARIABLE] = CUBA.VELOCITY
         vel_inlet._data[CUBA.VELOCITY] = (0.1, 0, 0)
-        pres_inlet = api.Neumann(name='pres_inlet')
+        pres_inlet = api.Neumann(mat, name='pres_inlet')
         pres_inlet._data[CUBA.VARIABLE] = CUBA.PRESSURE
 
-        vel_outlet = api.Neumann(name='vel_outlet')
+        vel_outlet = api.Neumann(mat, name='vel_outlet')
         vel_outlet._data[CUBA.VARIABLE] = CUBA.VELOCITY
-        pres_outlet = api.Dirichlet(name='pres_outlet')
+        pres_outlet = api.Dirichlet(mat, name='pres_outlet')
         pres_outlet._data[CUBA.VARIABLE] = CUBA.PRESSURE
         pres_outlet._data[CUBA.PRESSURE] = 0.0
 
-        vel_walls = api.Dirichlet(name='vel_walls')
+        vel_walls = api.Dirichlet(mat, name='vel_walls')
         vel_walls._data[CUBA.VARIABLE] = CUBA.VELOCITY
         vel_walls._data[CUBA.VELOCITY] = (0, 0, 0)
-        pres_walls = api.Neumann(name='pres_walls')
+        pres_walls = api.Neumann(mat, name='pres_walls')
         pres_walls._data[CUBA.VARIABLE] = CUBA.PRESSURE
 
-        vel_frontAndBack = api.Empty(name='vel_frontAndBack')
+        vel_frontAndBack = api.EmptyCondition(name='vel_frontAndBack')
         vel_frontAndBack._data[CUBA.VARIABLE] = CUBA.VELOCITY
-        pres_frontAndBack = api.Empty(name='pres_frontAndBack')
+        pres_frontAndBack = api.EmptyCondition(name='pres_frontAndBack')
         pres_frontAndBack._data[CUBA.VARIABLE] = CUBA.PRESSURE
 
         inlet = api.Boundary(name='inlet', condition=[vel_inlet, pres_inlet])

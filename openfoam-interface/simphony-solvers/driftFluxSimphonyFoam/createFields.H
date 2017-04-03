@@ -224,16 +224,3 @@
     // MULES Correction
     tmp<surfaceScalarField> tphiAlphaCorr0;
 
-new volScalarField
-(
-    IOobject
-    (
-        "Material",
-        runTime.timeName(),
-        mesh,
-        IOobject::READ_IF_PRESENT,
-        IOobject::AUTO_WRITE
-    ),
-    mesh,
- dimensionedScalar("Material", dimensionSet(0, 0, 0, 0, 0, 0, 0), 0.0)
-);

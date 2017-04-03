@@ -9,8 +9,7 @@ import simphonyfoaminterface as foamface
 from simphony.core.cuba import CUBA
 from simphony.cuds.meta import api
 
-from foam_controlwrapper.foam_variables import (dataDimensionMap, dataKeyMap,
-                                                dataNameMap)
+from foam_controlwrapper.foam_variables import (dataNameMap, phaseNames)
 
 userLibs = """
 ("libshearStressPowerLawSlipVelocity.so"  "libtwoPhaseProperties.so")
@@ -992,7 +991,7 @@ def parse_map(mapContent):
 def get_rheology_model_coeffs(rheology_model, cuds):
     material_uid = rheology_model.material
     material = cuds.get(material_uid)
-    density = material._data[CUBA.DENSITY]
+    density = material.data[CUBA.DENSITY]
     if isinstance(rheology_model, api.HerschelBulkleyModel):
         return {'name': 'HerschelBulkley',
                 'nu0': str(rheology_model.initial_viscosity/density),
@@ -1055,11 +1054,11 @@ def modifyNumerics(mesh, cuds, solver='pimpleFoam', io=False):
     interval = final-current
     endTime = interval + mesh._time
     for solv_param in cuds.iter(item_type=CUBA.SOLVER_PARAMETER):
-        if CUBA.MAXIMUM_COURANT_NUMBER in solv_param._data:
+        if CUBA.MAXIMUM_COURANT_NUMBER in solv_param.data:
             mapContent['controlDict']['maxCo'] =\
-                solv_param._data[CUBA.MAXIMUM_COURANT_NUMBER]
+                solv_param.data[CUBA.MAXIMUM_COURANT_NUMBER]
             mapContent['controlDict']['maxAlphaCo'] =\
-                solv_param._data[CUBA.MAXIMUM_COURANT_NUMBER]
+                solv_param.data[CUBA.MAXIMUM_COURANT_NUMBER]
 
     mapContent['controlDict']['startTime'] = str(mesh._time)
     mapContent['controlDict']['deltaT'] = str(deltaT)
@@ -1081,7 +1080,7 @@ def modifyNumerics(mesh, cuds, solver='pimpleFoam', io=False):
         control = mapContent['transportProperties']
         rheology_model = cfd.rheology_model
         material = materials[0]
-        control['rho rho [ 1 -3 0 0 0 0 0 ]'] = material._data[CUBA.DENSITY]
+        control['rho rho [ 1 -3 0 0 0 0 0 ]'] = material.data[CUBA.DENSITY]
         if rheology_model is not None and not \
                 isinstance(rheology_model, api.NewtonianFluidModel):
             rheology_model_coeffs = get_rheology_model_coeffs(rheology_model,
@@ -1098,8 +1097,8 @@ def modifyNumerics(mesh, cuds, solver='pimpleFoam', io=False):
                 rheology_model.initial_viscosity
         else:
             control['nu nu     [ 0 2 -1 0 0 0 0 ]'] = \
-                material._data[CUBA.DYNAMIC_VISCOSITY] / \
-                material._data[CUBA.DENSITY]
+                material.data[CUBA.DYNAMIC_VISCOSITY] / \
+                material.data[CUBA.DENSITY]
 
         if not_empty(cuds.iter(item_type=CUBA.STRESS_MODEL)):
             stress_model = get_first(cuds.iter(item_type=CUBA.STRESS_MODEL))
@@ -1112,43 +1111,31 @@ def modifyNumerics(mesh, cuds, solver='pimpleFoam', io=False):
 
         transportPropertiesDict = parse_map(control)
     elif solver == 'interFoam':
-        # take cell to get the material list order
-        cell = mesh._get_cell(mesh._foamCellLabelToUuid[0])
-        if CUBA.MATERIAL not in cell.data:
-            error_str = "Material must be assigned to cell data\n"
-            error_str += "Use cell.data[CUBA.MATERIAL] = material.uid"
-            raise ValueError(error_str)
 
         control = mapContent['transportProperties']
-        if materials[0].uid == cell.data[CUBA.MATERIAL]:
-            ordered_materials = materials
-        else:
-            ordered_materials = [materials[1], materials[0]]
-        i = 1
-        for material in ordered_materials:
-            density = material._data[CUBA.DENSITY]
-            viscosity = material._data[CUBA.DYNAMIC_VISCOSITY]
+
+        for phase_name, material in mesh._foamPhaseNameToMaterial.iteritems():
+            density = material.data[CUBA.DENSITY]
+            viscosity = material.data[CUBA.DYNAMIC_VISCOSITY]
             rheology_model = None
             if type(cfd.rheology_model) is list:
                 for rm in cfd.rheology_model:
-                    if rm._data[CUBA.MATERIAL] == material.uid:
+                    if rm.data[CUBA.MATERIAL] == material.uid:
                         rheology_model = rm
                         break
-            elif CUBA.MATERIAL in cfd.rheology_model._data:
-                if cfd.rheology_model._data[CUBA.MATERIAL] == material.uid:
+            elif CUBA.MATERIAL in cfd.rheology_model.data:
+                if cfd.rheology_model.data[CUBA.MATERIAL] == material.uid:
                     rheology_model = cfd.rheology_model
             if rheology_model is not None:
                 rheology_model_name = rheology_model.__class__.__name__
             else:
                 rheology_model_name = 'Newtonian'
-            phase_name = 'phase' + str(i)
-            i += 1
             if rheology_model_name == 'Newtonian':
                 control[phase_name]['nu              nu [ 0 2 -1 0 0 0 0 ]']\
-                    = material._data[CUBA.DYNAMIC_VISCOSITY] / \
-                    material._data[CUBA.DENSITY]
+                    = material.data[CUBA.DYNAMIC_VISCOSITY] / \
+                    material.data[CUBA.DENSITY]
                 control[phase_name]['rho             rho [ 1 -3 0 0 0 0 0 ]']\
-                    = material._data[CUBA.DENSITY]
+                    = material.data[CUBA.DENSITY]
             else:
                 rheology_model_coeffs = get_rheology_model_coeffs(
                     rheology_model, cuds)
@@ -1172,31 +1159,31 @@ def modifyNumerics(mesh, cuds, solver='pimpleFoam', io=False):
         transportPropertiesDict = parse_map(control)
     elif solver == 'driftFluxFoam':
         control = mapContent['transportProperties']
-        for i in range(2):
-            mixture_model = get_first(cuds.iter(item_type=CUBA.MIXTURE_MODEL))
-            disperse_material_uid = mixture_model.disperse
-            if materials[i].uid == disperse_material_uid:
-                phase_name = 'phase1'
+        mixture_model = get_first(cuds.iter(item_type=CUBA.MIXTURE_MODEL))
+        disperse_material_uid = mixture_model.disperse
+        for pname, material in mesh._foamPhaseNameToMaterial.iteritems():
+            # always disperse phase name phaseNames[0]
+            if disperse_material_uid == material.uid:
+                phase_name = phaseNames[0]
             else:
-                phase_name = 'phase2'
-
-            density = materials[i]._data[CUBA.DENSITY]
-            viscosity = materials[i]._data[CUBA.DYNAMIC_VISCOSITY]
+                phase_name = phaseNames[1]
+            density = material.data[CUBA.DENSITY]
+            viscosity = material.data[CUBA.DYNAMIC_VISCOSITY]
             rheology_models = cfd.rheology_model
             rheology_model = None
             if rheology_models is not None:
                 if type(rheology_models) is list:
                     for rm in rheology_models:
-                        if rm._data[CUBA.MATERIAL] == materials[i].uid:
+                        if rm.data[CUBA.MATERIAL] == material.uid:
                             rheology_model = rm
                             break
                     if rheology_model is None:
                         error_str = "Rheology model not specified"
                         error_str += "for material {}"
-                        raise ValueError(error_str.format(materials[i].name))
+                        raise ValueError(error_str.format(material.name))
 
-                elif CUBA.MATERIAL in rheology_models._data:
-                    if rheology_models._data[CUBA.MATERIAL] == material.uid:
+                elif CUBA.MATERIAL in rheology_models.data:
+                    if rheology_models.data[CUBA.MATERIAL] == material.uid:
                         rheology_model = rheology_models
             if rheology_model is not None:
                 rheology_model_coeffs = \
@@ -1209,9 +1196,9 @@ def modifyNumerics(mesh, cuds, solver='pimpleFoam', io=False):
                         control[phase_name][vmc][coeff] = \
                             rheology_model_coeffs[coeff]
                         control[phase_name]['rho'] = \
-                            materials[0]._data[CUBA.DENSITY]
+                            materials[0].data[CUBA.DENSITY]
             else:
-                if materials[i].uid == disperse_material_uid:
+                if material.uid == disperse_material_uid:
                     rheology_model_name = 'dummyViscosity'
                 else:
                     rheology_model_name = 'Newtonian'
@@ -1292,21 +1279,7 @@ def check_boundary_names(bc_names, boundary_names):
 def get_foam_boundary_condition(condition):
     """ Return corresponding foam condition from Condition type
     """
-    dyn_pres = condition._data[CUBA.VARIABLE] == CUBA.DYNAMIC_PRESSURE
-    if isinstance(condition, api.Dirichlet):
-        patch = []
-        patch.append('fixedValue')
-        patch.append(condition._data[condition._data[CUBA.VARIABLE]])
-        return patch
-    elif isinstance(condition, api.Neumann):
-        # for dynamic pressure use fixedFluxPressure
-        if dyn_pres:
-            return 'fixedFluxPressure'
-        else:
-            return 'zeroGradient'
-    elif isinstance(condition, api.Empty):
-        return 'empty'
-    elif isinstance(condition, api.ShearStressPowerLawSlipVelocity):
+    if isinstance(condition, api.ShearStressPowerLawSlipVelocity):
         patch = []
         patch.append('shearStressPowerLawSlipVelocity')
         patch.append({'rho': str(condition.density),
@@ -1314,22 +1287,22 @@ def get_foam_boundary_condition(condition):
                       'n': str(condition.power_law_index)})
         return patch
     elif isinstance(condition, api.InletOutlet):
-        if condition._data[CUBA.VARIABLE] == CUBA.VELOCITY:
+        if condition.data[CUBA.VARIABLE] == CUBA.VELOCITY:
             patch = []
             patch.append('pressureInletOutletVelocity')
-            patch.append(condition._data[condition._data[CUBA.VARIABLE]])
+            patch.append(condition.data[condition.data[CUBA.VARIABLE]])
             return patch
-        elif condition._data[CUBA.VARIABLE] == CUBA.VOLUME_FRACTION:
+        elif condition.data[CUBA.VARIABLE] == CUBA.VOLUME_FRACTION:
             patch = []
             patch.append('inletOutlet')
-            patch.append(condition._data[condition._data[CUBA.VARIABLE]])
+            patch.append(condition.data[condition.data[CUBA.VARIABLE]])
             return patch
         else:
             error_str = "Boundary condition not supported:\n"
             error_str += " condition: {}\n"
             error_str += " variable: {}"
             raise ValueError(error_str.format(condition.__class__.__name__,
-                                              condition._data[CUBA.VARIABLE]))
+                                              condition.data[CUBA.VARIABLE]))
 
     elif isinstance(condition, api.SlipVelocity):
         return 'slip'
@@ -1338,6 +1311,20 @@ def get_foam_boundary_condition(condition):
         patch.append('wettingAngle')
         patch.append(condition.contact_angle)
         return patch
+    elif isinstance(condition, api.Dirichlet):
+        patch = []
+        patch.append('fixedValue')
+        patch.append(condition.data[condition.data[CUBA.VARIABLE]])
+        return patch
+    elif isinstance(condition, api.Neumann):
+        # for dynamic pressure use fixedFluxPressure
+        dyn_pres = condition.data[CUBA.VARIABLE] == CUBA.DYNAMIC_PRESSURE
+        if dyn_pres:
+            return 'fixedFluxPressure'
+        else:
+            return 'zeroGradient'
+    elif isinstance(condition, api.EmptyCondition):
+        return 'empty'
     else:
         patch = None
         return patch
@@ -1376,7 +1363,7 @@ def modifyFields(mesh, cuds, solver='pimpleFoam'):
     for boundary in cuds.iter(item_type=CUBA.BOUNDARY):
         patch = None
         for condition in boundary.condition:
-            if condition.variable == CUBA.VELOCITY:
+            if condition.data[CUBA.VARIABLE] == CUBA.VELOCITY:
                 patch = get_foam_boundary_condition(condition)
                 break
         if patch is None:
@@ -1429,7 +1416,7 @@ def modifyFields(mesh, cuds, solver='pimpleFoam'):
     for boundary in cuds.iter(item_type=CUBA.BOUNDARY):
         patch = None
         for condition in boundary.condition:
-            if condition.variable == ID_pressure:
+            if condition.data[CUBA.VARIABLE] == ID_pressure:
                 patch = get_foam_boundary_condition(condition)
                 break
         if patch is None:
@@ -1462,7 +1449,7 @@ def modifyFields(mesh, cuds, solver='pimpleFoam'):
         for boundary in cuds.iter(item_type=CUBA.BOUNDARY):
             patch = None
             for condition in boundary.condition:
-                if condition.variable == CUBA.VOLUME_FRACTION:
+                if condition.data[CUBA.VARIABLE] == CUBA.VOLUME_FRACTION:
                     patch = get_foam_boundary_condition(condition)
                     break
             if patch is None:
@@ -1494,53 +1481,9 @@ def modifyFields(mesh, cuds, solver='pimpleFoam'):
                     myDict = myDict + "\t limit \t gradient;\n"
                     myDict = myDict + "\t value \t uniform 0;\n"
             myDict = myDict + "}\n"
-        foamface.setBC(mesh.name, dataNameMap[CUBA.VOLUME_FRACTION], myDict)
-
-    nCells = foamface.getCellCount(mesh.name)
-    p_values = [0.0] * nCells
-    U_values = [0.0] * (nCells * 3)
-    if solver == 'driftFluxFoam' or solver == 'interFoam':
-        alpha_values = [0.0] * nCells
-    if solver == 'driftFluxFoam' or solver == 'simpleFoam':
-        vdj_values = [0.0] * (nCells * 3)
-        sigma_mu_values = [0.0] * (nCells * 9)
-    for cell in mesh._iter_cells():
-        label, _ = mesh._uuidToFoamLabelAndType[cell.uid]
-        p_values[label] = cell.data[ID_pressure]
-
-        i = 3 * label
-        for k in range(3):
-            U_values[i + k] = cell.data[CUBA.VELOCITY][k]
-        if solver == 'driftFluxFoam' or solver == 'interFoam':
-            alpha_values[label] = cell.data[CUBA.VOLUME_FRACTION]
-        if solver == 'driftFluxFoam':
-            i = 3 * label
-            for k in range(3):
-                vdj_values[i + k] = cell.data[CUBA.RELATIVE_VELOCITY][k]
-        if solver == 'driftFluxFoam' or solver == 'simpleFoam':
-            i = 9 * label
-            for k in range(9):
-                sigma_mu_values[i + k] = \
-                    cell.data[CUBA.HOMOGENIZED_STRESS_TENSOR]
-    foamface.setAllCellData(mesh.name, name_pressure, 0, p_values,
-                            dataDimensionMap[dataKeyMap[name_pressure]])
-    foamface.setAllCellVectorData(mesh.name, dataNameMap[CUBA.VELOCITY],
-                                  0, U_values,
-                                  dataDimensionMap[dataKeyMap[
-                                      dataNameMap[CUBA.VELOCITY]]])
-    if solver == 'driftFluxFoam' or solver == 'interFoam':
-        foamface.setAllCellData(mesh.name, dataNameMap[CUBA.VOLUME_FRACTION],
-                                0, alpha_values,
-                                dataDimensionMap[dataKeyMap[
-                                    dataNameMap[CUBA.VOLUME_FRACTION]]])
-    if solver == 'driftFluxFoam' or solver == 'simpleFoam':
-        foamface.setAllCellTensorData(mesh.name, dataNameMap[
-                                      CUBA.HOMOGENIZED_STRESS_TENSOR],
-                                      0, sigma_mu_values,
-                                      dataDimensionMap[dataKeyMap[
-                                          dataNameMap[
-                                              CUBA.HOMOGENIZED_STRESS_TENSOR
-                                              ]]])
+        foamface.setBC(mesh.name,
+                       dataNameMap[CUBA.VOLUME_FRACTION] + '.' + phaseNames[0],
+                       myDict)
 
 
 def is_empty(generator):
@@ -1593,7 +1536,7 @@ def get_foam_solver(cuds):
 
     if not_empty(cuds.iter(item_type=CUBA.SOLVER_PARAMETER)):
         for sp in cuds.iter(item_type=CUBA.SOLVER_PARAMETER):
-            if CUBA.STEADY_STATE in sp._data:
+            if CUBA.STEADY_STATE in sp.data:
                 solver = 'simpleFoam'
                 return solver
     if is_empty(cuds.iter(item_type=CUBA.CFD)):

@@ -13,13 +13,15 @@ from simphony.cuds.mesh import Mesh
 from simphony.cuds.mesh_items import Point, Face, Cell
 
 from simphony.core.cuba import CUBA
+from simphony.cuds.meta.api import PhaseVolumeFraction
 
 import simphonyfoaminterface as foamface
 
 from .foam_dicts import (get_dictionary_maps, parse_map, check_boundary_names,
-                         get_foam_boundary_condition)
+                         get_foam_boundary_condition, not_empty)
 from foam_controlwrapper.foam_variables import (dataNameMap, dataKeyMap,
-                                                dataTypeMap, dataDimensionMap)
+                                                dataTypeMap, dataDimensionMap,
+                                                phaseNames)
 from .mesh_utils import (create_dummy_celldata, set_cells_data,
                          get_cells_in_range)
 
@@ -59,6 +61,8 @@ class FoamMesh(Mesh):
         Mapping from  OpenFoam point label number to uuid
     _boundaries : dictionary
         Mapping from boundary name to list of boundary faces
+    _foamPhaseNameToMaterial : dictionary
+        Mapping from phase name to material
 
     """
 
@@ -72,7 +76,7 @@ class FoamMesh(Mesh):
         self._foamPointLabelToUuid = {}
         self._boundaries = {}
         self._time = 0.0
-        self._foamMaterialLabelToUuid = None
+        self._foamPhaseNameToMaterial = {}
 
         if path:
             self.path = path
@@ -166,9 +170,16 @@ class FoamMesh(Mesh):
                     label += 1
                 pointMap.clear()
 
+            
+            if cuds and not_empty(cuds.iter(item_type=CUBA.MATERIAL)):
+                materials = list(cuds.iter(item_type=CUBA.MATERIAL))
+                im = 0
+                for material in materials:
+                    self._foamPhaseNameToMaterial[phaseNames[im]] = material
+                    im += 1
+
             if hasattr(mesh, '_get_cell_data_map'):
                 cell_data_map = mesh._get_cell_data_map()
-                self._foamMaterialLabelToUuid = mesh._foamMaterialLabelToUuid
             else:
                 cell_data_map = {}
                 nCells = mesh.count_of(CUBA.CELL)
@@ -182,20 +193,16 @@ class FoamMesh(Mesh):
                                 cell_data_map[key] = [0] * (nCells * 3)
                             elif dataTypeMap[key] == "tensor":
                                 cell_data_map[key] = [0] * (nCells * 9)
-                        if key == CUBA.MATERIAL:
-                            self._foamMaterialLabelToUuid = cell.data[key]
-                            cell_data_map[key][label] = 0
-                        else:
-                            if dataTypeMap[key] == "scalar":
-                                cell_data_map[key][label] = cell.data[key]
-                            elif dataTypeMap[key] == "vector":
-                                for i in range(len(cell.data[key])):
-                                    k = 3 * label + i
-                                    cell_data_map[key][k] = cell.data[key][i]
-                            elif dataTypeMap[key] == "tensor":
-                                for i in range(len(cell.data[key])):
-                                    k = 9 * label + i
-                                    cell_data_map[key][k] = cell.data[key][i]
+                        if dataTypeMap[key] == "scalar":
+                            cell_data_map[key][label] = cell.data[key]
+                        elif dataTypeMap[key] == "vector":
+                            for i in range(len(cell.data[key])):
+                                k = 3 * label + i
+                                cell_data_map[key][k] = cell.data[key][i]
+                        elif dataTypeMap[key] == "tensor":
+                            for i in range(len(cell.data[key])):
+                                k = 9 * label + i
+                                cell_data_map[key][k] = cell.data[key][i]
 
             # make patch information
             patchNames = []
@@ -421,16 +428,25 @@ class FoamMesh(Mesh):
         dataNames = foamface.getCellDataNames(self.name)
         dataNames += foamface.getCellVectorDataNames(self.name)
         dataNames += foamface.getCellTensorDataNames(self.name)
+        if len(self._foamPhaseNameToMaterial) > 1:
+            dataNames.append(dataNameMap[CUBA.VOLUME_FRACTION])
         for dataName in set(dataKeyMap.keys()).intersection(dataNames):
-            if dataTypeMap[dataKeyMap[dataName]] == "scalar":
-                if dataKeyMap[dataName] == CUBA.MATERIAL:
-                    cell.data[dataKeyMap[dataName]] = \
-                        self._foamMaterialLabelToUuid
-                else:
-                    cell.data[dataKeyMap[dataName]] = \
-                        foamface.getCellData(self.name,
-                                             label,
-                                             dataName)
+            if dataName == dataNameMap[CUBA.VOLUME_FRACTION]:
+                # currently this is only for volume_fraction and for two phase
+                dName = dataName + '.' + phaseNames[0]
+                vol_frac1 = foamface.getCellData(self.name, label, dName)
+                material1 = self._foamPhaseNameToMaterial[phaseNames[0]]
+                material2 = self._foamPhaseNameToMaterial[phaseNames[1]]
+                phase1_vol_frac = PhaseVolumeFraction(material1, vol_frac1)
+                phase2_vol_frac = PhaseVolumeFraction(material2, 1 - vol_frac1)
+                cell.data[dataKeyMap[dataName]] = [phase1_vol_frac,
+                                                   phase2_vol_frac]
+
+            elif dataTypeMap[dataKeyMap[dataName]] == "scalar":
+                cell.data[dataKeyMap[dataName]] = \
+                    foamface.getCellData(self.name,
+                                         label,
+                                         dataName)
             elif dataTypeMap[dataKeyMap[dataName]] == "vector":
                 cell.data[dataKeyMap[dataName]] = \
                     foamface.getCellVectorData(self.name,
@@ -515,12 +531,7 @@ class FoamMesh(Mesh):
         for dataName in newDataNames:
             create_dummy_celldata(self.name, dataName)
 
-        if CUBA.MATERIAL in cellList[0].data:
-                self._foamMaterialLabelToUuid = cellList[0].data[CUBA.MATERIAL]
-
         for cell in cellList:
-            if CUBA.MATERIAL in cell.data:
-                    cell.data[CUBA.MATERIAL] = 0
             if cell.uid not in self._uuidToFoamLabelAndType:
                 error_str = "Trying to update a non-existing cell with uuid: "\
                     + str(cell.uid)
@@ -535,7 +546,19 @@ class FoamMesh(Mesh):
             if set(puids) != set(cell.points):
                 raise Warning("Cell points can't be updated")
 
-        set_cells_data(self.name, cellList, dataNameKeyMap)
+        # check that if volume fraction is in data, phase names are mapped to
+        # materials
+        if CUBA.VOLUME_FRACTION in dataNameKeyMap.values() \
+                and not self._foamPhaseNameToMaterial:
+            cell = cellList[0]
+            phase_vol_fracs = cell.data[CUBA.VOLUME_FRACTION]
+            im = 0
+            for phase_vol_frac in phase_vol_fracs:
+                self._foamPhaseNameToMaterial[phaseNames[im]] = \
+                    phase_vol_frac.material
+                im += 1
+        set_cells_data(self.name, cellList, dataNameKeyMap,
+                       self._foamPhaseNameToMaterial)
 
     def copy_cells(self, cell_data_map):
         """ Copy the information of a set of cells.
@@ -572,8 +595,13 @@ class FoamMesh(Mesh):
             dimension = dataDimensionMap[key]
             dataName = dataNameMap[key]
             if dataTypeMap[key] == "scalar":
-                foamface.setAllCellData(self.name, dataName, 0,
-                                        data, dimension)
+                if key == CUBA.VOLUME_FRACTION:
+                    foamface.setAllCellData(self.name,
+                                            dataName + '.' + phaseNames[0], 0,
+                                            data, dimension)
+                else:
+                    foamface.setAllCellData(self.name, dataName, 0,
+                                            data, dimension)
             elif dataTypeMap[key] == "vector":
                 foamface.setAllCellVectorData(self.name, dataName, 0,
                                               data, dimension)
@@ -662,65 +690,52 @@ class FoamMesh(Mesh):
                 face = self._get_face(uid)
                 yield Face.from_face(face)
 
-    def _iter_cells_parallell(self, cell_uuids=None):
-        """Returns an iterator over the selected cells.
+    def _iter_cells_parallel(self):
+        """Returns an iterator over all cells.
 
-        Returns an iterator over the cells with uuid in
-        cell_uuids. If none of the uuids in cell_uuids exists,
-        an empty iterator is returned. If there is no uuids
-        inside cell_uuids, a iterator over all cells of
-        the mesh is returned instead. In this case cell instances are
+        Returns an iterator over the cells. Cell instances are
         made parallell.
 
-        Parameters
-        ----------
-        cell_uuids : list of uuids, optional
-            Uuids of the desired cell, default empty
 
         Returns
         -------
         iter
-            Iterator over the selected cells
+            Iterator over cells
 
         """
 
-        if cell_uuids is None:
-            pointLabels = foamface.getAllCellPoints(self.name)
-            data_map = self._get_cell_data_map()
+        pointLabels = foamface.getAllCellPoints(self.name)
+        data_map = self._get_cell_data_map()
 
-            n_jobs = cpu_count()
-            cells_puids = self._find_cells_puids(pointLabels)
+        n_jobs = cpu_count()
+        cells_puids = self._find_cells_puids(pointLabels)
 
-            n_cells = len(cells_puids)
-            group_size = n_cells / (n_jobs - 1)
-            last_group_size = n_cells % (n_jobs - 1)
-            cell_indeces = []
-            for i in range(n_jobs - 1):
-                cellis = []
-                cellis.append(i * group_size)
-                cellis.append((i+1) * group_size - 1)
-                cell_indeces.append(cellis)
+        n_cells = len(cells_puids)
+        group_size = n_cells / n_jobs
+        last_group_size = group_size + n_cells % n_jobs
+        cell_indeces = []
+        for i in range(n_jobs - 1):
             cellis = []
-            cellis.append((n_jobs - 1) * group_size)
-            cellis.append((n_jobs - 1) * group_size + last_group_size - 1)
+            cellis.append(i * group_size)
+            cellis.append((i+1) * group_size - 1)
             cell_indeces.append(cellis)
+        cellis = []
+        cellis.append((n_jobs - 1) * group_size)
+        cellis.append((n_jobs - 1) * group_size + last_group_size - 1)
+        cell_indeces.append(cellis)
 
-            pool = Pool(n_jobs)
-            results = pool.map(get_cells_in_range,
-                               [(cell_indeces[i][0],
-                                 cell_indeces[i][1],
-                                 cells_puids,
-                                 data_map, self)
-                                for i in range(n_jobs)])
-            for res in results:
-                for item in res:
-                    yield item
-            pool.close()
-            data_map.clear()
-        else:
-            for uid in cell_uuids:
-                cell = self._get_cell(uid)
-                yield cell
+        pool = Pool(n_jobs)
+        args = [[cell_indeces[i][0], cell_indeces[i][1],
+                 cells_puids, data_map, self._foamCellLabelToUuid,
+                 self._foamPhaseNameToMaterial]
+                for i in range(n_jobs)]
+        results = pool.map(get_cells_in_range, args)
+
+        for res in results:
+            for item in res:
+                yield item
+        pool.close()
+        data_map.clear()
 
     def _iter_cells(self, cell_uuids=None):
         """ Returns an iterator over the selected cells.
@@ -759,9 +774,19 @@ class FoamMesh(Mesh):
                 cell = Cell(puids, self._foamCellLabelToUuid[cell_label])
                 for dataKey, data in data_map.iteritems():
                     if dataTypeMap[dataKey] == "scalar":
-                        if dataKey == CUBA.MATERIAL:
-                            cell.data[dataKey] = \
-                                self._foamMaterialLabelToUuid
+                        if dataKey == CUBA.VOLUME_FRACTION:
+                            if self._foamPhaseNameToMaterial:
+                                material1 = self._foamPhaseNameToMaterial[
+                                    phaseNames[0]]
+                                material2 = self._foamPhaseNameToMaterial[
+                                    phaseNames[1]]
+                                vol_frac1 = data[cell_label]
+                                phase1_vol_frac = PhaseVolumeFraction(
+                                    material1, vol_frac1)
+                                phase2_vol_frac = PhaseVolumeFraction(
+                                    material2, 1 - vol_frac1)
+                                cell.data[dataKey] = [phase1_vol_frac,
+                                                      phase2_vol_frac]
                         else:
                             cell.data[dataKey] = data[cell_label]
                     elif dataTypeMap[dataKey] == "vector":
@@ -924,8 +949,13 @@ class FoamMesh(Mesh):
         dataMap = {}
         for dataName in set(dataKeyMap.keys()).intersection(dataNames):
             if dataTypeMap[dataKeyMap[dataName]] == "scalar":
-                dataMap[dataKeyMap[dataName]] = \
-                    foamface.getAllCellData(self.name, dataName)
+                if dataKeyMap[dataName] == CUBA.VOLUME_FRACTION:
+                    dName = dataName + '.' + phaseNames[0]
+                    dataMap[dataKeyMap[dataName]] = \
+                        foamface.getAllCellData(self.name, dName)
+                else:
+                    dataMap[dataKeyMap[dataName]] = \
+                        foamface.getAllCellData(self.name, dataName)
             elif dataTypeMap[dataKeyMap[dataName]] == "vector":
                 dataMap[dataKeyMap[dataName]] = \
                     foamface.getAllCellVectorData(self.name, dataName)

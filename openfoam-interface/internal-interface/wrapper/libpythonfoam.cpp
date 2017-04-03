@@ -1042,6 +1042,7 @@ extern "C" {
 	    vals[i] = PyFloat_AsDouble(strObj);
 	  }
 
+
 	  int dimensionsize = PyList_Size(dime);
 	  std::vector<int> dimension(dimensionsize);
 	  for (int i=0;i<dimensionsize;i++) {
