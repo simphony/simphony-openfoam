@@ -73,17 +73,17 @@ gm.acceleration = (0, -9.81, 0)
 cuds.add([gm])
 
 # boundary conditions
-vel_inlet = api.InletOutlet(name='vel_inlet')
+vel_inlet = api.InletOutlet(water, name='vel_inlet')
 vel_inlet.data[CUBA.VARIABLE] = CUBA.VELOCITY
 vel_inlet.data[CUBA.VELOCITY] = (0, 0, 0)
 pres_inlet = api.Dirichlet(water, name='pres_inlet')
 pres_inlet.data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
 pres_inlet.data[CUBA.DYNAMIC_PRESSURE] = 0.0
-vf_inlet = api.InletOutlet(name='vf_inlet')
+vf_inlet = api.InletOutlet(water, name='vf_inlet')
 vf_inlet.data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
 vf_inlet.data[CUBA.VOLUME_FRACTION] = 1.0
 
-vel_atm = api.InletOutlet(name='vel_atm')
+vel_atm = api.InletOutlet(water, name='vel_atm')
 vel_atm.data[CUBA.VARIABLE] = CUBA.VELOCITY
 vel_atm.data[CUBA.VELOCITY] = (0, 0, 0)
 pres_atm = api.Dirichlet(water, name='pres_atm')
@@ -160,13 +160,12 @@ sim = Simulation(cuds, 'OpenFOAM', engine_interface=EngineInterface.FileIO)
 
 print "Time spend in wrapper init: ", time.time()-start
 start = time.time()
-
-sim.run()
-print "Time spend in run: ", time.time()-start
-
 mesh_in_engine = cuds.get_by_name(mesh_name)
 
 print "Case directory ", mesh_in_engine.path
+
+sim.run()
+print "Time spend in run: ", time.time()-start
 
 
 @mayavi2.standalone

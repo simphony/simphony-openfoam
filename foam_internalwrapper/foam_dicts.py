@@ -1276,7 +1276,7 @@ def check_boundary_names(bc_names, boundary_names):
                 boundary_names))
 
 
-def get_foam_boundary_condition(condition):
+def get_foam_boundary_condition(condition, phaseNameToMaterial):
     """ Return corresponding foam condition from Condition type
     """
     if isinstance(condition, api.ShearStressPowerLawSlipVelocity):
@@ -1295,7 +1295,11 @@ def get_foam_boundary_condition(condition):
         elif condition.data[CUBA.VARIABLE] == CUBA.VOLUME_FRACTION:
             patch = []
             patch.append('inletOutlet')
-            patch.append(condition.data[condition.data[CUBA.VARIABLE]])
+            if condition.material == phaseNameToMaterial[phaseNames[0]]:
+                vf = condition.data[CUBA.VOLUME_FRACTION]
+            else:
+                vf = 1 - condition.data[CUBA.VOLUME_FRACTION]
+            patch.append(vf)
             return patch
         else:
             error_str = "Boundary condition not supported:\n"
@@ -1314,7 +1318,14 @@ def get_foam_boundary_condition(condition):
     elif isinstance(condition, api.Dirichlet):
         patch = []
         patch.append('fixedValue')
-        patch.append(condition.data[condition.data[CUBA.VARIABLE]])
+        if condition.data[CUBA.VARIABLE] == CUBA.VOLUME_FRACTION:
+            if condition.material == phaseNameToMaterial[phaseNames[0]]:
+                vf = condition.data[CUBA.VOLUME_FRACTION]
+            else:
+                vf = 1 - condition.data[CUBA.VOLUME_FRACTION]
+            patch.append(vf)
+        else:
+            patch.append(condition.data[condition.data[CUBA.VARIABLE]])
         return patch
     elif isinstance(condition, api.Neumann):
         # for dynamic pressure use fixedFluxPressure
@@ -1364,7 +1375,8 @@ def modifyFields(mesh, cuds, solver='pimpleFoam'):
         patch = None
         for condition in boundary.condition:
             if condition.data[CUBA.VARIABLE] == CUBA.VELOCITY:
-                patch = get_foam_boundary_condition(condition)
+                patch = get_foam_boundary_condition(
+                    condition, mesh._foamPhaseNameToMaterial)
                 break
         if patch is None:
             error_str = "Boundary condition not specified:\n"
@@ -1417,7 +1429,8 @@ def modifyFields(mesh, cuds, solver='pimpleFoam'):
         patch = None
         for condition in boundary.condition:
             if condition.data[CUBA.VARIABLE] == ID_pressure:
-                patch = get_foam_boundary_condition(condition)
+                patch = get_foam_boundary_condition(
+                    condition, mesh._foamPhaseNameToMaterial)
                 break
         if patch is None:
                 error_str = "Boundary condition not specified:\n"
@@ -1450,7 +1463,8 @@ def modifyFields(mesh, cuds, solver='pimpleFoam'):
             patch = None
             for condition in boundary.condition:
                 if condition.data[CUBA.VARIABLE] == CUBA.VOLUME_FRACTION:
-                    patch = get_foam_boundary_condition(condition)
+                    patch = get_foam_boundary_condition(
+                        condition, mesh._foamPhaseNameToMaterial)
                     break
             if patch is None:
                 error_str = "Boundary condition not specified:\n"
