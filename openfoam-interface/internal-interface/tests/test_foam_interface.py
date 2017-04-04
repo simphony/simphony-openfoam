@@ -12,7 +12,7 @@ from collections import OrderedDict
 
 from simphony.cuds.mesh import Mesh, Face, Point, Cell
 from simphony.core.cuba import CUBA
-from simphony.core.data_container import DataContainer
+
 import simphonyfoaminterface as foamface
 
 from foam_internalwrapper import foam_dicts

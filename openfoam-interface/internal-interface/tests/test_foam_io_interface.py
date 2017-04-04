@@ -169,7 +169,6 @@ class FoamInterfaceTestCase(unittest.TestCase):
                          self.patchNames, self.patchFaces,
                          self.patchTypes)
 
-
     def tearDown(self):
         if os.path.exists(self.test_dir):
             shutil.rmtree(self.test_dir)
