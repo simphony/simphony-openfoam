@@ -109,15 +109,15 @@ void foam_setCellTensorData(std::string name, int label,std::string dataname,std
 // set mesh cell data
 void foam_setCellData(std::string name, std::string dataname, std::vector<double> values);
 // set mesh cell data and writes to  case directory
-void foam_setAndWriteCellData(std::string name, std::string dataname, std::vector<double> values,std::vector<int> dimension);
+void foam_setAndWriteCellData(std::string name, std::string dataname, std::vector<double> values,std::vector<int> dimension, bool write);
 // set mesh cell vector data
 void foam_setCellVectorData(std::string name, std::string dataname, std::vector<double> values);
 // set mesh cell tensor data
 void foam_setCellTensorData(std::string name, std::string dataname,std::vector<double> values);
 // set mesh cell vector data and writes to  case directory
-void foam_setAndWriteCellVectorData(std::string name, std::string dataname, std::vector<double> values,std::vector<int> dimension);
+void foam_setAndWriteCellVectorData(std::string name, std::string dataname, std::vector<double> values,std::vector<int> dimension, bool write);
 // set mesh cell tensor data and writes to  case directory
-void foam_setAndWriteCellTensorData(std::string name, std::string dataname, std::vector<double> values,std::vector<int> dimension);
+void foam_setAndWriteCellTensorData(std::string name, std::string dataname, std::vector<double> values,std::vector<int> dimension, bool write);
 // write cell data 
 void foam_writeCellData(std::string name,std::string dataname);
 // write cell vector data

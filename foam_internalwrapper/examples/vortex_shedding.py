@@ -53,33 +53,21 @@ cuds.add([mesh])
 
 vel_b = [None]*6
 pres_b = [None]*6
-vel_b[0] = api.Dirichlet(mat, name='vel_b0')
-vel_b[0].data[CUBA.VARIABLE] = CUBA.VELOCITY
-vel_b[0].data[CUBA.VELOCITY] = (1.0, 0, 0)
-pres_b[0] = api.Neumann(mat, name='pres_b0')
-pres_b[0].data[CUBA.VARIABLE] = CUBA.PRESSURE
+vel_b[0] = api.ConstantVelocityCondition((1.0, 0, 0), mat, name='vel_b0')
+pres_b[0] = api.ZeroGradientPressureCondition(0.0, mat, name='pres_b0')
 
-vel_b[1] = api.Neumann(mat, name='vel_b1')
-vel_b[1].data[CUBA.VARIABLE] = CUBA.VELOCITY
-pres_b[1] = api.Dirichlet(mat, name='pres_b1')
-pres_b[1].data[CUBA.VARIABLE] = CUBA.PRESSURE
-pres_b[1].data[CUBA.PRESSURE] = 0.0
+vel_b[1] = api.ZeroGradientVelocityCondition((0.0, 0.0, 0.0), mat,
+                                             name='vel_b1')
+pres_b[1] = api.ConstantPressureCondition(0.0, mat, name='pres_b1')
 
-vel_b[2] = api.SlipVelocity([0.0, 0.0, 0.0], mat, name='vel_b2')
-vel_b[2].data[CUBA.VARIABLE] = CUBA.VELOCITY
-pres_b[2] = api.Neumann(mat, name='pres_b2')
-pres_b[2].data[CUBA.VARIABLE] = CUBA.PRESSURE
+vel_b[2] = api.FreeSlipVelocity(name='vel_b2')
+pres_b[2] = api.ZeroGradientPressureCondition(0.0, mat, name='pres_b2')
 
-vel_b[3] = api.SlipVelocity([0.0, 0.0, 0.0], mat, name='vel_b3')
-vel_b[3].data[CUBA.VARIABLE] = CUBA.VELOCITY
-pres_b[3] = api.Neumann(mat, name='pres_b3')
-pres_b[3].data[CUBA.VARIABLE] = CUBA.PRESSURE
+vel_b[3] = api.FreeSlipVelocity(name='vel_b3')
+pres_b[3] = api.ZeroGradientPressureCondition(0.0, mat, name='pres_b3')
 
-vel_b[4] = api.Dirichlet(mat, name='vel_b4')
-vel_b[4].data[CUBA.VARIABLE] = CUBA.VELOCITY
-vel_b[4].data[CUBA.VELOCITY] = (0, 0, 0)
-pres_b[4] = api.Neumann(mat, name='pres_b4')
-pres_b[4].data[CUBA.VARIABLE] = CUBA.PRESSURE
+vel_b[4] = api.ConstantVelocityCondition((0, 0, 0), mat, name='vel_b4')
+pres_b[4] = api.ZeroGradientPressureCondition(0.0, mat, name='pres_b4')
 
 vel_b[5] = api.EmptyCondition(name='vel_b5')
 vel_b[5].data[CUBA.VARIABLE] = CUBA.VELOCITY
@@ -98,7 +86,6 @@ sim.run()
 
 mesh_in_engine = cuds.get_by_name(mesh_name)
 
-print "Case directory ", mesh_in_engine.path
 
 # compute velocity magnitude for visualization
 updated_cells = []

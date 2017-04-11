@@ -82,40 +82,23 @@ gm.acceleration = (0, -9.81, 0)
 cuds.add([gm])
 
 # boundary condtitions
-vel_inlet = api.Dirichlet(water, name='vel_inlet')
-vel_inlet.data[CUBA.VARIABLE] = CUBA.VELOCITY
-vel_inlet.data[CUBA.VELOCITY] = (0.0191, 0, 0)
-pres_inlet = api.Neumann(water, name='pres_inlet')
-pres_inlet.data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
-vf_inlet = api.Dirichlet(water, name='vf_inlet')
-vf_inlet.data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
-vf_inlet.data[CUBA.VOLUME_FRACTION] = 0.001
+vel_inlet = api.ConstantVelocityCondition((0.0191, 0, 0), water,
+                                          name='vel_inlet')
+pres_inlet = api.ZeroGradientPressureCondition(0.0, water, name='pres_inlet')
+vf_inlet = api.ConstantVolumeFractionCondition(0.001, water, name='vf_inlet')
 
-vel_outlet = api.InletOutlet(name='vel_outlet')
-vel_outlet.data[CUBA.VARIABLE] = CUBA.VELOCITY
-vel_outlet.data[CUBA.VELOCITY] = (0, 0, 0)
+vel_outlet = api.InletOutletVelocity((0, 0, 0), water, name='vel_outlet')
 
-pres_outlet = api.Dirichlet(water, name='pres_outlet')
-pres_outlet.data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
-pres_outlet.data[CUBA.DYNAMIC_PRESSURE] = 0.0
-vf_outlet = api.InletOutlet(name='vf_outlet')
-vf_outlet.data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
-vf_outlet.data[CUBA.VOLUME_FRACTION] = 0.001
+pres_outlet = api.ConstantPressureCondition(0.0, water, name='pres_outlet')
+vf_outlet = api.InletOutletVolumeFraction(0.001, water, name='vf_outlet')
 
-vel_walls = api.Dirichlet(water, name='vel_walls')
-vel_walls.data[CUBA.VARIABLE] = CUBA.VELOCITY
-vel_walls.data[CUBA.VELOCITY] = (0, 0, 0)
-pres_walls = api.Neumann(water, name='pres_walls')
-pres_walls.data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
-vf_walls = api.Neumann(water, name='vf_walls')
-vf_walls.data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
+vel_walls = api.ConstantVelocityCondition((0, 0, 0), water, name='vel_walls')
+pres_walls = api.ZeroGradientPressureCondition(0.0, water, name='pres_walls')
+vf_walls = api.ZeroGradientVolumeFractionCondition(0.0, water, name='vf_walls')
 
-vel_top = api.SlipVelocity([0, 0, 0], water, name='vel_top')
-vel_top.data[CUBA.VARIABLE] = CUBA.VELOCITY
-pres_top = api.Neumann(water, name='pres_top')
-pres_top.data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
-vf_top = api.Neumann(water, name='vf_top')
-vf_top.data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
+vel_top = api.FreeSlipVelocity(name='vel_top')
+pres_top = api.ZeroGradientPressureCondition(0.0, water, name='pres_top')
+vf_top = api.ZeroGradientVolumeFractionCondition(0.0, water, name='vf_top')
 
 vel_frontAndBack = api.EmptyCondition(name='vel_frontAndBack')
 vel_frontAndBack.data[CUBA.VARIABLE] = CUBA.VELOCITY

@@ -73,32 +73,18 @@ gm.acceleration = (0, -9.81, 0)
 cuds.add([gm])
 
 # boundary conditions
-vel_inlet = api.InletOutlet(water, name='vel_inlet')
-vel_inlet.data[CUBA.VARIABLE] = CUBA.VELOCITY
-vel_inlet.data[CUBA.VELOCITY] = (0, 0, 0)
-pres_inlet = api.Dirichlet(water, name='pres_inlet')
-pres_inlet.data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
-pres_inlet.data[CUBA.DYNAMIC_PRESSURE] = 0.0
-vf_inlet = api.InletOutlet(water, name='vf_inlet')
-vf_inlet.data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
-vf_inlet.data[CUBA.VOLUME_FRACTION] = 1.0
+vel_inlet = api.InletOutletVelocity((0, 0, 0), water, name='vel_inlet')
+pres_inlet = api.ConstantPressureCondition(0.0, water, name='pres_inlet')
+vf_inlet = api.InletOutletVolumeFraction(1.0, water, name='vf_inlet')
 
-vel_atm = api.InletOutlet(water, name='vel_atm')
-vel_atm.data[CUBA.VARIABLE] = CUBA.VELOCITY
-vel_atm.data[CUBA.VELOCITY] = (0, 0, 0)
-pres_atm = api.Dirichlet(water, name='pres_atm')
-pres_atm.data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
-pres_atm.data[CUBA.DYNAMIC_PRESSURE] = 0.0
-vf_atm = api.Neumann(water, name='vf_atm')
-vf_atm.data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
+vel_atm = api.InletOutletVelocity((0, 0, 0), water, name='vel_atm')
+pres_atm = api.ConstantPressureCondition(0.0, water, name='pres_atm')
+vf_atm = api.ZeroGradientVolumeFractionCondition(0.0, water, name='vf_atm')
 
-vel_walls = api.Dirichlet(water, name='vel_walls')
-vel_walls.data[CUBA.VARIABLE] = CUBA.VELOCITY
-vel_walls.data[CUBA.VELOCITY] = (0, 0, 0)
-pres_walls = api.Neumann(water, name='pres_walls')
-pres_walls.data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
+vel_walls = api.ConstantVelocityCondition((0, 0, 0), water, name='vel_walls')
+pres_walls = api.ZeroGradientPressureCondition(0.0, water, name='pres_walls')
+
 vf_walls = api.WettingAngle([water, air], contact_angle=45.0, name='vf_walls')
-vf_walls.data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
 
 vel_frontAndBack = api.EmptyCondition(name='vel_frontAndBack')
 vel_frontAndBack.data[CUBA.VARIABLE] = CUBA.VELOCITY

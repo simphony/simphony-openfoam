@@ -84,15 +84,11 @@ vf_inlet = api.Dirichlet(water, name='vf_inlet')
 vf_inlet.data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
 vf_inlet.data[CUBA.VOLUME_FRACTION] = 0.001
 
-vel_outlet = api.InletOutlet(name='vel_outlet')
-vel_outlet.data[CUBA.VARIABLE] = CUBA.VELOCITY
-vel_outlet.data[CUBA.VELOCITY] = (0, 0, 0)
+vel_outlet = api.InletOutletVelocity((0, 0, 0), name='vel_outlet')
 pres_outlet = api.Dirichlet(water, name='pres_outlet')
 pres_outlet.data[CUBA.VARIABLE] = CUBA.DYNAMIC_PRESSURE
 pres_outlet.data[CUBA.DYNAMIC_PRESSURE] = 0.0
-vf_outlet = api.InletOutlet(name='vf_outlet')
-vf_outlet.data[CUBA.VARIABLE] = CUBA.VOLUME_FRACTION
-vf_outlet.data[CUBA.VOLUME_FRACTION] = 0.001
+vf_outlet = api.InletOutletVolumeFraction(0.001, name='vf_outlet')
 
 vel_walls = api.Dirichlet(water, name='vel_walls')
 vel_walls.data[CUBA.VARIABLE] = CUBA.VELOCITY

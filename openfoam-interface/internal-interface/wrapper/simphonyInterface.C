@@ -967,7 +967,7 @@ void foam_setCellData(std::string name, std::string dataname, std::vector<double
 
   }
 
-void foam_setAndWriteCellData(std::string name,std::string dataname, std::vector<double> values,std::vector<int> dimension) 
+void foam_setAndWriteCellData(std::string name,std::string dataname, std::vector<double> values,std::vector<int> dimension,bool write) 
   {
 
     const fvMesh & mesh = getMeshFromDb(name);
@@ -978,7 +978,8 @@ void foam_setAndWriteCellData(std::string name,std::string dataname, std::vector
 	volScalarField& field = find_scalarData(name,dataname);
 	field.internalField() = Field<scalar>(UList<scalar>(&(values[0]),values.size()));
 	//	field.correctBoundaryConditions();
-	field.write();
+	if (write)
+	  field.write();
       }
     else
       {
@@ -998,7 +999,8 @@ void foam_setAndWriteCellData(std::string name,std::string dataname, std::vector
 	volScalarField& field = find_scalarData(name,dataname);
 	field.internalField() = Field<scalar>(UList<scalar>(&(values[0]),values.size()));
 	//	field.correctBoundaryConditions();
-	field.write();
+	if (write)
+	  field.write();
  
       }
   }
@@ -1012,7 +1014,7 @@ void foam_setCellVectorData(std::string name, std::string dataname, std::vector<
   }
 
 
-void foam_setAndWriteCellVectorData(std::string name, std::string dataname, std::vector<double> values,std::vector<int> dimension) 
+void foam_setAndWriteCellVectorData(std::string name, std::string dataname, std::vector<double> values,std::vector<int> dimension,bool write ) 
   {
   const fvMesh & mesh = getMeshFromDb(name);
   hashedWordList names(mesh.names());
@@ -1021,7 +1023,8 @@ void foam_setAndWriteCellVectorData(std::string name, std::string dataname, std:
       volVectorField& field = find_vectorData(name,dataname);
       field.internalField() = Field<vector>(UList<vector>((vector*)&(values[0]),values.size()/3));
       //      field.correctBoundaryConditions();
-      field.write();
+      if (write)
+	field.write();
     }
   else
     {
@@ -1042,8 +1045,9 @@ void foam_setAndWriteCellVectorData(std::string name, std::string dataname, std:
 
       field.internalField() = Field<vector>(UList<vector>((vector*)&(values[0]),values.size()/3));
       //      field.correctBoundaryConditions();
-      field.write();
-      
+      if (write)
+	field.write();
+	
     }
 
   }
@@ -1058,7 +1062,7 @@ void foam_setCellTensorData(std::string name, std::string dataname, std::vector<
 
 
 
-void foam_setAndWriteCellTensorData(std::string name,  std::string dataname, std::vector<double> values,std::vector<int> dimension) 
+void foam_setAndWriteCellTensorData(std::string name,  std::string dataname, std::vector<double> values,std::vector<int> dimension,bool write) 
   {
   const fvMesh & mesh = getMeshFromDb(name);
   hashedWordList names(mesh.names());
@@ -1069,7 +1073,8 @@ void foam_setAndWriteCellTensorData(std::string name,  std::string dataname, std
       field.internalField() = Field<tensor>(UList<tensor>((tensor*)&(values[0]),values.size()/9));
       //      field.correctBoundaryConditions();
       foam_extendToBoundaries(name, dataname);
-      field.write();
+      if (write)
+	field.write();
     }
   else
     {
@@ -1090,7 +1095,8 @@ void foam_setAndWriteCellTensorData(std::string name,  std::string dataname, std
       field.internalField() = Field<tensor>(UList<tensor>((tensor*)&(values[0]),values.size()/9));
       //      field.correctBoundaryConditions();
       foam_extendToBoundaries(name, dataname);
-      field.write();
+      if (write)
+	field.write();
 
     }
   }

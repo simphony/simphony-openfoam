@@ -1276,7 +1276,32 @@ def check_boundary_names(bc_names, boundary_names):
                 boundary_names))
 
 
-def get_foam_boundary_condition(condition, phaseNameToMaterial):
+def get_condition_variable(condition, solver):
+    """Returns condition variable as CUBA key.
+    If not defined raise an error
+    """
+
+    if hasattr(condition, 'variables'):
+        variable = CUBA[condition.variables[0].split('.')[1]]
+    else:
+        if CUBA.VARIABLE not in condition.data:
+            error_str = "condition.data[CUBA.VARIABLE] must be defined\n"
+            error_str += " condition: {}\n"
+            error_str += " name: {}"
+            raise ValueError(error_str.format(condition.__class__.__name__,
+                                              condition.name))
+        else:
+            variable = condition.data[CUBA.VARIABLE]
+
+    if (solver == 'driftFluxFoam' or solver == 'interFoam') and \
+            variable == CUBA.PRESSURE:
+        condition.data[CUBA.DYNAMIC_PRESSURE] = condition.data[CUBA.PRESSURE]
+        return CUBA.DYNAMIC_PRESSURE
+    else:
+        return variable
+
+
+def get_foam_boundary_condition(condition, phaseNameToMaterial, solver):
     """ Return corresponding foam condition from Condition type
     """
     if isinstance(condition, api.ShearStressPowerLawSlipVelocity):
@@ -1286,13 +1311,14 @@ def get_foam_boundary_condition(condition, phaseNameToMaterial):
                       'beta': str(condition.linear_constant),
                       'n': str(condition.power_law_index)})
         return patch
-    elif isinstance(condition, api.InletOutlet):
-        if condition.data[CUBA.VARIABLE] == CUBA.VELOCITY:
+    elif isinstance(condition, api.MixedCondition):
+        variable = get_condition_variable(condition, solver)
+        if isinstance(condition, api.InletOutletVelocity):
             patch = []
             patch.append('pressureInletOutletVelocity')
-            patch.append(condition.data[condition.data[CUBA.VARIABLE]])
+            patch.append(condition.data[variable])
             return patch
-        elif condition.data[CUBA.VARIABLE] == CUBA.VOLUME_FRACTION:
+        elif isinstance(condition, api.InletOutletVolumeFraction):
             patch = []
             patch.append('inletOutlet')
             if condition.material == phaseNameToMaterial[phaseNames[0]]:
@@ -1306,9 +1332,9 @@ def get_foam_boundary_condition(condition, phaseNameToMaterial):
             error_str += " condition: {}\n"
             error_str += " variable: {}"
             raise ValueError(error_str.format(condition.__class__.__name__,
-                                              condition.data[CUBA.VARIABLE]))
+                                              variable))
 
-    elif isinstance(condition, api.SlipVelocity):
+    elif isinstance(condition, api.FreeSlipVelocity):
         return 'slip'
     elif isinstance(condition, api.WettingAngle):
         patch = []
@@ -1318,18 +1344,20 @@ def get_foam_boundary_condition(condition, phaseNameToMaterial):
     elif isinstance(condition, api.Dirichlet):
         patch = []
         patch.append('fixedValue')
-        if condition.data[CUBA.VARIABLE] == CUBA.VOLUME_FRACTION:
+        variable = get_condition_variable(condition, solver)
+        if variable == CUBA.VOLUME_FRACTION:
             if condition.material == phaseNameToMaterial[phaseNames[0]]:
                 vf = condition.data[CUBA.VOLUME_FRACTION]
             else:
                 vf = 1 - condition.data[CUBA.VOLUME_FRACTION]
             patch.append(vf)
         else:
-            patch.append(condition.data[condition.data[CUBA.VARIABLE]])
+            patch.append(condition.data[variable])
         return patch
     elif isinstance(condition, api.Neumann):
         # for dynamic pressure use fixedFluxPressure
-        dyn_pres = condition.data[CUBA.VARIABLE] == CUBA.DYNAMIC_PRESSURE
+        variable = get_condition_variable(condition, solver)
+        dyn_pres = variable == CUBA.DYNAMIC_PRESSURE
         if dyn_pres:
             return 'fixedFluxPressure'
         else:
@@ -1374,9 +1402,10 @@ def modifyFields(mesh, cuds, solver='pimpleFoam'):
     for boundary in cuds.iter(item_type=CUBA.BOUNDARY):
         patch = None
         for condition in boundary.condition:
-            if condition.data[CUBA.VARIABLE] == CUBA.VELOCITY:
+            variable = get_condition_variable(condition, solver)
+            if variable == CUBA.VELOCITY:
                 patch = get_foam_boundary_condition(
-                    condition, mesh._foamPhaseNameToMaterial)
+                    condition, mesh._foamPhaseNameToMaterial, solver)
                 break
         if patch is None:
             error_str = "Boundary condition not specified:\n"
@@ -1428,9 +1457,10 @@ def modifyFields(mesh, cuds, solver='pimpleFoam'):
     for boundary in cuds.iter(item_type=CUBA.BOUNDARY):
         patch = None
         for condition in boundary.condition:
-            if condition.data[CUBA.VARIABLE] == ID_pressure:
+            variable = get_condition_variable(condition, solver)
+            if variable == ID_pressure:
                 patch = get_foam_boundary_condition(
-                    condition, mesh._foamPhaseNameToMaterial)
+                    condition, mesh._foamPhaseNameToMaterial, solver)
                 break
         if patch is None:
                 error_str = "Boundary condition not specified:\n"
@@ -1462,9 +1492,10 @@ def modifyFields(mesh, cuds, solver='pimpleFoam'):
         for boundary in cuds.iter(item_type=CUBA.BOUNDARY):
             patch = None
             for condition in boundary.condition:
-                if condition.data[CUBA.VARIABLE] == CUBA.VOLUME_FRACTION:
+                variable = get_condition_variable(condition, solver)
+                if variable == CUBA.VOLUME_FRACTION:
                     patch = get_foam_boundary_condition(
-                        condition, mesh._foamPhaseNameToMaterial)
+                        condition, mesh._foamPhaseNameToMaterial, solver)
                     break
             if patch is None:
                 error_str = "Boundary condition not specified:\n"

@@ -172,7 +172,8 @@ class FoamMesh(Mesh):
                     label += 1
                 pointMap.clear()
 
-            if mesh._foamPhaseNameToMaterial:
+            if hasattr(mesh, '_foamPhaseNameToMaterial') and \
+                    mesh._foamPhaseNameToMaterial:
                 self._foamPhaseNameToMaterial = mesh._foamPhaseNameToMaterial
             elif cuds and not_empty(cuds.iter(item_type=CUBA.MATERIAL)):
                 materials = list(cuds.iter(item_type=CUBA.MATERIAL))
@@ -229,7 +230,8 @@ class FoamMesh(Mesh):
                 for boundary in cuds.iter(item_type=CUBA.BOUNDARY):
                     bcs[boundary.name] = \
                         get_foam_boundary_condition(
-                        boundary.condition[0], self._foamPhaseNameToMaterial)
+                        boundary.condition[0], self._foamPhaseNameToMaterial,
+                        solver)
                 check_boundary_names(bcs.keys(), patchNames)
 
                 for patchName in patchNames:
