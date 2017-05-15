@@ -668,13 +668,41 @@ class FoamMesh(Mesh):
 
         if point_uuids is None:
             point_coordinates = foamface.getAllPointCoordinates(self.name)
+            data_map = self._get_point_data_map()
+
             i = 0
             label = 0
             while i < len(point_coordinates):
-                yield Point(point_coordinates[i:i+3],
+                point = Point(point_coordinates[i:i+3],
                             self._foamPointLabelToUuid[label])
+                for dataKey, data in data_map.iteritems():
+                    if dataTypeMap[dataKey] == "scalar":
+                        if dataKey == CUBA.VOLUME_FRACTION:
+                            if self._foamPhaseNameToMaterial:
+                                material1 = self._foamPhaseNameToMaterial[
+                                    phaseNames[0]]
+                                material2 = self._foamPhaseNameToMaterial[
+                                    phaseNames[1]]
+                                vol_frac1 = data[label]
+                                phase1_vol_frac = PhaseVolumeFraction(
+                                    material1, vol_frac1)
+                                phase2_vol_frac = PhaseVolumeFraction(
+                                    material2, 1 - vol_frac1)
+                                point.data[dataKey] = [phase1_vol_frac,
+                                                      phase2_vol_frac]
+                        else:
+                            point.data[dataKey] = data[label]
+                    elif dataTypeMap[dataKey] == "vector":
+                        point.data[dataKey] = \
+                            [data[label * 3 + k] for k in range(3)]
+                    elif dataTypeMap[dataKey] == "tensor":
+                        point.data[dataKey] = \
+                            [data[label * 9 + k] for k in range(9)]
+                
+                yield point
                 label += 1
                 i += 3
+            data_map.clear()
         else:
             for uid in point_uuids:
                 point = self._get_point(uid)
@@ -1024,4 +1052,33 @@ class FoamMesh(Mesh):
             elif dataTypeMap[dataKeyMap[dataName]] == "tensor":
                 dataMap[dataKeyMap[dataName]] = \
                     foamface.getAllCellTensorData(self.name, dataName)
+        return dataMap
+
+    def _get_point_data_map(self):
+        """ get map for mesh pointwise data
+        """
+
+        dataNames = foamface.getCellDataNames(self.name)
+        dataNames += foamface.getCellVectorDataNames(self.name)
+        dataNames += foamface.getCellTensorDataNames(self.name)
+
+        dataMap = {}
+        # take phase dependance away from the name
+        dataNames = [dname.partition('.')[0] for dname in dataNames]
+
+        for dataName in set(dataKeyMap.keys()).intersection(dataNames):
+            if dataTypeMap[dataKeyMap[dataName]] == "scalar":
+                if dataKeyMap[dataName] == CUBA.VOLUME_FRACTION:
+                    dName = dataName + '.' + phaseNames[0]
+                    dataMap[dataKeyMap[dataName]] = \
+                        foamface.getAllPointData(self.name, dName)
+                else:
+                    dataMap[dataKeyMap[dataName]] = \
+                        foamface.getAllPointData(self.name, dataName)
+            elif dataTypeMap[dataKeyMap[dataName]] == "vector":
+                dataMap[dataKeyMap[dataName]] = \
+                    foamface.getAllPointVectorData(self.name, dataName)
+            elif dataTypeMap[dataKeyMap[dataName]] == "tensor":
+                dataMap[dataKeyMap[dataName]] = \
+                    foamface.getAllPointTensorData(self.name, dataName)
         return dataMap

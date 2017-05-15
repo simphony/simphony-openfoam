@@ -73,6 +73,8 @@ std::vector<std::string> foam_getCellTensorDataNames(std::string name);
 double foam_getCellData(std::string name, int label,std::string dataname);
 // get mesh cells scalar data named dataname
 std::vector<double> foam_getCellData(std::string name, std::string dataname);
+// get mesh points scalar data named dataname
+std::vector<double> foam_getPointData(std::string name, std::string dataname);
 // get mesh single cell vector data named dataname
 std::vector<double> foam_getCellVectorData(std::string name, int label,std::string dataname);
 // get mesh single cell tensor data named dataname
@@ -81,6 +83,10 @@ std::vector<double> foam_getCellTensorData(std::string name, int label,std::stri
 std::vector<double> foam_getCellVectorData(std::string name, std::string dataname);
 // get mesh cells tensor data named dataname
 std::vector<double> foam_getCellTensorData(std::string name, std::string dataname);
+// get mesh points vector data named dataname
+std::vector<double> foam_getPointVectorData(std::string name, std::string dataname);
+// get mesh points tensor data named dataname
+std::vector<double> foam_getPointTensorData(std::string name, std::string dataname);
 
 
 std::vector<int> foam_getBoundaryCells(std::string name, std::string boundaryname);

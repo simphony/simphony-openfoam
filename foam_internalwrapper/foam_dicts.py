@@ -350,9 +350,9 @@ SIMPLE
 
     residualControl
     {
-        p               1e-2;
-        U               1e-3;
-        "(k|epsilon|omega)" 1e-3;
+        p               1e-3;
+        U               1e-4;
+        "(k|epsilon|omega)" 1e-4;
     }
 }
 relaxationFactors
