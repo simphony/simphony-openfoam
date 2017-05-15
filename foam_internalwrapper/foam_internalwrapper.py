@@ -4,12 +4,12 @@ Wrapper module for OpenFOAM
 
 """
 from simphony.core.cuba import CUBA
-from simphony.core.data_container import DataContainer
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
-from foam_controlwrapper.cuba_extension import CUBAExt
+from simphony.cuds.mesh import Mesh
+
 from .foam_mesh import FoamMesh
-from .foam_dicts import (modifyNumerics, modifyFields)
-from .foam_dicts import get_foam_solver
+from .foam_dicts import (modifyNumerics, modifyFields,
+                         get_foam_solver, not_empty)
 import simphonyfoaminterface as foamface
 
 
@@ -18,16 +18,27 @@ class Wrapper(ABCModelingEngine):
 
     """
 
-    def __init__(self):
-        super(Wrapper, self).__init__()
+    def __init__(self, **kwargs):
+
         self._meshes = {}
-        self.CM = DataContainer()
-        self.BC = DataContainer()
-        self.SP = DataContainer()
-        #: to be able to use CUBAExt keywords, which are not in accepted
-        #  CUBA keywords these extensions to CM and SP is used
-        self.CM_extensions = {}
-        self.SP_extensions = {}
+        super(Wrapper, self).__init__(**kwargs)
+
+    def _load_cuds(self):
+        """Load CUDS data into  engine."""
+        cuds = self.get_cuds()
+        if not cuds:
+            return
+
+        for component in cuds.iter(item_type=CUBA.MESH):
+            # while mesh can be from other mesh engine add_dataset creates
+            # new FoamMesh. While there is no other way to know the
+            # new mesh name on cuds the corresponding mesh component is
+            # removed from cuds and replaced with the new mesh.
+            # If the component is wanted to remain on cuds it must be
+            # duplicated on user level code using some other name
+            new_mesh = self.add_dataset(component)
+            cuds.remove([component.uid])
+            cuds.add([new_mesh])
 
     def run(self):
         """ run OpenFoam based on CM, BC and SP data
@@ -44,36 +55,33 @@ class Wrapper(ABCModelingEngine):
 
         """
 
-        if not self.CM[CUBA.NAME]:
-            error_str = "Mesh name must be defined in CM[CUBA.NAME]"
-            raise ValueError(error_str)
-
         if not self._meshes:
             error_str = "Meshes not added to wrapper. Use add_mesh method"
             raise ValueError(error_str)
 
-        solver = get_foam_solver(self.CM_extensions)
+        if len(self._meshes) > 1:
+            error_str = "Multiple meshes not supported"
+            raise ValueError(error_str)
 
-        name = self.CM[CUBA.NAME]
+        cuds = self.get_cuds()
+        solver = get_foam_solver(cuds)
 
-        if not self._meshes[name]:
-            error_str = "Mesh {} does not exist"
-            raise ValueError(error_str.format(name))
-
-        mesh = self._meshes[name]
+        mesh = self._meshes.values()[0]
 
 #       a) Modify fvSchemes and fvSolution
-        modifyNumerics(mesh, self.SP, self.SP_extensions, solver)
+        modifyNumerics(mesh, cuds, solver)
 
 #       b) Set boundary condition and Fields
-        modifyFields(mesh, self.BC, solver)
+        modifyFields(mesh, cuds, solver)
 
 #       c) Call solver
-        if CUBAExt.NUMBER_OF_CORES in self.CM_extensions:
-            ncores = self.CM_extensions[CUBAExt.NUMBER_OF_CORES]
-        else:
-            ncores = 1
-
+        solver_parameters = cuds.iter(item_type=CUBA.SOLVER_PARAMETER)
+        ncores = 1
+        if solver_parameters is not None:
+            for sp in solver_parameters:
+                if CUBA.NUMBER_OF_CORES in sp.data:
+                    ncores = sp.data[CUBA.NUMBER_OF_CORES]
+                    break
         mesh._time = foamface.run(mesh.name, ncores, solver)
 
     def add_dataset(self, mesh, name=None):
@@ -81,7 +89,7 @@ class Wrapper(ABCModelingEngine):
 
         Parameters
         ----------
-        mesh : ABCMesh
+        mesh : Mesh
             mesh to be added.
         name : string
             name to give to mesh (optional)
@@ -99,15 +107,24 @@ class Wrapper(ABCModelingEngine):
 
         """
 
+        if not isinstance(mesh, Mesh):
+            raise TypeError('Mesh not instance of Mesh')
+
         mesh_name = mesh.name
         if name:
             mesh_name = name
         if mesh_name in self._meshes:
             raise ValueError('Mesh \'{}\` already exists'.format(mesh_name))
         else:
-            solver = get_foam_solver(self.CM_extensions)
-            self._meshes[mesh_name] = FoamMesh(mesh_name, self.BC,
-                                               solver, mesh)
+            cuds = self.get_cuds()
+            if cuds is not None and not_empty(cuds.iter(
+                    item_type=CUBA.BOUNDARY)):
+                solver = get_foam_solver(cuds)
+                self._meshes[mesh_name] = FoamMesh(mesh_name, cuds,
+                                                   solver, mesh)
+            else:
+                self._meshes[mesh_name] = FoamMesh(mesh_name, {},
+                                                   'pimpleFoam', mesh)
             return self._meshes[mesh_name]
 
     def remove_dataset(self, name):

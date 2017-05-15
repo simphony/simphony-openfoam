@@ -4,6 +4,7 @@ set -x
 
 wclean libso mixtureViscosityModels
 wclean libso relativeVelocityModels
+wclean libso incompressibleTwoPhaseInteractingMixture
 wclean
 
 # ----------------------------------------------------------------- end-of-file

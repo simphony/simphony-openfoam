@@ -92,7 +92,7 @@ new volTensorField
 
 Info<< "Calculating face flux field phi\n" << endl;
 
-surfaceScalarField* phi = new surfaceScalarField
+new surfaceScalarField
 (
     IOobject
     (
@@ -247,3 +247,5 @@ new uniformDimensionedVectorField
   ),
  dimensionedVector("g", dimensionSet(0, 1, -2, 0, 0, 0, 0), vector::zero)
  );
+
+

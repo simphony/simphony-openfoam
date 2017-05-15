@@ -4,7 +4,6 @@ python:
 virtualenv:
   system_site_packages: false
 env:
-  - SIMPHONY_VERSION=0.6.0
   - SIMPHONY_VERSION=master
 matrix:
   allow_failures:

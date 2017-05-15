@@ -11,7 +11,6 @@ import tempfile
 
 from simphony.core.cuba import CUBA
 
-from foam_controlwrapper.foam_controlwrapper import Wrapper
 from foam_controlwrapper.blockmesh_utils import create_quad_mesh
 from foam_controlwrapper.io_utils import read_foammesh
 
@@ -19,16 +18,14 @@ from foam_controlwrapper.io_utils import read_foammesh
 class IOUtilsTestCase(unittest.TestCase):
     """Test case for io_utils"""
     def setUp(self):
-        wrapper = Wrapper()
         self.path = os.path.join(tempfile.mkdtemp())
         self.name = "test_mesh"
         corner_points = [(0.0, 0.0, 0.0), (5.0, 0.0, 0.0),
                          (5.0, 5.0, 0.0), (0.0, 5.0, 0.0),
                          (0.0, 0.0, 1.0), (5.0, 0.0, 1.0),
                          (5.0, 5.0, 1.0), (0.0, 5.0, 1.0)]
-        create_quad_mesh(self.path, self.name, wrapper, corner_points, 5, 5, 5)
-
-        self.mesh = wrapper.get_dataset(self.name)
+        self.mesh = create_quad_mesh(self.path, self.name, corner_points,
+                                     5, 5, 5)
 
     def test_read_foammesh(self):
         """Test read_foammesh method

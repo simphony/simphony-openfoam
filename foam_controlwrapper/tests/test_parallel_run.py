@@ -2,61 +2,104 @@ import unittest
 import os
 import re
 import shutil
+import tempfile
 
-from foam_controlwrapper.foam_controlwrapper import Wrapper
+from simphony.api import CUDS, Simulation
 from simphony.core.cuba import CUBA
-from foam_controlwrapper.cuba_extension import CUBAExt
+from simphony.cuds.meta import api
+from simphony.engine import EngineInterface
+
 from foam_controlwrapper.blockmesh_utils import create_quad_mesh
 
 
 class WrapperRunTestCase(unittest.TestCase):
     def setUp(self):
-        wrapper = Wrapper()
-        name = "simplemesh_parallel"
-        self.path = "test_parallel_path"
-        wrapper.CM[CUBA.NAME] = name
-        wrapper.CM_extensions[CUBAExt.GE] = (CUBAExt.INCOMPRESSIBLE,
-                                             CUBAExt.LAMINAR_MODEL)
 
-        wrapper.CM_extensions[CUBAExt.NUMBER_OF_CORES] = 4
+        case_name = "simplemesh_parallel"
+        mesh_name = "simplemesh_parallel_mesh"
+        cuds = CUDS(name=case_name)
+        # physics model
+        cfd = api.Cfd(name='default model')
+        cuds.add([cfd])
 
-        wrapper.SP[CUBA.TIME_STEP] = 1
-        wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 1
-        wrapper.SP[CUBA.DENSITY] = 1.0
-        wrapper.SP[CUBA.DYNAMIC_VISCOSITY] = 1.0
-        wrapper.BC[CUBA.VELOCITY] = {'inlet': ('fixedValue', (0.1, 0, 0)),
-                                     'outlet': 'zeroGradient',
-                                     'walls': ('fixedValue', (0, 0, 0)),
-                                     'frontAndBack': 'empty'}
-        wrapper.BC[CUBA.PRESSURE] = {'inlet': 'zeroGradient',
-                                     'outlet': ('fixedValue', 0),
-                                     'walls': 'zeroGradient',
-                                     'frontAndBack': 'empty'}
-        self.wrapper = wrapper
+        self.sp = api.SolverParameter(name='solver_parameters')
+        self.sp._data[CUBA.NUMBER_OF_CORES] = 4
+
+        cuds.add([self.sp])
+
+        sim_time = api.IntegrationTime(name='simulation_time',
+                                       current=0.0,
+                                       final=1.0,
+                                       size=1.0)
+        cuds.add([sim_time])
+
+        mat = api.Material(name='a_material')
+        mat._data[CUBA.DENSITY] = 1.0
+        mat._data[CUBA.DYNAMIC_VISCOSITY] = 1.0
+        cuds.add([mat])
+
+        vel_inlet = api.Dirichlet(mat, name='vel_inlet')
+        vel_inlet._data[CUBA.VARIABLE] = CUBA.VELOCITY
+        vel_inlet._data[CUBA.VELOCITY] = (0.1, 0, 0)
+        pres_inlet = api.Neumann(mat, name='pres_inlet')
+        pres_inlet._data[CUBA.VARIABLE] = CUBA.PRESSURE
+
+        vel_outlet = api.Neumann(mat, name='vel_outlet')
+        vel_outlet._data[CUBA.VARIABLE] = CUBA.VELOCITY
+        pres_outlet = api.Dirichlet(mat, name='pres_outlet')
+        pres_outlet._data[CUBA.VARIABLE] = CUBA.PRESSURE
+        pres_outlet._data[CUBA.PRESSURE] = 0.0
+
+        vel_walls = api.Dirichlet(mat, name='vel_walls')
+        vel_walls._data[CUBA.VARIABLE] = CUBA.VELOCITY
+        vel_walls._data[CUBA.VELOCITY] = (0, 0, 0)
+        pres_walls = api.Neumann(mat, name='pres_walls')
+        pres_walls._data[CUBA.VARIABLE] = CUBA.PRESSURE
+
+        vel_frontAndBack = api.EmptyCondition(name='vel_frontAndBack')
+        vel_frontAndBack._data[CUBA.VARIABLE] = CUBA.VELOCITY
+        pres_frontAndBack = api.EmptyCondition(name='pres_frontAndBack')
+        pres_frontAndBack._data[CUBA.VARIABLE] = CUBA.PRESSURE
+
+        inlet = api.Boundary(name='inlet', condition=[vel_inlet, pres_inlet])
+        walls = api.Boundary(name='walls', condition=[vel_walls, pres_walls])
+        outlet = api.Boundary(name='outlet', condition=[vel_outlet,
+                                                        pres_outlet])
+        frontAndBack = api.Boundary(name='frontAndBack',
+                                    condition=[vel_frontAndBack,
+                                               pres_frontAndBack])
+
+        cuds.add([inlet, walls, outlet, frontAndBack])
 
         corner_points = [(0.0, 0.0, 0.0), (5.0, 0.0, 0.0),
                          (5.0, 5.0, 0.0), (0.0, 5.0, 0.0),
                          (0.0, 0.0, 1.0), (5.0, 0.0, 1.0),
                          (5.0, 5.0, 1.0), (0.0, 5.0, 1.0)]
-        create_quad_mesh(self.path, name, self.wrapper, corner_points, 5, 5, 5)
-        self.mesh_inside_wrapper = self.wrapper.get_dataset(name)
+        self.mesh_path = tempfile.mkdtemp()
+        mesh = create_quad_mesh(self.mesh_path, mesh_name,
+                                corner_points, 5, 5, 5)
+        cuds.add([mesh])
+        self.cuds = cuds
+        self.sim = Simulation(cuds, 'OpenFOAM',
+                              engine_interface=EngineInterface.FileIO)
+        self.mesh_in_cuds = self.cuds.get_by_name(mesh_name)
 
     def tearDown(self):
-        if os.path.exists(self.mesh_inside_wrapper.path):
-            shutil.rmtree(self.mesh_inside_wrapper.path)
-        if os.path.exists(self.path):
-            shutil.rmtree(self.path)
+        if os.path.exists(self.mesh_in_cuds.path):
+            shutil.rmtree(self.mesh_in_cuds.path)
+        if os.path.exists(self.mesh_path):
+            shutil.rmtree(self.mesh_path)
 
     def test_parallel_run(self):
         """Test parallel running of OpenFoam
 
         """
 
-        self.wrapper.run()
+        self.sim.run()
 
-        self.assertEqual(self.wrapper.CM_extensions[CUBAExt.NUMBER_OF_CORES],
+        self.assertEqual(self.sp._data[CUBA.NUMBER_OF_CORES],
                          len([d for d in
-                              os.listdir(self.mesh_inside_wrapper.path)
+                              os.listdir(self.mesh_in_cuds.path)
                               if re.match(r'processor*', d)]))
 
 

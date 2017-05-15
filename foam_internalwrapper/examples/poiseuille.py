@@ -3,63 +3,107 @@
 """
 
 from simphony.core.cuba import CUBA
-from simphony.engine import openfoam_internal
-from simphony.engine import openfoam_file_io
 
 from mayavi.scripts import mayavi2
 
+from simphony.api import CUDS, Simulation
+from simphony.cuds.meta import api
+from simphony.engine import EngineInterface
+
 import tempfile
+from foam_controlwrapper import create_quad_mesh
 
-wrapper = openfoam_internal.Wrapper()
-CUBAExt = openfoam_internal.CUBAExt
+case_name = 'poiseuille'
+mesh_name = 'poiseuille_mesh'
 
-name = 'poiseuille'
+# create cuds
+cuds = CUDS(name=case_name)
 
-wrapper.CM[CUBA.NAME] = name
+# physics model
+cfd = api.Cfd(name='default model')
 
-wrapper.CM_extensions[CUBAExt.GE] = (CUBAExt.INCOMPRESSIBLE,
-                                     CUBAExt.LAMINAR_MODEL)
+# these are already by default set in CFD
+cfd.rheology_model = api.NewtonianFluidModel(name='newtonian')
+cfd.thermal_model = api.IsothermalModel(name='isothermal')
+cfd.turbulence_model = api.LaminarFlowModel(name='laminar')
+cfd.compressibility_model = api.IncompressibleFluidModel(name='incompressible')
+# add to cuds
+cuds.add([cfd])
 
-wrapper.CM_extensions[CUBAExt.NUMBER_OF_CORES] = 1
+# material
+mat = api.Material(name='a_material')
+mat.data[CUBA.DENSITY] = 1.0
+mat.data[CUBA.DYNAMIC_VISCOSITY] = 1.0
+cuds.add([mat])
 
-wrapper.SP[CUBA.TIME_STEP] = 0.001
-wrapper.SP[CUBA.NUMBER_OF_TIME_STEPS] = 1000
-wrapper.SP[CUBA.DENSITY] = 1.0
-wrapper.SP[CUBA.DYNAMIC_VISCOSITY] = 1.0
+# time setting
+sim_time = api.IntegrationTime(name='simulation_time',
+                               current=0.0,
+                               final=1.0,
+                               size=0.01)
+cuds.add([sim_time])
 
-wrapper.BC[CUBA.VELOCITY] = {'inlet': ('fixedValue', (0.1, 0, 0)),
-                             'outlet': 'zeroGradient',
-                             'walls': ('fixedValue', (0, 0, 0)),
-                             'frontAndBack': 'empty'}
-wrapper.BC[CUBA.PRESSURE] = {'inlet': 'zeroGradient',
-                             'outlet': ('fixedValue', 0),
-                             'walls': 'zeroGradient',
-                             'frontAndBack': 'empty'}
-
+# create computational mesh
 
 corner_points = [(0.0, 0.0, 0.0), (20.0e-3, 0.0, 0.0),
                  (20.0e-3, 1.0e-3, 0.0), (0.0, 1.0e-3, 0.0),
                  (0.0, 0.0, 0.1e-3), (20.0e-3, 0.0, 0.1e-3),
                  (20.0e-3, 1.0e-3, 0.1e-3), (0.0, 1.0e-3, 0.1e-3)]
-
 # elements in x -direction
 nex = 8
 # elements in y -direction
 ney = 4
-openfoam_file_io.create_quad_mesh(tempfile.mkdtemp(), name, wrapper,
-                                  corner_points, nex, ney, 1)
-mesh_inside_wrapper = wrapper.get_dataset(name)
+# this routine creates one block quad mesh
+#  - boundaries have predescribed names (inlet, walls, outlet, frontAndBack)
 
-# run returns the latest time
-wrapper.run()
+mesh = create_quad_mesh(tempfile.mkdtemp(), mesh_name,
+                        corner_points, nex, ney, 1)
+cuds.add([mesh])
+
+vel_inlet = api.ConstantVelocityCondition((0.1, 0, 0), mat, name='vel_inlet')
+pres_inlet = api.ZeroGradientPressureCondition(0.0, mat, name='pres_inlet')
+vel_inlet.data[CUBA.VARIABLE] = CUBA.VELOCITY
+pres_inlet.data[CUBA.VARIABLE] = CUBA.PRESSURE
+
+vel_outlet = api.ZeroGradientVelocityCondition((0.0, 0.0, 0.0), mat,
+                                               name='vel_outlet')
+pres_outlet = api.ConstantPressureCondition(0.0, mat, name='pres_outlet')
+vel_outlet.data[CUBA.VARIABLE] = CUBA.VELOCITY
+pres_outlet.data[CUBA.VARIABLE] = CUBA.PRESSURE
+
+vel_walls = api.ConstantVelocityCondition((0, 0, 0), mat, name='vel_walls')
+pres_walls = api.ZeroGradientPressureCondition(0.0, mat, name='pres_walls')
+vel_walls.data[CUBA.VARIABLE] = CUBA.VELOCITY
+pres_walls.data[CUBA.VARIABLE] = CUBA.PRESSURE
+
+vel_frontAndBack = api.EmptyCondition(name='vel_frontAndBack')
+vel_frontAndBack.data[CUBA.VARIABLE] = CUBA.VELOCITY
+pres_frontAndBack = api.EmptyCondition(name='pres_frontAndBack')
+pres_frontAndBack.data[CUBA.VARIABLE] = CUBA.PRESSURE
+
+
+inlet = api.Boundary(name='inlet', condition=[vel_inlet, pres_inlet])
+walls = api.Boundary(name='walls', condition=[vel_walls, pres_walls])
+outlet = api.Boundary(name='outlet', condition=[vel_outlet, pres_outlet])
+frontAndBack = api.Boundary(name='frontAndBack',
+                            condition=[vel_frontAndBack, pres_frontAndBack])
+
+cuds.add([inlet, walls, outlet, frontAndBack])
+
+sim = Simulation(cuds, 'OpenFOAM', engine_interface=EngineInterface.Internal)
+
+sim.run()
 
 average_pressure = 0.0
-for cell in mesh_inside_wrapper.get_boundary_cells('inlet'):
+mesh_in_engine = cuds.get_by_name(mesh_name)
+print "working directory ", mesh_in_engine.path
+
+for cell in mesh_in_engine.get_boundary_cells(inlet.name):
     average_pressure += cell.data[CUBA.PRESSURE]
 
-average_pressure /= len(mesh_inside_wrapper._boundaries['inlet'])
+average_pressure /= len(mesh_in_engine._boundaries[inlet.name])
 
-print "Average pressure on inlet: ", average_pressure
+print "Average pressure on " + inlet.name + ": ", average_pressure
 
 
 @mayavi2.standalone
@@ -68,7 +112,7 @@ def view():
     from simphony_mayavi.sources.api import CUDSSource
 
     mayavi.new_scene()  # noqa
-    src = CUDSSource(cuds=mesh_inside_wrapper)
+    src = CUDSSource(cuds=mesh_in_engine)
     mayavi.add_source(src)  # noqa
     s = Surface()
     mayavi.add_module(s)  # noqa

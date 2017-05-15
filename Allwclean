@@ -4,18 +4,23 @@ export FOAM_MPI_INCLUDE=$WM_THIRD_PARTY_DIR/platforms/$WM_ARCH$WM_COMPILER/$FOAM
 rm -rf dist build foam_wrappers.egg-info
 pushd .
 cd openfoam-interface/simphony-solvers/driftFluxSimphonyFoam
-wclean
-rm -rf build
+./Allwclean
 popd
 pushd .
 cd openfoam-interface/simphony-solvers/shearStressPowerLawSlipVelocity/io
-wclean
-rm -rf build
+wclean libso
 popd
 pushd .
 cd openfoam-interface/simphony-solvers/shearStressPowerLawSlipVelocity/internal
+wclean libso
+popd
+pushd .
+cd openfoam-interface/simphony-solvers/simpleSimphonyFoam
 wclean
-rm -rf build
+popd
+pushd .
+cd openfoam-interface/simphony-solvers/pimpleSimphonyFoam
+wclean
 popd
 pushd .
 rm -f openfoam-interface/internal-interface/bin/*
@@ -26,9 +31,6 @@ rm -rf incompressibleTurbulenceModel
 popd
 pushd .
 cd openfoam-interface/internal-interface/wrapper
-cd relativeVelocityModels
-wclean
-cd ..
 python setup.py clean
 wclean
 wclean mixtureViscosityModels
