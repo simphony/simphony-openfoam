@@ -636,6 +636,8 @@ class FoamMesh(Mesh):
 
         if point_uuids is None:
             point_coordinates = foamface.getAllPointCoordinates(self.name)
+            data_map = self._get_point_data_map()
+
             i = 0
             label = 0
             while i < len(point_coordinates):
@@ -668,6 +670,7 @@ class FoamMesh(Mesh):
                 yield point
                 label += 1
                 i += 3
+            data_map.clear()
         else:
             for uid in point_uuids:
                 point = self._get_point(uid)
