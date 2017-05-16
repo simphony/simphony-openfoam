@@ -1493,7 +1493,7 @@ def modifyFields(mesh, cuds, solver='pimpleFoam'):
             patch = None
             for condition in boundary.condition:
                 variable = get_condition_variable(condition, solver)
-                if variable == CUBA.VOLUME_FRACTION:
+                if variable == CUBA.VOLUME_FRACTION or variable == CUBA.CONTACT_ANGLE:
                     patch = get_foam_boundary_condition(
                         condition, mesh._foamPhaseNameToMaterial, solver)
                     break
@@ -1564,7 +1564,7 @@ def get_first(generator):
 def get_simphony_io_solver(foam_solver):
     simphony_solvers = {'pimpleFoam': 'pimpleSimphonyFoam',
                         'simpleFoam': 'simpleSimphonyFoam',
-                        'interFoam': 'interSimphonyFoam',
+                        'interFoam': 'interFoam',
                         'driftFluxFoam': 'driftFluxSimphonyFoam'}
     return simphony_solvers[foam_solver]
 
