@@ -674,7 +674,7 @@ class FoamMesh(Mesh):
             label = 0
             while i < len(point_coordinates):
                 point = Point(point_coordinates[i:i+3],
-                            self._foamPointLabelToUuid[label])
+                              self._foamPointLabelToUuid[label])
                 for dataKey, data in data_map.iteritems():
                     if dataTypeMap[dataKey] == "scalar":
                         if dataKey == CUBA.VOLUME_FRACTION:
@@ -689,7 +689,7 @@ class FoamMesh(Mesh):
                                 phase2_vol_frac = PhaseVolumeFraction(
                                     material2, 1 - vol_frac1)
                                 point.data[dataKey] = [phase1_vol_frac,
-                                                      phase2_vol_frac]
+                                                       phase2_vol_frac]
                         else:
                             point.data[dataKey] = data[label]
                     elif dataTypeMap[dataKey] == "vector":
@@ -698,7 +698,6 @@ class FoamMesh(Mesh):
                     elif dataTypeMap[dataKey] == "tensor":
                         point.data[dataKey] = \
                             [data[label * 9 + k] for k in range(9)]
-                
                 yield point
                 label += 1
                 i += 3
