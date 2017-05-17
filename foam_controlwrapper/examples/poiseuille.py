@@ -43,6 +43,11 @@ sim_time = api.IntegrationTime(name='simulation_time',
                                size=0.01)
 cuds.add([sim_time])
 
+# solver parameter to write data
+sp = api.SolverParameter(name='solver_parameters')
+sp.data[CUBA.NUMBER_OF_PHYSICS_STATES] = 5
+cuds.add([sp])
+
 # create computational mesh
 
 corner_points = [(0.0, 0.0, 0.0), (20.0e-3, 0.0, 0.0),

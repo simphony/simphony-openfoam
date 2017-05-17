@@ -1051,6 +1051,7 @@ def modifyNumerics(mesh, cuds, solver='pimpleFoam', io=False):
         final = int_time.final
         deltaT = int_time.size
         break
+
     interval = final-current
     endTime = interval + mesh._time
     for solv_param in cuds.iter(item_type=CUBA.SOLVER_PARAMETER):
@@ -1059,6 +1060,9 @@ def modifyNumerics(mesh, cuds, solver='pimpleFoam', io=False):
                 solv_param.data[CUBA.MAXIMUM_COURANT_NUMBER]
             mapContent['controlDict']['maxAlphaCo'] =\
                 solv_param.data[CUBA.MAXIMUM_COURANT_NUMBER]
+        if CUBA.NUMBER_OF_PHYSICS_STATES in solv_param.data:
+                interval = interval /\
+                    solv_param.data[CUBA.NUMBER_OF_PHYSICS_STATES]
 
     mapContent['controlDict']['startTime'] = str(mesh._time)
     mapContent['controlDict']['deltaT'] = str(deltaT)
