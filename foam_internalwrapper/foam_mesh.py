@@ -995,7 +995,7 @@ class FoamMesh(Mesh):
                     foamface.getAllCellTensorData(self.name, dataName)
         return dataMap
 
-    def _get_poin_data_map(self):
+    def _get_point_data_map(self):
         """ get map for mesh pointwise data
         """
 
