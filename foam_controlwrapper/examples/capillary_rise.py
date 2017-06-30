@@ -144,7 +144,7 @@ start = time.time()
 
 sim = Simulation(cuds, 'OpenFOAM', engine_interface=EngineInterface.FileIO)
 
-print "Time spend in wrapper init: ", time.time()-start
+print "Time sped in wrapper init: ", time.time()-start
 start = time.time()
 mesh_in_engine = cuds.get_by_name(mesh_name)
 

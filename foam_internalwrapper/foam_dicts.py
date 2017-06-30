@@ -350,9 +350,9 @@ SIMPLE
 
     residualControl
     {
-        p               1e-2;
-        U               1e-3;
-        "(k|epsilon|omega)" 1e-3;
+        p               1e-4;
+        U               1e-4;
+        "(k|epsilon|omega)" 1e-4;
     }
 }
 relaxationFactors
@@ -1051,6 +1051,7 @@ def modifyNumerics(mesh, cuds, solver='pimpleFoam', io=False):
         final = int_time.final
         deltaT = int_time.size
         break
+
     interval = final-current
     endTime = interval + mesh._time
     for solv_param in cuds.iter(item_type=CUBA.SOLVER_PARAMETER):
@@ -1059,6 +1060,9 @@ def modifyNumerics(mesh, cuds, solver='pimpleFoam', io=False):
                 solv_param.data[CUBA.MAXIMUM_COURANT_NUMBER]
             mapContent['controlDict']['maxAlphaCo'] =\
                 solv_param.data[CUBA.MAXIMUM_COURANT_NUMBER]
+        if CUBA.NUMBER_OF_PHYSICS_STATES in solv_param.data:
+                interval = interval /\
+                    solv_param.data[CUBA.NUMBER_OF_PHYSICS_STATES]
 
     mapContent['controlDict']['startTime'] = str(mesh._time)
     mapContent['controlDict']['deltaT'] = str(deltaT)
@@ -1318,6 +1322,11 @@ def get_foam_boundary_condition(condition, phaseNameToMaterial, solver):
             patch.append('pressureInletOutletVelocity')
             patch.append(condition.data[variable])
             return patch
+        elif isinstance(condition, api.TotalPressureCondition):
+            patch = []
+            patch.append('totalPressure')
+            patch.append(condition.data[variable])
+            return patch
         elif isinstance(condition, api.InletOutletVolumeFraction):
             patch = []
             patch.append('inletOutlet')
@@ -1482,6 +1491,16 @@ def modifyFields(mesh, cuds, solver='pimpleFoam'):
             myDict = myDict + "\t type \t fixedValue;\n"
             myDict = myDict + "\t value \t uniform " \
                             + str(patch[1]) + ";\n"
+        elif isinstance(patch, list) and\
+                patch[0] == "totalPressure":
+            myDict = myDict + "\t type \t totalPressure;\n"
+            myDict = myDict + "\t p0 \t uniform " + str(patch[1]) + ";\n"
+            myDict = myDict + "\t U  \t U;\n"
+            myDict = myDict + "\t phi \t phi;\n"
+            myDict = myDict + "\t rho \t rho;\n"
+            myDict = myDict + "\t psi \t none;\n"
+            myDict = myDict + "\t gamma \t 1;\n"
+            myDict = myDict + "\t value \t uniform 0;"
         myDict = myDict + "}\n"
 
     foamface.setBC(mesh.name, name_pressure, myDict)
@@ -1493,7 +1512,8 @@ def modifyFields(mesh, cuds, solver='pimpleFoam'):
             patch = None
             for condition in boundary.condition:
                 variable = get_condition_variable(condition, solver)
-                if variable == CUBA.VOLUME_FRACTION:
+                if variable == CUBA.VOLUME_FRACTION or \
+                        variable == CUBA.CONTACT_ANGLE:
                     patch = get_foam_boundary_condition(
                         condition, mesh._foamPhaseNameToMaterial, solver)
                     break
@@ -1564,7 +1584,7 @@ def get_first(generator):
 def get_simphony_io_solver(foam_solver):
     simphony_solvers = {'pimpleFoam': 'pimpleSimphonyFoam',
                         'simpleFoam': 'simpleSimphonyFoam',
-                        'interFoam': 'interSimphonyFoam',
+                        'interFoam': 'interFoam',
                         'driftFluxFoam': 'driftFluxSimphonyFoam'}
     return simphony_solvers[foam_solver]
 

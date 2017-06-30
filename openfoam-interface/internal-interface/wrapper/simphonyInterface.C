@@ -323,7 +323,6 @@ double foam_getCellData(std::string name, int label,std::string dataname)
 }
 
 
-
 std::vector<int> foam_getBoundaryCells(std::string name, std::string boundaryname)
 {
     fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
@@ -580,6 +579,74 @@ std::vector<double> foam_getCellTensorData(std::string name, std::string datanam
 
 }
 
+std::vector<double> foam_getPointTensorData(std::string name, std::string dataname)
+{
+  fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
+  hashedWordList names(mesh.names());
+  volPointInterpolation vpi(mesh);
+  if (names.contains(word(dataname)))
+    {
+      volTensorField& field = find_Data<tensor>(mesh,dataname);
+      pointTensorField fieldp = vpi.interpolate(field); 
+      std::vector<double> retValue(9*fieldp.size()); 
+      int k=0;
+      for(int i=0;i<fieldp.size();i++) 
+	{
+	  retValue[k]=fieldp[i].xx();
+	  retValue[k+1]=fieldp[i].xy();
+	  retValue[k+2]=fieldp[i].xz();
+	  retValue[k+3]=fieldp[i].yx();
+	  retValue[k+4]=fieldp[i].yy();
+	  retValue[k+5]=fieldp[i].yz();
+	  retValue[k+6]=fieldp[i].zx();
+	  retValue[k+7]=fieldp[i].zy();
+	  retValue[k+8]=fieldp[i].zz();
+	  k+=9;
+	}
+	    
+      return retValue;      
+
+    }else
+    {
+    
+      new volTensorField
+	(
+	 IOobject
+	 (
+	  word(dataname),
+	  runTimes[name]->timeName(),
+	  mesh,
+	  IOobject::MUST_READ_IF_MODIFIED,
+	  //	  IOobject::MUST_READ,
+	  IOobject::NO_WRITE
+	  ),
+	 mesh);
+      volTensorField& field = find_Data<tensor>(mesh,dataname);
+      pointTensorField fieldp = vpi.interpolate(field); 
+      std::vector<double> retValue(9*fieldp.size()); 
+      int k=0;
+      for(int i=0;i<fieldp.size();i++) 
+	{
+	  retValue[k]=fieldp[i].xx();
+	  retValue[k+1]=fieldp[i].xy();
+	  retValue[k+2]=fieldp[i].xz();
+	  retValue[k+3]=fieldp[i].yx();
+	  retValue[k+4]=fieldp[i].yy();
+	  retValue[k+5]=fieldp[i].yz();
+	  retValue[k+6]=fieldp[i].zx();
+	  retValue[k+7]=fieldp[i].zy();
+	  retValue[k+8]=fieldp[i].zz();
+	  k+=9;
+	}
+
+     return retValue;
+
+    }
+
+}
+
+
+
 std::vector<double> foam_getCellVectorData(std::string name, std::string dataname)
 {
   fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
@@ -630,7 +697,108 @@ std::vector<double> foam_getCellVectorData(std::string name, std::string datanam
 
 }
 
+std::vector<double> foam_getPointVectorData(std::string name, std::string dataname)
+{
+  fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
+  hashedWordList names(mesh.names());
+  volPointInterpolation vpi(mesh);
 
+  if (names.contains(word(dataname)))
+    {
+      volVectorField& field = find_Data<vector>(mesh,dataname);
+      pointVectorField fieldp = vpi.interpolate(field); 
+
+      std::vector<double> retValue(3*fieldp.size()); 
+      int k=0;
+      for(int i=0;i<fieldp.size();i++) 
+	{
+	  retValue[k]=fieldp[i].x();
+	  retValue[k+1]=fieldp[i].y();
+	  retValue[k+2]=fieldp[i].z();
+	  k+=3;
+	}
+	    
+      return retValue;
+    }else
+    { 
+      new volVectorField
+	(       IOobject
+		(
+		 word(dataname),
+		 runTimes[name]->timeName(),
+		 mesh,
+		 IOobject::MUST_READ_IF_MODIFIED,
+		 //		 IOobject::MUST_READ,
+		 IOobject::NO_WRITE
+		 ),
+		mesh);
+      volVectorField& field = find_Data<vector>(mesh,dataname);
+      pointVectorField fieldp = vpi.interpolate(field); 
+
+      std::vector<double> retValue(3*fieldp.size()); 
+      int k=0;
+      for(int i=0;i<fieldp.size();i++) 
+	{
+	  retValue[k]=fieldp[i].x();
+	  retValue[k+1]=fieldp[i].y();
+	  retValue[k+2]=fieldp[i].z();
+	  k+=3;
+	}
+
+      return retValue;
+
+    }
+
+}
+
+
+std::vector<double> foam_getPointData(std::string name, std::string dataname)
+{
+
+    fvMesh & mesh = const_cast<fvMesh&>(getMeshFromDb(name));
+    hashedWordList names(mesh.names());
+    
+    volPointInterpolation vpi(mesh);
+
+    if (names.contains(word(dataname)))
+      {
+	volScalarField& field = find_Data<scalar>(mesh,dataname);
+	pointScalarField fieldp = vpi.interpolate(field); 
+
+	std::vector<double> retValue(fieldp.size()); 
+	for(int i=0;i<fieldp.size();i++) 
+	  {
+	    retValue[i]=fieldp[i];
+	  }
+	return retValue;	
+      }
+    else 
+      {
+	new volScalarField
+	  (
+	   IOobject
+	   (
+	    word(dataname),
+	    runTimes[name]->timeName(),
+	    mesh,
+	    IOobject::MUST_READ_IF_MODIFIED,
+	    //        IOobject::MUST_READ,
+	    IOobject::NO_WRITE
+	    ),
+	   mesh);
+	volScalarField& field = find_Data<scalar>(mesh,dataname);
+
+	pointScalarField fieldp = vpi.interpolate(field); 
+
+	std::vector<double> retValue(fieldp.size()); 
+	for(int i=0;i<fieldp.size();i++) 
+	  {
+	    retValue[i]=fieldp[i];
+	  }
+	return retValue;	
+      }
+ 
+}
 
 
 std::vector<double> foam_getCellData(std::string name, std::string dataname)
