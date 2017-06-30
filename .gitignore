@@ -60,3 +60,4 @@ openfoam-interface/lnInclude
 *.dep
 
 */version.py
+.devenv

@@ -2,12 +2,13 @@ import os
 import sys
 
 from setuptools import setup, find_packages, Command
-from setuptools.command.install import install
+from setuptools.command.bdist_egg import bdist_egg
+from packageinfo import NAME, VERSION
+
 
 with open('README.rst', 'r') as readme:
     README_TEXT = readme.read()
 
-VERSION = '0.4.0.dev0'
 
 
 class CleanCommand(Command):
@@ -26,14 +27,14 @@ class CleanCommand(Command):
         os.system('./Allwclean')
 
 
-class InstallCommand(install):
-    """Customized setuptools install command - prints a friendly greeting."""
+class BdistEggCommand(bdist_egg):
+    """Customized setuptools bdist_egg command - prints a friendly greeting."""
     def run(self):
         if '--user' in sys.argv:
             os.system("./install_foam_interface.sh --user")
         else:
             os.system("./install_foam_interface.sh")
-        install.run(self)
+        bdist_egg.run(self)
 
 
 def write_version_py(filename=None):
@@ -57,17 +58,17 @@ write_version_py(os.path.join(os.path.dirname(__file__),
                               'foam_internalwrapper', 'version.py'))
 
 setup(
-    name='foam_wrappers',
+    name=NAME,
     version=VERSION,
     author='SimPhoNy FP7 European Project',
     description='Implementation of OpenFoam wrappers',
     long_description=README_TEXT,
     packages=find_packages(),
-    install_requires=['simphony[H5IO, CUBAGen]>=0.5'],
+    install_requires=['simphony>=0.5'],
     entry_points={'simphony.engine':
                   ['openfoam_file_io = foam_controlwrapper',
                    'openfoam_internal = foam_internalwrapper']},
     cmdclass={
         'clean': CleanCommand,
-        'install': InstallCommand}
+        'bdist_egg': BdistEggCommand}
 )
