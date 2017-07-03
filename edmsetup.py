@@ -69,7 +69,7 @@ def upload_egg():
         try:
             common.run("python edmsetup.py upload_egg")
         except subprocess.CalledProcessError as e:
-            print("Error during egg upload of submodule. {}. Continuing".format(e.message))
+            print("Error during egg upload of submodule: {}. Continuing.".format(e))
 
     click.echo("Done")
 

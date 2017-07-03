@@ -3,4 +3,5 @@ packages = [
   # "dependency_name dependency_version_at_patchlevel_detail"
     "simphony 0.8.0.dev0",
     "FoamInterface 0.2.4.dev0",
+    "PyFoam 0.6.4",
 ]
