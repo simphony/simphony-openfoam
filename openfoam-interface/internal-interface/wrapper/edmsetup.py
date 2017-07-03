@@ -8,6 +8,7 @@
 import sys
 import click
 import os
+import shutil
 import subprocess
 
 from packageinfo import BUILD, VERSION, NAME
@@ -42,6 +43,23 @@ import buildcommons as common  # noqa
 workspace = common.workspace()
 common.edmenv_setup()
 
+def write_endist_dat():
+    with open("endist.dat", "w") as f:
+        f.write("""
+packages = [
+  # A list of strings in the format
+  # "dependency_name dependency_version_at_patchlevel_detail"
+]
+add_files=[
+    ("{}", ".*", "EGG-INFO/usr/bin/"),
+    ("{}", ".*", "EGG-INFO/usr/lib/"),
+    (".", "post_egginst.py", "EGG-INFO/"),
+]
+""".format(
+    os.environ["FOAM_USER_APPBIN"],
+    os.environ["FOAM_USER_LIBBIN"],
+    ))
+
 
 @click.group()
 def cli():
@@ -50,10 +68,26 @@ def cli():
 
 @cli.command()
 def egg():
-    common.local_repo_to_edm_egg(".", name=NAME, version=VERSION, build=BUILD)
-    with common.cd("openfoam-interface/internal-interface/wrapper"):
-        common.run("python edmsetup.py egg")
+    write_endist_dat()
+    common.edmenv_run("python setup.py bdist_egg")
 
+    try:
+        os.makedirs("endist")
+    except OSError:
+        pass
+
+    common.run("edm repack-egg -b {build} -a rh6-x86_64 dist/{name}-{version}-py2.7-linux-x86_64.egg".format(
+        name=NAME, version=VERSION, build=BUILD))
+
+    edm_egg_filename = "{name}-{version}-{build}.egg".format(
+        name=NAME, version=VERSION, build=BUILD)
+
+    shutil.move(
+        os.path.join("dist", edm_egg_filename),
+        os.path.join("endist", edm_egg_filename)
+        )
+
+    return os.path.join("endist", edm_egg_filename)
 
 
 @cli.command()
@@ -64,10 +98,6 @@ def upload_egg():
         BUILD=BUILD)
     click.echo("Uploading {} to EDM repo".format(egg_path))
     common.upload_egg(egg_path)
-
-    with common.cd("openfoam-interface/internal-interface/wrapper"):
-        common.run("python edmsetup.py upload_egg")
-
     click.echo("Done")
 
 
