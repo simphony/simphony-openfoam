@@ -61,3 +61,8 @@ openfoam-interface/lnInclude
 
 */version.py
 .devenv
+linux64GccDPOpt
+lnInclude
+incompressibleTurbulenceModel
+endist
+
