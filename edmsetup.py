@@ -66,7 +66,10 @@ def upload_egg():
     common.upload_egg(egg_path)
 
     with common.cd("openfoam-interface/internal-interface/wrapper"):
-        common.run("python edmsetup.py upload_egg")
+        try:
+            common.run("python edmsetup.py upload_egg")
+        except subprocess.CalledProcessError as e:
+            print("Error during egg upload of submodule. {}. Continuing".format(e.message))
 
     click.echo("Done")
 
