@@ -1,10 +1,3 @@
-# Basic template for edm setup.
-# Copy this file to retrieve the buildcommons repository
-# This template can be used as is on trivial "setup.py only"
-# packages.
-# It requires the additional files:
-# - a packageinfo.py containing the relevant data.
-# - an endist.dat file, containing the relevant data.
 import sys
 import click
 import os
