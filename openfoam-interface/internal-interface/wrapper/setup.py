@@ -1,4 +1,4 @@
-from distutils.core import setup, Extension
+from setuptools import setup, Extension
 import os
 
 openfoam_src_dir = os.environ['FOAM_SRC']

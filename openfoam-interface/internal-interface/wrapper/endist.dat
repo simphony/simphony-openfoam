@@ -1,0 +1,10 @@
+
+packages = [
+  # A list of strings in the format
+  # "dependency_name dependency_version_at_patchlevel_detail"
+]
+add_files=[
+    ("/home/sbo/OpenFOAM/sbo-2.3.0/platforms/linux64GccDPOpt/bin", ".*", "EGG-INFO/usr/bin/"),
+    ("/home/sbo/OpenFOAM/sbo-2.3.0/platforms/linux64GccDPOpt/lib", ".*", "EGG-INFO/usr/lib/"),
+    (".", "post_egginst.py", "EGG-INFO/"),
+]
