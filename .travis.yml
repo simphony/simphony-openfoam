@@ -11,7 +11,7 @@ matrix:
     - env: SIMPHONY_VERSION=master
 
 before_install:
-  - sudo sh -c "echo deb http://www.openfoam.org/download/ubuntu precise main > /etc/apt/sources.list.d/openfoam.list"
+  - sudo sh -c 'echo "deb http://dl.openfoam.org/ubuntu precise main" > /etc/apt/sources.list.d/openfoam.list'
   - sudo apt-get update -qq
   - sudo apt-get install -y --force-yes openfoam230
   - sudo apt-get install libhdf5-serial-dev
