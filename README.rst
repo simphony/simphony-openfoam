@@ -64,7 +64,6 @@ To run the cleaner run::
     python setup.py clean
 
 
-
 EDM egg build and uploading
 ---------------------------
 
