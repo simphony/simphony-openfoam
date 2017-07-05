@@ -10,7 +10,7 @@ if "WM_PROJECT" not in os.environ:
     sys.exit(1)
 
 # The version of the buildcommon to checkout.
-BUILDCOMMONS_VERSION="v0.2"
+BUILDCOMMONS_VERSION = "v0.2"
 
 
 def bootstrap_devenv():
@@ -48,7 +48,6 @@ def egg():
         common.run("python edmsetup.py egg")
 
 
-
 @cli.command()
 def upload_egg():
     egg_path = "endist/{NAME}-{VERSION}-{BUILD}.egg".format(
@@ -62,7 +61,8 @@ def upload_egg():
         try:
             common.run("python edmsetup.py upload_egg")
         except subprocess.CalledProcessError as e:
-            print("Error during egg upload of submodule: {}. Continuing.".format(e))
+            print("Error during egg upload of submodule: {}. "
+                  "Continuing.".format(e))
 
     click.echo("Done")
 

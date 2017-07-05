@@ -11,7 +11,7 @@ if "WM_PROJECT" not in os.environ:
     sys.exit(1)
 
 # The version of the buildcommon to checkout.
-BUILDCOMMONS_VERSION="v0.1"
+BUILDCOMMONS_VERSION = "v0.2"
 
 
 def bootstrap_devenv():
@@ -36,6 +36,7 @@ import buildcommons as common  # noqa
 workspace = common.workspace()
 common.edmenv_setup()
 
+
 def write_endist_dat():
     with open("endist.dat", "w") as f:
         f.write("""
@@ -48,10 +49,7 @@ add_files=[
     ("{}", ".*", "EGG-INFO/usr/lib/"),
     (".", "post_egginst.py", "EGG-INFO/"),
 ]
-""".format(
-    os.environ["FOAM_USER_APPBIN"],
-    os.environ["FOAM_USER_LIBBIN"],
-    ))
+""".format(os.environ["FOAM_USER_APPBIN"], os.environ["FOAM_USER_LIBBIN"]))
 
 
 @click.group()
@@ -69,8 +67,10 @@ def egg():
     except OSError:
         pass
 
-    common.run("edm repack-egg -b {build} -a rh6-x86_64 dist/{name}-{version}-py2.7-linux-x86_64.egg".format(
-        name=NAME, version=VERSION, build=BUILD))
+    common.run(
+        "edm repack-egg -b {build} -a rh6-x86_64 "
+        "dist/{name}-{version}-py2.7-linux-x86_64.egg".format(
+            name=NAME, version=VERSION, build=BUILD))
 
     edm_egg_filename = "{name}-{version}-{build}.egg".format(
         name=NAME, version=VERSION, build=BUILD)
