@@ -63,3 +63,27 @@ To run the cleaner run::
 
     python setup.py clean
 
+
+
+EDM egg build and uploading
+---------------------------
+
+The repository supports building of EDM packages. The command::
+    
+    python edmsetup.py egg
+
+Creates the egg, and the command::
+
+    python edmsetup.py upload_egg
+
+uploads it to EDM repository. An important difference with respect to other EDM-enhanced repositories
+is that due to the current layout of the repository, we are building **two** eggs. The consequence is that
+there are **two** packageinfo.py with different package names, release tags and build numbers. 
+Check under ``openfoam-interface/wrapper/`` for the secondary packageinfo.py.
+
+The automatic Jenkins based builder creates new eggs for branches named ``release-<version>-<build>``.
+To do a new build (or release), you should modify the relevant packageinfo.py, merge the PR to master, then 
+create the above branch to trigger the build and upload of the new eggs.
+
+For additional information about the EDM build system, check the ``simphonyproject/buildrecipes-common`` 
+repository.

@@ -1,0 +1,7 @@
+packages = [
+  # A list of strings in the format 
+  # "dependency_name dependency_version_at_patchlevel_detail"
+    "simphony 0.4.4",
+    "FoamInterface 0.2.4.dev0",
+    "PyFoam 0.6.4",
+]
